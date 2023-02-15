@@ -9,10 +9,10 @@ class Player(pygame.sprite.Sprite):
         self.screen = pygame.display.get_surface()
 
         self.image = pygame.image.load('graphics/test/player.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (30, 30))
+        self.image = pygame.transform.scale(self.image, (TILESIZE // 1.5, TILESIZE // 1.5))
         self.rect = self.image.get_rect(center=pos)
         self.mask = pygame.mask.from_surface(self.image)
-        self.hitbox = self.rect.inflate(0, 0)
+        self.hitbox = self.rect.inflate(0, -10)
 
         self.direction = pygame.math.Vector2()
         self.speed = 5
@@ -43,54 +43,30 @@ class Player(pygame.sprite.Sprite):
             self.direction = self.direction.normalize()
 
         self.hitbox.x += self.direction.x * speed
-        #self.collision('horizontal', speed)
+        self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed
-        #self.collision('vertical', speed)
+        self.collision('vertical')
 
         self.rect.center = self.hitbox.center
 
-    def collision(self, direction, speed):
+    def collision(self, direction):
         if direction == 'horizontal':
-            #if pygame.sprite.spritecollide(self, self.obstacle_sprites, False):
-            for i in range(len(self.obstacle_sprites.sprites())):
-                self.obstacle.add(self.obstacle_sprites.sprites()[i])
-
-                self.rect.x -= self.obstacle.sprites()[0].rect.x * self.TILESIZE
-                self.rect.y -= self.obstacle.sprites()[0].rect.y * self.TILESIZE
-
-                # if collision
-                if pygame.sprite.spritecollide(self, self.obstacle, False, pygame.sprite.collide_mask):
-                    if self.direction.x > 0:  # moving left
-                        self.hitbox.right -= self.direction.x * speed - 10
-                    if self.direction.x < 0:  # moving right
-                        self.hitbox.left += self.direction.x * speed + 10
-
-                self.rect.x += self.obstacle.sprites()[0].rect.x * self.TILESIZE
-                self.rect.y += self.obstacle.sprites()[0].rect.y * self.TILESIZE
-
-                self.obstacle.remove(self.obstacle_sprites.sprites()[i])
-
+            for sprite in self.obstacle_sprites:
+                if sprite.isWall:
+                    if sprite.hitbox.colliderect(self.hitbox):
+                        if self.direction.x > 0:  # moving right
+                            self.hitbox.right = sprite.hitbox.left
+                        if self.direction.x < 0:  # moving left
+                            self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
-            #if pygame.sprite.spritecollide(self, self.obstacle_sprites, False):
-            for i in range(len(self.obstacle_sprites.sprites())):
-                self.obstacle.add(self.obstacle_sprites.sprites()[i])
-
-                self.rect.x -= self.obstacle.sprites()[0].rect.x * self.TILESIZE
-                self.rect.y -= self.obstacle.sprites()[0].rect.y * self.TILESIZE
-
-                # if collision
-                if pygame.sprite.spritecollide(self, self.obstacle, False, pygame.sprite.collide_mask):
-                    self.direction = -self.direction
-                    # if self.direction.y > 0:  # moving up
-                    #     self.hitbox.top -= self.direction.y * self.speed
-                    # if self.direction.y < 0:  # moving down
-                    #     self.hitbox.bottom -= self.direction.y * self.speed
-
-                self.rect.x += self.obstacle.sprites()[0].rect.x * self.TILESIZE
-                self.rect.y += self.obstacle.sprites()[0].rect.y * self.TILESIZE
-
-                self.obstacle.remove(self.obstacle_sprites.sprites()[i])
+            for sprite in self.obstacle_sprites:
+                if sprite.isWall:
+                    if sprite.hitbox.colliderect(self.hitbox):
+                        if self.direction.y > 0:  # moving down
+                            self.hitbox.bottom = sprite.hitbox.top
+                        if self.direction.y < 0:  # moving up
+                            self.hitbox.top = sprite.hitbox.bottom
 
     def update(self):
         self.input()
