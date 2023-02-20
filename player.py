@@ -1,21 +1,27 @@
 import pygame
-from settings import TILESIZE
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, obstacle_sprites):
+    def __init__(self, pos, type, TILESIZE, groups, obstacle_sprites):
         super().__init__(groups)
         # get the display surface
         self.screen = pygame.display.get_surface()
 
-        self.image = pygame.image.load('graphics/test/player.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (TILESIZE // 1.5, TILESIZE // 1.5))
+        if type == 'girl':
+            self.player_back_walk = [pygame.transform.scale(pygame.image.load(f'graphics/player/girl_sprite_back{i}.png').convert_alpha(), (TILESIZE, TILESIZE)) for i in range(1, 5)]
+
+        self.player_back_walk_way = 0.1
+        self.player_index = 0
+        self.image = self.player_back_walk[self.player_index]
+
+        self.color = 'gold'
+
         self.rect = self.image.get_rect(center=pos)
-        self.mask = pygame.mask.from_surface(self.image)
-        self.hitbox = self.rect.inflate(0, -10)
+        self.hitbox = self.rect.inflate(-TILESIZE//2, -TILESIZE//2)
 
         self.direction = pygame.math.Vector2()
-        self.speed = 5
+        self.speed = 1
+        self.speed *= TILESIZE/10
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
@@ -48,6 +54,7 @@ class Player(pygame.sprite.Sprite):
         self.collision('vertical')
 
         self.rect.center = self.hitbox.center
+        self.depth = self.rect.x + self.rect.y
 
     def collision(self, direction):
         if direction == 'horizontal':
@@ -68,6 +75,12 @@ class Player(pygame.sprite.Sprite):
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
 
+    def animation_state(self):
+        self.player_index += self.player_back_walk_way
+        if self.player_index >= len(self.player_back_walk)-0.1 or self.player_index <= 0: self.player_back_walk_way = -self.player_back_walk_way
+        self.image = self.player_back_walk[int(self.player_index)]
+
     def update(self):
         self.input()
         self.move(self.speed)
+        self.animation_state()
