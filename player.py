@@ -1,4 +1,5 @@
 import pygame
+from support import import_folder
 
 
 class Player(pygame.sprite.Sprite):
@@ -7,17 +8,17 @@ class Player(pygame.sprite.Sprite):
         # get the display surface
         self.screen = pygame.display.get_surface()
 
-        if type == 'girl':
-            self.player_back_walk = [pygame.transform.scale(pygame.image.load(f'graphics/player/girl_sprite_back{i}.png').convert_alpha(), (TILESIZE, TILESIZE)) for i in range(1, 5)]
+        # graphics setup
+        self.import_player_assets(type)
+        self.status = 'down'
+        self.frame_index = 0
+        self.animation_speed = 0.15
 
-        self.player_back_walk_way = 0.1
-        self.player_index = 0
-        self.image = self.player_back_walk[self.player_index]
-
+        # set color on the minimap
         self.color = 'gold'
 
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-TILESIZE//2, -TILESIZE//2)
+        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3)
 
         self.direction = pygame.math.Vector2()
         self.speed = 1
@@ -28,21 +29,53 @@ class Player(pygame.sprite.Sprite):
 
         self.TILESIZE = TILESIZE
 
+    def import_player_assets(self, type):
+        if type == 'boy':
+            character_path = 'graphics/player/boy/'
+            self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
+                               'up_idle': [], 'left_idle': [], 'down_idle': [], 'right_idle': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path)
+            print(self.animations)
+
+        if type == 'girl':
+            character_path = 'graphics/player/girl/'
+            self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
+                               'up_idle': [], 'left_idle': [], 'down_idle': [], 'right_idle': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path)
+
+        self.image = pygame.image.load('graphics/player/boy/up_idle/boy_sprite_back1.png')
+
     def input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
             self.direction.y = -1
+            self.status = 'up'
         elif keys[pygame.K_s]:
+            self.status = 'down'
             self.direction.y = 1
         else:
             self.direction.y = 0
 
         if keys[pygame.K_q]:
+            self.status = 'left'
             self.direction.x = -1
         elif keys[pygame.K_d]:
+            self.status = 'right'
             self.direction.x = 1
         else:
             self.direction.x = 0
+
+    def get_status(self):
+        # idle status
+        if self.direction.x == 0 and self.direction.y == 0:
+            if not '_idle' in self.status:
+                self.status = self.status + '_idle'
 
     def move(self, speed):
         if self.direction.magnitude() != 0:
@@ -58,7 +91,7 @@ class Player(pygame.sprite.Sprite):
 
     def collision(self, direction):
         if direction == 'horizontal':
-            for sprite in self.obstacle_sprites:
+            for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
                 if sprite.isWall:
                     if sprite.hitbox.colliderect(self.hitbox):
                         if self.direction.x > 0:  # moving right
@@ -67,7 +100,7 @@ class Player(pygame.sprite.Sprite):
                             self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
-            for sprite in self.obstacle_sprites:
+            for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
                 if sprite.isWall:
                     if sprite.hitbox.colliderect(self.hitbox):
                         if self.direction.y > 0:  # moving down
@@ -75,12 +108,20 @@ class Player(pygame.sprite.Sprite):
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
 
-    def animation_state(self):
-        self.player_index += self.player_back_walk_way
-        if self.player_index >= len(self.player_back_walk)-0.1 or self.player_index <= 0: self.player_back_walk_way = -self.player_back_walk_way
-        self.image = self.player_back_walk[int(self.player_index)]
+    def animate(self):
+        animation = self.animations[self.status]
+
+        # loop over the frame index
+        self.frame_index += self.animation_speed
+        if self.frame_index >= len(animation):
+            self.frame_index = 0
+
+        # set the image
+        self.image = animation[int(self.frame_index)]
+        self.rect = self.image.get_rect(center = self.hitbox.center)
 
     def update(self):
         self.input()
+        self.get_status()
+        self.animate()
         self.move(self.speed)
-        self.animation_state()

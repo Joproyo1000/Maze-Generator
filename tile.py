@@ -6,19 +6,18 @@ class Tile(pygame.sprite.Sprite):
         super().__init__(groups)
         self.settings = settings
 
-        self.image = pygame.image.load('graphics/maze/IsoBushv2.png').convert_alpha()
-        scale = self.settings.TILESIZE/20
-        self.image = pygame.transform.scale(self.image, (20 * scale, 26 * scale))
-        self.path = pygame.image.load('graphics/maze/IsoPathv2.png').convert_alpha()
-        self.path = pygame.transform.scale(self.path, (20 * scale, 26 * scale))
+        self.image = pygame.image.load('graphics/maze/Bush - Copie.png').convert_alpha()
+        scale = self.settings.TILESIZE/27
+        self.image = pygame.transform.scale(self.image, (27 * scale, 37 * scale))
+        self.path = pygame.image.load('graphics/maze/Grass.png').convert_alpha()
+        self.path = pygame.transform.scale(self.path, (27 * scale, 37 * scale))
 
         self.rect = pygame.rect.Rect(pos[0], pos[1], min(self.image.get_width(), self.image.get_height()), min(self.image.get_width(), self.image.get_height()))
 
         self.rect.x = pos[0]
         self.rect.y = pos[1]
 
-        self.hitbox = self.rect.inflate(0, 0)
-        self.hitbox.y -= 10
+        self.hitbox = self.rect.inflate(-10, -10)
 
         self.pos = pygame.Vector2(pos)
 

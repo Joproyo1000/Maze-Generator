@@ -3,8 +3,10 @@ import pygame
 
 from tile import Tile
 from random import choice
-from ySortCamera import YSortCameraGroup
+from ySortCamera import YSortIsoCameraGroup, YSortCameraGroup
 from player import Player
+from enemy import Enemy
+from spatial_hashmap import HashMap
 
 
 class Maze(pygame.sprite.Group):
@@ -17,23 +19,36 @@ class Maze(pygame.sprite.Group):
         # get the screen
         self.screen = pygame.display.get_surface()
 
+        # calculate number of columns and rows
+        self.cols = int(self.settings.MAZEWIDTH // self.settings.TILESIZE / 2) * 2 + 1
+        self.rows = int(self.settings.MAZEHEIGHT // self.settings.TILESIZE / 2) * 2 + 1
+
         # create two groups, one for sprites that need to be drawn on th screen, the other for the ones with collisions
         self.visible_sprites = YSortCameraGroup(self.settings)
-        self.obstacle_sprites = pygame.sprite.Group()
+        self.obstacle_sprites = HashMap(self.settings.TILESIZE, self.cols)
 
-        # calculate number of columns and rows
-        self.cols, self.rows = int(self.settings.MAZEWIDTH // self.settings.TILESIZE / 2) * 2, int(self.settings.MAZEHEIGHT // self.settings.TILESIZE / 2) * 2
         # initialize the grid of cells
-        self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites]) for row in range(self.rows + 1) for col in range(self.cols + 1)]
+        self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites]) for row in range(self.rows) for col in range(self.cols)]
+
+        # initialize map
+        self.map = None
+        self.map_size = 10
 
         # first tile to start the maze from
-        self.start_tile = self.grid_cells[self.cols + 2]
+        self.start_tile = self.grid_cells[self.cols + 1]
         self.current_tile = self.start_tile
+        self.goal = self.grid_cells[(self.cols) * (self.rows) - self.cols - 2]
+
         # initialize the stack (used to generate the maze)
         self.stack = []
 
         # initialize the player and put it on the first tile
         self.player = Player(self.start_tile.rect.center, 'girl', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites)
+
+        # initialize enemies
+        self.enemies = pygame.sprite.Group()
+        for i in range(2):
+            self.enemies.add(Enemy(self.goal.rect.center, 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
 
         # True if maze is done generating
         self.mazeGenerated = False
@@ -43,9 +58,11 @@ class Maze(pygame.sprite.Group):
 
         # generate maze fast if RUNSLOW isn't checked
         if not self.settings.RUNSLOW:
-            while self.stack or self.grid_cells[self.cols + 2].isWall:
+            while self.stack or self.grid_cells[self.cols + 1].isWall:
                 self.generate_maze()
             self.update_tile_colors()
+            self.obstacle_sprites.generate_hashmap()
+            self.map = self.bake_maze(self.map_size)
             self.mazeGenerated = True
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
@@ -54,9 +71,9 @@ class Maze(pygame.sprite.Group):
         :param y: y position in the grid
         :return: the 1D position of the cell in the grid list
         """
-        return x + y * (self.cols+1)
+        return x + y * self.cols
 
-    def check_tile(self, x: int, y: int) -> object:
+    def check_tile(self, x: int, y: int) -> pygame.sprite.Sprite:
         """
         Converts tile from x, y position to a 1D position on the tile grid
         :param x: x position on the 2D grid
@@ -64,13 +81,13 @@ class Maze(pygame.sprite.Group):
         :return: corresponding tile on the 1D grid
         """
         # if tile is outside maze return false
-        if x < 0 or x > self.cols or y < 0 or y > self.rows:
+        if x < 0 or x > self.cols - 1 or y < 0 or y > self.rows - 1:
             return False
 
         # else return the tile in the grid corresponding to the coordinates
         return self.grid_cells[self.get_tile_pos_in_grid(x, y)]
 
-    def check_neighbors(self, x: int, y: int) -> object:
+    def check_neighbors(self, x: int, y: int) -> pygame.sprite.Sprite:
         """
         Checks for neighbors in the tiles surrounding the current tile
         :return: returns any possible neighbors to the current tile
@@ -126,12 +143,12 @@ class Maze(pygame.sprite.Group):
 
         # moving up
         if dy == 2:
-            upTile = self.grid_cells[current_pos - (self.cols + 1)]
+            upTile = self.grid_cells[current_pos - self.cols]
             upTile.isWall = False
 
         # moving down
         elif dy == -2:
-            downTile = self.grid_cells[current_pos + (self.cols + 1)]
+            downTile = self.grid_cells[current_pos + self.cols]
             downTile.isWall = False
 
     def update_tile_colors(self):
@@ -147,7 +164,6 @@ class Maze(pygame.sprite.Group):
         """
         # runs while maze not finished
         self.current_tile.isWall = False
-        # self.obstacle_sprites.remove(self.current_tile)
 
         self.update_tile_colors()
         self.current_tile.draw_current()
@@ -161,17 +177,61 @@ class Maze(pygame.sprite.Group):
             self.stack.append(self.current_tile)
             self.remove_walls(next_tile)
             self.current_tile = next_tile
+
         # else go back in the stack until a new cell is available again
         elif self.stack:
             self.current_tile = self.stack.pop()
 
+    def bake_maze(self, size: int) -> (pygame.Surface, pygame.Rect):
+        baked_map = pygame.Surface((self.settings.TILESIZE * self.cols, self.settings.TILESIZE * self.rows))
+        for tile in self.grid_cells:
+            tile_image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
+            tile_image.fill(tile.color)
+            baked_map.blit(tile_image, tile.rect)
+
+        baked_map = pygame.transform.scale(baked_map, (self.settings.TILESIZE * self.cols / size, self.settings.TILESIZE * self.rows / size))
+        return baked_map, baked_map.get_rect()
+
+    def check_victory(self):
+        """
+        Check if player reaches goal
+        """
+        if pygame.sprite.collide_rect(self.player, self.goal):
+            return True
+        return False
+
+    def check_death(self):
+        """
+        Check if player hits enemy
+        """
+        if pygame.sprite.spritecollideany(self.player, self.enemies):
+            return True
+        return False
+
+    def check_game_state(self):
+        """
+        Check if game is supposed to end
+        """
+        if self.check_victory():
+            self.reset()
+        if self.check_death():
+            self.reset()
+
+    def reset(self):
+        """
+        Resets maze with same settings
+        """
+        self.__init__(self.settings)
+
     def run(self):
         if self.settings.RUNSLOW and not self.mazeGenerated:
-            self.visible_sprites.debug_draw(1)
+            self.visible_sprites.draw_map(1)
 
             # if maze is finished generate border and set mazeGenerated to True
-            if not (self.stack or self.grid_cells[self.cols + 2].isWall):
+            if not (self.stack or self.grid_cells[self.cols + 1].isWall):
                 self.update_tile_colors()
+                self.obstacle_sprites.generate_hashmap()
+                self.map = self.bake_maze(self.map_size)
                 self.mazeGenerated = True
 
             if not self.mazeGenerated:
@@ -181,6 +241,15 @@ class Maze(pygame.sprite.Group):
                 self.FPS = self.settings.GAMEFPS
 
         if self.mazeGenerated:
+            for enemy in self.enemies.sprites():
+                enemy.direction = pygame.math.Vector2(randint(-1, 1), randint(-1, 1))
+
+            walls = [sprite for sprite in self.grid_cells if sprite.isWall]
+            paths = [sprite for sprite in self.grid_cells if not sprite.isWall]
+
             self.visible_sprites.update()
             self.visible_sprites.custom_draw(self.player)
-            #self.visible_sprites.debug_draw(10)
+
+            self.check_game_state()
+
+            # self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)

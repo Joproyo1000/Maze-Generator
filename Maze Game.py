@@ -35,13 +35,14 @@ class MazeGame:
                     pygame.quit()
                     exit()
                 if event.type == pygame.KEYDOWN:
-                    keys = pygame.key.get_pressed()
-                    if keys[pygame.K_ESCAPE]:
+                    if event.key == pygame.K_ESCAPE:
                         self.menu.switch()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed()[0]:
                         if self.menu.generate_button.checkForInput():
-                            self.maze = Maze(self.menu)
+                            self.maze.reset()
+                        if self.menu.runslow_button.checkForInput():
+                            self.menu.RUNSLOW = not self.menu.RUNSLOW
 
             # run the level
             self.maze.run()
