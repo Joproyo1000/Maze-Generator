@@ -225,7 +225,7 @@ class Maze(pygame.sprite.Group):
 
     def run(self):
         if self.settings.RUNSLOW and not self.mazeGenerated:
-            self.visible_sprites.draw_map(1)
+            self.visible_sprites.debug_draw()
 
             # if maze is finished generate border and set mazeGenerated to True
             if not (self.stack or self.grid_cells[self.cols + 1].isWall):

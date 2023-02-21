@@ -121,3 +121,10 @@ class YSortCameraGroup(pygame.sprite.Group):
             enemy_rect = player_image.get_rect(center=(enemy.rect.centerx / size + pos[0], enemy.rect.centery / size + pos[1]))
 
             self.screen.blit(enemy_image, enemy_rect)
+
+    def debug_draw(self):
+        for sprite in self.sprites():
+            img = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
+            img.fill(sprite.color)
+            rect = img.get_rect(topleft=(sprite.rect.topleft[0], sprite.rect.topleft[1]))
+            self.screen.blit(img, rect)
