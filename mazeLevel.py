@@ -48,8 +48,8 @@ class Maze(pygame.sprite.Group):
 
         # initialize enemies
         self.enemies = pygame.sprite.Group()
-        # for i in range(2):
-        #     self.enemies.add(Enemy((randint(450, 690), randint(450, 690)), 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
+        for i in range(1):
+            self.enemies.add(Enemy(self.goal.rect.center, 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
 
         #region variables
         # True if maze is done generating
