@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
         self.color = 'gold'
 
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3)
+        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3.2)
 
         self.direction = pygame.math.Vector2()
         self.speed = 1
@@ -87,7 +87,6 @@ class Player(pygame.sprite.Sprite):
         self.collision('vertical')
 
         self.rect.center = self.hitbox.center
-        self.depth = self.rect.x + self.rect.y
 
     def collision(self, direction):
         if direction == 'horizontal':

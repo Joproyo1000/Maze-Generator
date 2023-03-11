@@ -5,13 +5,12 @@ from mazeMenu import Menu
 from debug import debug
 
 
-
 class MazeGame:
     def __init__(self):
 
         # set the resolution for the screen
-        self.RESOLUTION = 1402, 802
-        self.MAZERESOLUTION = 802, 802
+        self.RESOLUTION = 1400, 800
+        self.MAZERESOLUTION = 800, 800
 
         # general setup
         pygame.init()
@@ -26,7 +25,7 @@ class MazeGame:
 
         while True:
             # set background color
-            self.screen.fill(pygame.Color(10, 10, 10))
+            self.screen.fill(pygame.Color(0, 0, 0))
 
             # used for taking inputs
             for event in pygame.event.get():

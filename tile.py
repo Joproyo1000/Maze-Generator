@@ -25,6 +25,25 @@ class Tile(pygame.sprite.Sprite):
 
         self.isWall = isWall
 
+        # pathfinding variables
+        self.gCost = 0
+        self.hCost = 0
+
+        self.parent = None
+
+    def __lt__(self, other):
+        compare = False if self.fCost() == other.fCost() else self.fCost() < other.fCost()
+        if compare == False:
+            compare = self.hCost < other.hCost
+        return compare
+
+    def fCost(self):
+        return self.gCost + self.hCost
+
+    def reset(self):
+        self.gCost = 0
+        self.hCost = 0
+
     def draw_current(self):
         self.color = self.settings.CURRENTCOLOR
 

@@ -195,7 +195,7 @@ class Menu:
         self.TILESIZE = 60
 
         # randomness of the maze
-        self.TURNFACTOR = 15
+        self.TURNFACTOR = 13
 
         # colors
         self.WALLCOLOR = 'darkgreen'

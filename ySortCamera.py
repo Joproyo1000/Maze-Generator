@@ -1,4 +1,5 @@
 import pygame
+from Pygame_Lights import *
 
 
 class YSortIsoCameraGroup(pygame.sprite.Group):
@@ -17,6 +18,7 @@ class YSortIsoCameraGroup(pygame.sprite.Group):
 
         self.offset = pygame.math.Vector2()
         self.isoOffset = pygame.math.Vector2(0.47, 0.45)
+
 
     def blit(self, sprite):
         self.screen.blit(sprite.image, (sprite.rect.centerx * self.isoOffset.x + sprite.rect.centery * -self.isoOffset.x - self.offset.x,
@@ -63,21 +65,28 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.settings = settings
 
         # get the display surface
-        self.screen = pygame.display.get_surface()
+        self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
 
         self.half_width = self.screen.get_width() // 2
         self.half_height = self.screen.get_height() // 2
 
         self.offset = pygame.math.Vector2()
+        self.perspectiveOffset = 1.3
+
+    def initLight(self):
+        self.light = LIGHT(250, pixel_shader(250, (255, 255, 200), 1, False))
+        self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/10, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
 
     def blit(self, sprite):
-        self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
-                                        sprite.rect.topleft[1]/1.3 - self.offset.y))
+        # self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
+        #                                 sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
+        self.screen.blit(sprite.image, (sprite.rect.topleft[0],
+                                        sprite.rect.topleft[1] / self.perspectiveOffset))
 
     def custom_draw(self, player):
         # calculate offset of player to center of screen
         self.offset.x = player.rect.centerx - self.half_width
-        self.offset.y = player.rect.centery/1.3 - self.half_height
+        self.offset.y = player.rect.centery / self.perspectiveOffset - self.half_height
 
         mazeSprites = [sprite for sprite in self.sprites() if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>")]
 
@@ -85,7 +94,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             if not sprite.isWall:
                 self.blit(sprite)
 
-        for sprite in sorted(self.sprites(), key=lambda sprite: (sprite.rect.centery)):
+        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             # separate the player from the tiles
             if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
                 if sprite.isWall:
@@ -93,9 +102,16 @@ class YSortCameraGroup(pygame.sprite.Group):
             else:
                 self.blit(sprite)
 
-        # overlay = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT)).convert_alpha()
-        # overlay.fill(pygame.Color(2, 2, 10, 150))
-        # self.screen.blit(overlay, overlay.get_rect())
+        # lighting
+        lights_display = pygame.Surface((self.screen.get_size()))
+
+        lights_display.blit(global_light(self.screen.get_size(), 20), (0, 0))
+        self.light.main(self.shadow_objects, lights_display, player.rect.centerx,
+                                                             player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
+
+        self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
+
+        pygame.display.get_surface().blit(self.screen, self.screen.get_rect(topleft=(-self.offset.x, -self.offset.y)))
 
     def draw_map(self, pos, map, player, enemies, size):
         # get the rect of the map with the offset and show it

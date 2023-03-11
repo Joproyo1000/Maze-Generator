@@ -39,7 +39,11 @@ class Enemy(pygame.sprite.Sprite):
         self.collision('vertical')
 
         self.rect.center = self.hitbox.center
-        self.depth = self.rect.x + self.rect.y
+
+    def followPath(self, path):
+        if path:
+            self.direction = pygame.math.Vector2(path[0].rect.centerx - self.rect.centerx,
+                                                 path[0].rect.centery - self.rect.centery)
 
     def collision(self, direction):
         if direction == 'horizontal':

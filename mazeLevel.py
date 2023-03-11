@@ -7,6 +7,7 @@ from ySortCamera import YSortIsoCameraGroup, YSortCameraGroup
 from player import Player
 from enemy import Enemy
 from spatial_hashmap import HashMap
+from pathFinding import PathFinder
 
 
 class Maze(pygame.sprite.Group):
@@ -47,15 +48,18 @@ class Maze(pygame.sprite.Group):
 
         # initialize enemies
         self.enemies = pygame.sprite.Group()
-        for i in range(2):
-            self.enemies.add(Enemy(self.goal.rect.center, 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
+        # for i in range(2):
+        #     self.enemies.add(Enemy((randint(450, 690), randint(450, 690)), 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
 
+        #region variables
         # True if maze is done generating
         self.mazeGenerated = False
 
         # set FPS for the game
         self.FPS = self.settings.GAMEFPS
+        #endregion
 
+        #region RUNFAST
         # generate maze fast if RUNSLOW isn't checked
         if not self.settings.RUNSLOW:
             while self.stack or self.grid_cells[self.cols + 1].isWall:
@@ -64,6 +68,11 @@ class Maze(pygame.sprite.Group):
             self.obstacle_sprites.generate_hashmap()
             self.map = self.bake_maze(self.map_size)
             self.mazeGenerated = True
+            self.visible_sprites.initLight()
+        #endregion
+
+        # initialize pathfinder
+        self.pathFinder = PathFinder(self)
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
         """
@@ -121,6 +130,23 @@ class Maze(pygame.sprite.Group):
                 neighbors.append(right)
 
         return choice(neighbors) if neighbors else False
+
+    def get_neighbors(self, tile):
+        neighbors = []
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if x == 0 and y == 0:
+                    continue
+
+                if not isinstance(tile, bool):
+                    checkX = tile.rect.x // self.settings.TILESIZE + x
+                    checkY = tile.rect.y // self.settings.TILESIZE + y
+
+                    neighbor = self.check_tile(checkX, checkY)
+                    if neighbor:
+                        neighbors.append(neighbor)
+
+        return neighbors
 
     def remove_walls(self, next_tile: object):
         """
@@ -192,6 +218,18 @@ class Maze(pygame.sprite.Group):
         baked_map = pygame.transform.scale(baked_map, (self.settings.TILESIZE * self.cols / size, self.settings.TILESIZE * self.rows / size))
         return baked_map, baked_map.get_rect()
 
+    def enemyBehavior(self):
+        for enemy in self.enemies.sprites():
+            # get the tile where the enemy and the player are
+            enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
+                                       enemy.rect.centery // self.settings.TILESIZE)
+            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                        self.player.rect.centery // self.settings.TILESIZE)
+
+            # if both exists (failsafe) pathfind to player
+            if enemyPos and playerPos:
+                enemy.followPath(self.pathFinder.findPath(enemyPos, playerPos))
+
     def check_victory(self):
         """
         Check if player reaches goal
@@ -224,6 +262,7 @@ class Maze(pygame.sprite.Group):
         self.__init__(self.settings)
 
     def run(self):
+        # region RUNSLOW
         if self.settings.RUNSLOW and not self.mazeGenerated:
             self.visible_sprites.debug_draw()
 
@@ -233,23 +272,20 @@ class Maze(pygame.sprite.Group):
                 self.obstacle_sprites.generate_hashmap()
                 self.map = self.bake_maze(self.map_size)
                 self.mazeGenerated = True
+                self.visible_sprites.initLight()
 
             if not self.mazeGenerated:
                 self.FPS = self.settings.RUNSLOWFPS
                 self.generate_maze()
             else:
                 self.FPS = self.settings.GAMEFPS
+        # endregion
+
+        self.visible_sprites.update()
+        self.visible_sprites.custom_draw(self.player)
 
         if self.mazeGenerated:
-            for enemy in self.enemies.sprites():
-                enemy.direction = pygame.math.Vector2(randint(-1, 1), randint(-1, 1))
-
-            walls = [sprite for sprite in self.grid_cells if sprite.isWall]
-            paths = [sprite for sprite in self.grid_cells if not sprite.isWall]
-
-            self.visible_sprites.update()
-            self.visible_sprites.custom_draw(self.player)
-
+            self.enemyBehavior()
             self.check_game_state()
 
             # self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
