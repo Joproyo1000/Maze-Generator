@@ -23,6 +23,7 @@ class Enemy(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()
         self.speed = 1
         self.speed *= TILESIZE/10
+        self.path = []
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
@@ -33,17 +34,25 @@ class Enemy(pygame.sprite.Sprite):
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
-        self.hitbox.x += self.direction.x * speed
-        self.collision('horizontal')
-        self.hitbox.y += self.direction.y * speed
-        self.collision('vertical')
+            self.hitbox.x += self.direction.x * speed
+            self.collision('horizontal')
+            self.hitbox.y += self.direction.y * speed
+            self.collision('vertical')
 
-        self.rect.center = self.hitbox.center
+            self.rect.center = self.hitbox.center
 
-    def followPath(self, path):
+    def followPath(self, path=True, replace=False):
         if path:
-            self.direction = pygame.math.Vector2(path[0].rect.centerx - self.rect.centerx,
-                                                 path[0].rect.centery - self.rect.centery)
+            if replace:
+                self.path = path
+            target = self.path[0]
+
+            self.direction = pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
+                                                 target.rect.centery - self.rect.centery)
+
+            if pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
+                                   target.rect.centery - self.rect.centery).length() < self.TILESIZE/2:
+                self.path.pop(0)
 
     def collision(self, direction):
         if direction == 'horizontal':

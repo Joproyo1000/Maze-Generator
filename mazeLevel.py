@@ -1,9 +1,9 @@
-from random import choice, randint
+from random import randint
 import pygame
 
 from tile import Tile
 from random import choice
-from ySortCamera import YSortIsoCameraGroup, YSortCameraGroup
+from ySortCamera import YSortCameraGroup
 from player import Player
 from enemy import Enemy
 from spatial_hashmap import HashMap
@@ -33,7 +33,7 @@ class Maze(pygame.sprite.Group):
 
         # initialize map
         self.map = None
-        self.map_size = 10
+        self.map_size = 5
 
         # first tile to start the maze from
         self.start_tile = self.grid_cells[self.cols + 1]
@@ -48,8 +48,8 @@ class Maze(pygame.sprite.Group):
 
         # initialize enemies
         self.enemies = pygame.sprite.Group()
-        for i in range(1):
-            self.enemies.add(Enemy(self.goal.rect.center, 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
+        # for i in range(1):
+        #     self.enemies.add(Enemy(self.goal.rect.center, 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
 
         #region variables
         # True if maze is done generating
@@ -220,15 +220,18 @@ class Maze(pygame.sprite.Group):
 
     def enemyBehavior(self):
         for enemy in self.enemies.sprites():
-            # get the tile where the enemy and the player are
-            enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
-                                       enemy.rect.centery // self.settings.TILESIZE)
-            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
-                                        self.player.rect.centery // self.settings.TILESIZE)
+            if len(enemy.path) == 0:
+                # get the tile where the enemy and the player are
+                enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
+                                           enemy.rect.centery // self.settings.TILESIZE)
+                playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                            self.player.rect.centery // self.settings.TILESIZE)
 
-            # if both exists (failsafe) pathfind to player
-            if enemyPos and playerPos:
-                enemy.followPath(self.pathFinder.findPath(enemyPos, playerPos))
+                # if both exists (failsafe) pathfind to player
+                if enemyPos and playerPos:
+                    path = self.pathFinder.findPath(enemyPos, playerPos)
+                    enemy.followPath(path=path, replace=True)
+            enemy.followPath()
 
     def check_victory(self):
         """
@@ -285,7 +288,7 @@ class Maze(pygame.sprite.Group):
         self.visible_sprites.custom_draw(self.player)
 
         if self.mazeGenerated:
-            self.enemyBehavior()
             self.check_game_state()
+            self.enemyBehavior()
 
-            # self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
+            self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)

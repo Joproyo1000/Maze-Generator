@@ -3,7 +3,7 @@ from support import import_folder
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, type, TILESIZE, groups, obstacle_sprites):
+    def __init__(self, pos: (int, int), type: str, TILESIZE: int, groups: [pygame.sprite.Group], obstacle_sprites: [pygame.sprite.Sprite]):
         super().__init__(groups)
         # get the display surface
         self.screen = pygame.display.get_surface()
@@ -29,7 +29,11 @@ class Player(pygame.sprite.Sprite):
 
         self.TILESIZE = TILESIZE
 
-    def import_player_assets(self, type):
+    def import_player_assets(self, type: str):
+        """
+        :param type: type of the player either 'boy' or 'girl'
+        :return: loads the corresponding animation frames onto the player
+        """
         if type == 'boy':
             character_path = 'graphics/player/boy/'
             self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
@@ -38,7 +42,6 @@ class Player(pygame.sprite.Sprite):
             for animation in self.animations:
                 full_path = character_path + animation
                 self.animations[animation] = import_folder(full_path)
-            print(self.animations)
 
         if type == 'girl':
             character_path = 'graphics/player/girl/'
@@ -49,9 +52,12 @@ class Player(pygame.sprite.Sprite):
                 full_path = character_path + animation
                 self.animations[animation] = import_folder(full_path)
 
-        self.image = pygame.image.load('graphics/player/boy/up_idle/boy_sprite_back1.png')
+        self.image = pygame.image.load('graphics/player/boy/down_idle/boy_sprite_front_idle1.png')
 
     def input(self):
+        """
+        :return: updates direction based on input
+        """
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
             self.direction.y = -1
@@ -72,12 +78,19 @@ class Player(pygame.sprite.Sprite):
             self.direction.x = 0
 
     def get_status(self):
+        """
+        :return: set the current status of the player for animation
+        """
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
             if not '_idle' in self.status:
                 self.status = self.status + '_idle'
 
-    def move(self, speed):
+    def move(self, speed: int):
+        """
+        :param speed: speed of the player when moving
+        :return: moves the player after applying collisions
+        """
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
@@ -88,7 +101,11 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.center = self.hitbox.center
 
-    def collision(self, direction):
+    def collision(self, direction: pygame.math.Vector2):
+        """
+        :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
+        :return: if collision occurs, stop the player
+        """
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
                 if sprite.isWall:
@@ -108,6 +125,9 @@ class Player(pygame.sprite.Sprite):
                             self.hitbox.top = sprite.hitbox.bottom
 
     def animate(self):
+        """
+        :return: animate the player based on the current status
+        """
         animation = self.animations[self.status]
 
         # loop over the frame index
@@ -120,7 +140,10 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
     def update(self):
-        self.input()
-        self.get_status()
-        self.animate()
-        self.move(self.speed)
+        """
+        Main update method
+        """
+        self.input()  # get inputs
+        self.get_status()  # get status
+        self.animate()  # animate based on status
+        self.move(self.speed)  # move based on inputs

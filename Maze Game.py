@@ -1,5 +1,6 @@
 from sys import exit
 import pygame
+
 from mazeLevel import Maze
 from mazeMenu import Menu
 from debug import debug
@@ -14,12 +15,14 @@ class MazeGame:
 
         # general setup
         pygame.init()
-        self.screen = pygame.display.set_mode((self.RESOLUTION))
+        self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
 
         self.menu = Menu(self.RESOLUTION, self.MAZERESOLUTION)
         self.maze = Maze(self.menu)
+        self.ENEMYUPDATE = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.ENEMYUPDATE, 10)
 
     def run(self):
 
@@ -49,8 +52,7 @@ class MazeGame:
 
             debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
 
-            # draw display
-            pygame.display.update()
+            #pygame.display.update()
 
             # set FPS
             self.clock.tick(self.maze.FPS)
