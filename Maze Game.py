@@ -2,9 +2,8 @@ from sys import exit
 import pygame
 
 from mazeLevel import Maze
-from mazeMenu import Menu
+from settings import Settings
 from debug import debug
-
 
 class MazeGame:
     def __init__(self):
@@ -16,13 +15,13 @@ class MazeGame:
         # general setup
         pygame.init()
         self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
+        # self.screen = pygame.display.set_mode(self.RESOLUTION)
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
 
-        self.menu = Menu(self.RESOLUTION, self.MAZERESOLUTION)
-        self.maze = Maze(self.menu)
-        self.ENEMYUPDATE = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.ENEMYUPDATE, 10)
+        # initialize settings and maze objects
+        self.settings = Settings(self.RESOLUTION, self.MAZERESOLUTION)
+        self.maze = Maze(self.settings)
 
     def run(self):
 
@@ -38,21 +37,21 @@ class MazeGame:
                     exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        self.menu.switch()
+                        self.settings.switch()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed()[0]:
-                        if self.menu.generate_button.checkForInput():
+                        if self.settings.generate_button.checkForInput():
                             self.maze.reset()
-                        if self.menu.runslow_button.checkForInput():
-                            self.menu.RUNSLOW = not self.menu.RUNSLOW
+                        if self.settings.runslow_button.checkForInput():
+                            self.settings.RUNSLOW = not self.settings.RUNSLOW
 
             # run the level
             self.maze.run()
-            self.menu.run()
+            self.settings.run()
 
             debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
 
-            #pygame.display.update()
+            # pygame.display.update()
 
             # set FPS
             self.clock.tick(self.maze.FPS)

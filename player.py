@@ -17,11 +17,13 @@ class Player(pygame.sprite.Sprite):
         # set color on the minimap
         self.color = 'gold'
 
+        # initialize rect (bounding box of the image) and hitbox (bounding box of the collision detection)
         self.rect = self.image.get_rect(center=pos)
         self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3.2)
 
+        # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
-        self.speed = 1
+        self.speed = 0.5
         self.speed *= TILESIZE/10
 
         self.obstacle_sprites = obstacle_sprites
@@ -32,7 +34,7 @@ class Player(pygame.sprite.Sprite):
     def import_player_assets(self, type: str):
         """
         :param type: type of the player either 'boy' or 'girl'
-        :return: loads the corresponding animation frames onto the player
+        Loads the corresponding animation frames onto the player
         """
         if type == 'boy':
             character_path = 'graphics/player/boy/'
@@ -56,7 +58,7 @@ class Player(pygame.sprite.Sprite):
 
     def input(self):
         """
-        :return: updates direction based on input
+        Updates direction based on input
         """
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
@@ -79,7 +81,7 @@ class Player(pygame.sprite.Sprite):
 
     def get_status(self):
         """
-        :return: set the current status of the player for animation
+        Set the current status of the player for animation
         """
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
@@ -89,7 +91,7 @@ class Player(pygame.sprite.Sprite):
     def move(self, speed: int):
         """
         :param speed: speed of the player when moving
-        :return: moves the player after applying collisions
+        Moves the player after applying collisions
         """
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
@@ -101,10 +103,10 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.center = self.hitbox.center
 
-    def collision(self, direction: pygame.math.Vector2):
+    def collision(self, direction: str):
         """
         :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
-        :return: if collision occurs, stop the player
+        If collision occurs, stop the player
         """
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
@@ -126,7 +128,7 @@ class Player(pygame.sprite.Sprite):
 
     def animate(self):
         """
-        :return: animate the player based on the current status
+        Animates the player based on the current status
         """
         animation = self.animations[self.status]
 

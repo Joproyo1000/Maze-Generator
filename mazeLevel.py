@@ -280,14 +280,19 @@ class Maze(pygame.sprite.Group):
             if not self.mazeGenerated:
                 self.FPS = self.settings.RUNSLOWFPS
                 self.generate_maze()
+
+                # show simplified version of maze
+                self.map = self.bake_maze(1)
+                self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
+
             else:
                 self.FPS = self.settings.GAMEFPS
         # endregion
 
-        self.visible_sprites.update()
-        self.visible_sprites.custom_draw(self.player)
-
         if self.mazeGenerated:
+            self.visible_sprites.update()
+            self.visible_sprites.custom_draw(self.player)
+
             self.check_game_state()
             self.enemyBehavior()
 

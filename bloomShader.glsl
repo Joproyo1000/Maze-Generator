@@ -7,8 +7,7 @@ out vec4 f_color;
 
 void main() {
     // Sample the texture
-    vec2 sample_pos = vec2(uvs.x, uvs.y);
-    vec4 color = texture(tex, sample_pos);
+    vec4 color = texture(tex, uvs);
 
     // Determine the brightness of the pixel
     float brightness = (color.r + color.g + color.b) / 5.0;

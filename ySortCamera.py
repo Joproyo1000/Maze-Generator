@@ -1,29 +1,36 @@
 import pygame.sprite
 
-import mazeMenu
+import settings
 from Pygame_Lights import *
 from shaders import Shader
 
 
 class YSortCameraGroup(pygame.sprite.Group):
-    def __init__(self, settings: mazeMenu.Menu):
+    def __init__(self, settings: settings.Settings):
         super().__init__()
 
+        # copy settings to self to access them in the whole class
         self.settings = settings
 
         # get the display surface
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
+
+        # initialize OpenGL shader
         self.shader = Shader(self.settings.RESOLUTION)
 
+        # precalculate half the width and half the height of the screen
         self.half_width = self.screen.get_width() // 2
         self.half_height = self.screen.get_height() // 2
 
+        # initialize offset which is used to offset the display to center the view on the player
         self.offset = pygame.math.Vector2()
+
+        # perspectiveOffset is used to offset each tile by a percentage (1 being no offset) to create fake perspective
         self.perspectiveOffset = 1.3
 
     def initLight(self):
         """
-        :return: set the light object of the player
+        Sets the light object of the player
         """
         self.light = LIGHT(250, pixel_shader(250, (255, 255, 200), 1, False))
         # create shadow objects (walls, etc...)
@@ -61,13 +68,12 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.blit(sprite)
 
         # lighting
-        lights_display = pygame.Surface((self.screen.get_size()))
-
-        lights_display.blit(global_light(self.screen.get_size(), 40), (0, 0))
-        self.light.main(self.shadow_objects, lights_display, player.rect.centerx,
-                                                             player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
-
-        self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
+        # lights_display = pygame.Surface((self.screen.get_size()))
+        #
+        # lights_display.blit(global_light(self.screen.get_size(), 10), (0, 0))
+        # self.light.main(self.shadow_objects, lights_display, player.rect.centerx, player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
+        #
+        # self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
 
         self.shader.render(self.screen, self.offset)
         # pygame.display.get_surface().blit(self.screen, self.screen.get_rect(topleft=(-self.offset.x, -self.offset.y)))
