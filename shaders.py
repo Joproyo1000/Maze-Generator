@@ -31,14 +31,14 @@ class Shader:
         self.program = self.ctx.program(vertex_shader=self.vert_shader, fragment_shader=self.frag_shader)
         self.render_object = self.ctx.vertex_array(self.program, [(self.quad_buffer, '2f 2f', 'vert', 'texcoord')])
 
-    def render(self, img, offset):
+    def render(self, img):
         """
         :param img: image to render
         :return: renders the image applying color modification using GPU optimization
         """
 
         self.display.fill((0, 0, 0))
-        self.display.blit(img, img.get_rect(topleft=(-offset.x, -offset.y)))
+        self.display.blit(img, img.get_rect())
 
         self.t += 1
 

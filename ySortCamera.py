@@ -16,7 +16,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
 
         # initialize OpenGL shader
-        self.shader = Shader(self.settings.RESOLUTION)
+        # self.shader = Shader(self.settings.RESOLUTION)
 
         # precalculate half the width and half the height of the screen
         self.half_width = self.screen.get_width() // 2
@@ -32,7 +32,9 @@ class YSortCameraGroup(pygame.sprite.Group):
         """
         Sets the light object of the player
         """
-        self.light = LIGHT(250, pixel_shader(250, (255, 255, 200), 1, False))
+        lightColor = (255, 255, 200)
+        lightSize = 250
+        self.light = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
         # create shadow objects (walls, etc...)
         self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/10, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
 
@@ -41,14 +43,17 @@ class YSortCameraGroup(pygame.sprite.Group):
         :param sprite: sprite to blit on the screen
         :return: blits the sprite on the screen after applying the perspective offset
         """
-        self.screen.blit(sprite.image, (sprite.rect.topleft[0],
-                                        sprite.rect.topleft[1] / self.perspectiveOffset))
+        self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
+                                        sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
 
     def custom_draw(self, player: pygame.sprite.Sprite):
         """
         :param player: player sprite (used to calculate the offset to center the screen)
         :return: draws with perspective all the sprites in the visible_sprites group
         """
+        # reset screen
+        self.screen.fill('black')
+
         # calculate offset of player to center of screen
         self.offset.x = player.rect.centerx - self.half_width
         self.offset.y = player.rect.centery / self.perspectiveOffset - self.half_height
@@ -68,15 +73,15 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.blit(sprite)
 
         # lighting
-        # lights_display = pygame.Surface((self.screen.get_size()))
-        #
-        # lights_display.blit(global_light(self.screen.get_size(), 10), (0, 0))
-        # self.light.main(self.shadow_objects, lights_display, player.rect.centerx, player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
-        #
-        # self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
+        lights_display = pygame.Surface((self.screen.get_size()))
 
-        self.shader.render(self.screen, self.offset)
-        # pygame.display.get_surface().blit(self.screen, self.screen.get_rect(topleft=(-self.offset.x, -self.offset.y)))
+        lights_display.blit(global_light(self.screen.get_size(), 40), (0, 0))
+        self.light.main(self.shadow_objects, lights_display, player.rect.centerx, player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
+
+        self.screen.blit(lights_display, (-self.offset.xy), special_flags=BLEND_RGBA_MULT)
+
+        # self.shader.render(self.screen)
+        pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 
     def draw_map(self, pos: (int, int), map, player: pygame.sprite.Sprite, enemies, size):
         display = pygame.display.get_surface()

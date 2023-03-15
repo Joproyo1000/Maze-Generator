@@ -10,12 +10,12 @@ class MazeGame:
 
         # set the resolution for the screen
         self.RESOLUTION = 1400, 800
-        self.MAZERESOLUTION = 800, 800
+        self.MAZERESOLUTION = 1500, 1500
 
         # general setup
         pygame.init()
-        self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
-        # self.screen = pygame.display.set_mode(self.RESOLUTION)
+        # self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
+        self.screen = pygame.display.set_mode(self.RESOLUTION)
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
 
@@ -51,7 +51,7 @@ class MazeGame:
 
             debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
 
-            # pygame.display.update()
+            pygame.display.update()
 
             # set FPS
             self.clock.tick(self.maze.FPS)
