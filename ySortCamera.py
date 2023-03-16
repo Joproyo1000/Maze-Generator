@@ -16,7 +16,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
 
         # initialize OpenGL shader
-        # self.shader = Shader(self.settings.RESOLUTION)
+        self.shader = Shader(self.settings.RESOLUTION)
 
         # precalculate half the width and half the height of the screen
         self.half_width = self.screen.get_width() // 2
@@ -33,10 +33,26 @@ class YSortCameraGroup(pygame.sprite.Group):
         Sets the light object of the player
         """
         lightColor = (255, 255, 200)
-        lightSize = 250
+        lightSize = 250 * self.settings.TILESIZE//60
         self.light = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
         # create shadow objects (walls, etc...)
-        self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/10, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
+        # the rect's y parameter must be adjusted to the TILESIZE
+        self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/12, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
+
+    def renderLight(self):
+        """
+        Blits the light on the screen with shadows cast from the shadow_objects
+        """
+        # reset screen
+        lights_display = pygame.Surface((self.screen.get_size()))
+
+        # global light darkens the background
+        lights_display.blit(global_light(self.screen.get_size(), 0), (0, 0))
+        # main light
+        self.light.main(self.shadow_objects, self.offset, lights_display, self.half_width, self.half_height)
+
+        # show the light on the screen
+        self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
 
     def blit(self, sprite: pygame.sprite.Sprite):
         """
@@ -73,15 +89,10 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.blit(sprite)
 
         # lighting
-        lights_display = pygame.Surface((self.screen.get_size()))
+        self.renderLight()
 
-        lights_display.blit(global_light(self.screen.get_size(), 40), (0, 0))
-        self.light.main(self.shadow_objects, lights_display, player.rect.centerx, player.rect.centery/self.perspectiveOffset + self.settings.TILESIZE/10)
-
-        self.screen.blit(lights_display, (-self.offset.xy), special_flags=BLEND_RGBA_MULT)
-
-        # self.shader.render(self.screen)
-        pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
+        self.shader.render(self.screen)
+        # pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 
     def draw_map(self, pos: (int, int), map, player: pygame.sprite.Sprite, enemies, size):
         display = pygame.display.get_surface()

@@ -19,7 +19,7 @@ class Settings:
         self.MAZERESOLUTION = self.MAZEWIDTH, self.MAZEHEIGHT
 
         # set the tilesize (larger ones means smaller maze)
-        self.TILESIZE = 60
+        self.TILESIZE = 120
 
         # randomness of the maze
         self.TURNFACTOR = 13

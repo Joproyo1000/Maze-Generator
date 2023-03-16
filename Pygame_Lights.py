@@ -114,14 +114,16 @@ class LIGHT:
 
         return corners
 
-    def get_tiles(self, tiles, x, y):
+    def get_tiles(self, tiles, x, y, offset):
         points = []
 
         for rect in tiles:
-            if ((-self.radius) - rect.width <= rect.x - x <= self.radius) and (
-                    (-self.radius) - rect.height <= rect.y - y <= self.radius):
-                points.append([[rect.x + rect.width, rect.y], [rect.x, rect.y], [rect.x, rect.y + rect.height],
-                               [rect.x + rect.width, rect.y + rect.height]])
+            if ((-self.radius) - rect.width <= rect.x - offset.x - x <= self.radius) and ((-self.radius) - rect.height <= rect.y - offset.y - y <= self.radius):
+                offsetRect = rect.copy()
+                offsetRect.x -= offset.x
+                offsetRect.y -= offset.y
+                points.append([[offsetRect.x + offsetRect.width, offsetRect.y], [offsetRect.x, offsetRect.y], [offsetRect.x, offsetRect.y + offsetRect.height],
+                               [offsetRect.x + offsetRect.width, offsetRect.y + offsetRect.height]])
 
         return points
 
@@ -140,13 +142,13 @@ class LIGHT:
 
         return render
 
-    def main(self, tiles, display, x, y):
+    def main(self, tiles, offset, display, x, y):
         self.render_surface.fill((0, 0, 0))
         self.render_surface.blit(self.baked_pixel_shader_surf, (0, 0))
 
         dx, dy = x - self.radius, y - self.radius
 
-        for point in self.get_tiles(tiles, x, y):
+        for point in self.get_tiles(tiles, x, y, offset):
 
             if self.check_cast(point, dx, dy):
                 corners = self.get_corners(point, x, y)

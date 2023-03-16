@@ -19,11 +19,11 @@ class Player(pygame.sprite.Sprite):
 
         # initialize rect (bounding box of the image) and hitbox (bounding box of the collision detection)
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3.2)
+        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//10)  # the 3 and 10 must be adjusted to the TILESIZE
 
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
-        self.speed = 0.5
+        self.speed = 0.3
         self.speed *= TILESIZE/10
 
         self.obstacle_sprites = obstacle_sprites
@@ -43,7 +43,7 @@ class Player(pygame.sprite.Sprite):
 
             for animation in self.animations:
                 full_path = character_path + animation
-                self.animations[animation] = import_folder(full_path)
+                self.animations[animation] = import_folder(full_path, 1.6)
 
         if type == 'girl':
             character_path = 'graphics/player/girl/'
@@ -52,7 +52,7 @@ class Player(pygame.sprite.Sprite):
 
             for animation in self.animations:
                 full_path = character_path + animation
-                self.animations[animation] = import_folder(full_path)
+                self.animations[animation] = import_folder(full_path, 1.6)
 
         self.image = pygame.image.load('graphics/player/boy/down_idle/boy_sprite_front_idle1.png')
 
