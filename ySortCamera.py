@@ -47,20 +47,24 @@ class YSortCameraGroup(pygame.sprite.Group):
         lights_display = pygame.Surface((self.screen.get_size()))
 
         # global light darkens the background
-        lights_display.blit(global_light(self.screen.get_size(), 0), (0, 0))
+        lights_display.blit(global_light(self.screen.get_size(), 40), (0, 0))
         # main light
         self.light.main(self.shadow_objects, self.offset, lights_display, self.half_width, self.half_height)
 
         # show the light on the screen
         self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
 
-    def blit(self, sprite: pygame.sprite.Sprite):
+    def blit(self, sprite: pygame.sprite.Sprite, customImage=None):
         """
         :param sprite: sprite to blit on the screen
         :return: blits the sprite on the screen after applying the perspective offset
         """
-        self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
-                                        sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
+        if customImage is not None:
+            self.screen.blit(customImage, (sprite.rect.topleft[0] - self.offset.x,
+                                           sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
+        else:
+            self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
+                                            sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
 
     def custom_draw(self, player: pygame.sprite.Sprite):
         """
@@ -80,17 +84,31 @@ class YSortCameraGroup(pygame.sprite.Group):
             if not sprite.isWall:
                 self.blit(sprite)
 
+        # we create a copy of the player sprite that we are going to cut to prevent overlap with the walls
+        # we do that so that the player sprite isn't affected by lighting since it would cause some bugs
+        cutPlayerSprite = player.image.copy()
+
+        # draw every sprite sorted by y coordinate
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             # separate the player from the tiles
             if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
                 if sprite.isWall:
                     self.blit(sprite)
-            else:
-                self.blit(sprite)
+
+                    # remove wall sprite from player,
+                    if sprite.rect.centery > player.rect.centery:
+                        pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
+                                         pygame.Rect(sprite.rect.centerx - player.rect.centerx - 13,
+                                                    (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
+                                                     self.settings.TILESIZE, self.settings.TILESIZE))
 
         # lighting
         self.renderLight()
 
+        # draw player after lighting so that it is not affected
+        self.blit(player, customImage=cutPlayerSprite)
+
+        # and finally render screen
         self.shader.render(self.screen)
         # pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 

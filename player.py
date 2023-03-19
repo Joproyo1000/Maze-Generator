@@ -19,7 +19,7 @@ class Player(pygame.sprite.Sprite):
 
         # initialize rect (bounding box of the image) and hitbox (bounding box of the collision detection)
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//10)  # the 3 and 10 must be adjusted to the TILESIZE
+        self.hitbox = self.rect.inflate(0, -TILESIZE//10)  # the 10 must be adjusted to the TILESIZE
 
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()

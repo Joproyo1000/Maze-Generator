@@ -6,7 +6,7 @@ class Tile(pygame.sprite.Sprite):
         super().__init__(groups)
         self.settings = settings
 
-        self.image = pygame.image.load('graphics/maze/Bush - Copie.png').convert_alpha()
+        self.image = pygame.image.load('graphics/maze/Bush.png').convert_alpha()
         scale = self.settings.TILESIZE/27
         self.image = pygame.transform.scale(self.image, (27 * scale, 37 * scale))
         self.path = pygame.image.load('graphics/maze/Grass.png').convert_alpha()

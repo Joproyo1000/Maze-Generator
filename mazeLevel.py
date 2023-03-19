@@ -296,4 +296,4 @@ class Maze(pygame.sprite.Group):
             self.check_game_state()
             self.enemyBehavior()
 
-            self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
+            # self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
