@@ -5,6 +5,7 @@ from mazeLevel import Maze
 from settings import Settings
 from debug import debug
 
+
 class MazeGame:
     def __init__(self):
 
@@ -12,16 +13,24 @@ class MazeGame:
         self.RESOLUTION = 1400, 800
         self.MAZERESOLUTION = 1500, 1500
 
-        # general setup
+        # initialize settings
+        self.settings = Settings(self.RESOLUTION, self.MAZERESOLUTION)
+
+        # general setup for pygame and display
         pygame.init()
-        self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
-        # self.screen = pygame.display.set_mode(self.RESOLUTION)
+        # changes screen mode to adapt if shaders are activated or not
+        if self.settings.shadersOn:
+            self.screen = pygame.display.set_mode(self.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
+        else:
+            self.screen = pygame.display.set_mode(self.RESOLUTION)
+
+        # initialize maze
+        self.maze = Maze(self.settings)
+
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
 
-        # initialize settings and maze objects
-        self.settings = Settings(self.RESOLUTION, self.MAZERESOLUTION)
-        self.maze = Maze(self.settings)
+        self.settings.generate()
 
     def run(self):
 
@@ -42,8 +51,10 @@ class MazeGame:
                     if pygame.mouse.get_pressed()[0]:
                         if self.settings.generate_button.checkForInput():
                             self.maze.reset()
-                        if self.settings.runslow_button.checkForInput():
-                            self.settings.RUNSLOW = not self.settings.RUNSLOW
+
+                for enemyEvent in self.maze.enemyEvents:
+                    if event.type == enemyEvent:
+                        self.maze.enemyBehavior()
 
             # run the level
             self.maze.run()
@@ -51,7 +62,8 @@ class MazeGame:
 
             debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
 
-            # pygame.display.update()
+            if not self.settings.shadersOn:
+                pygame.display.update()
 
             # set FPS
             self.clock.tick(self.maze.FPS)

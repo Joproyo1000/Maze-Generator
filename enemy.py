@@ -21,7 +21,7 @@ class Enemy(pygame.sprite.Sprite):
         self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3)
 
         self.direction = pygame.math.Vector2()
-        self.speed = 1
+        self.speed = 0.5
         self.speed *= TILESIZE/10
         self.path = []
 

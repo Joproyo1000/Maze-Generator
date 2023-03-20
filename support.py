@@ -1,5 +1,7 @@
+import math
 from os import walk
 import pygame
+import tile
 
 
 def import_folder(path, size):
@@ -13,6 +15,10 @@ def import_folder(path, size):
             surface_list.append(image_surf)
 
     return surface_list
+
+
+def distance(a:tile, b:tile):
+    return math.sqrt(sum((a.pos[i] - b.pos[i])**2 for i in range(2)))
 
 
 class Button:

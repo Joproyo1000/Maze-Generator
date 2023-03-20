@@ -22,30 +22,31 @@ class Settings:
         self.TILESIZE = 120
 
         # randomness of the maze
-        self.TURNFACTOR = 13
+        self.TURNFACTOR = 4
 
         # colors
         self.WALLCOLOR = 'darkgreen'
         self.PATHCOLOR = 'green'
         self.CURRENTCOLOR = 'red'
 
+        # lighting
+        self.LIGHTCOLOR = (255, 255, 200)
+        self.LIGHTRADIUS = 250 * self.TILESIZE//60
+        self.LIGHTINTENSITY = 40
+
+        # shaders
+        self.shadersOn = False
+
         # set FPS
         self.GAMEFPS = 60
 
-        """ ================================================== """
-        """ ONLY FOR DEBUGGING, MAKES THE MAZE GENERATE SLOWER """
-        self.RUNSLOW = False
-        self.RUNSLOWFPS = 30
-        """ ================================================== """
+        self.show = False
 
+    def generate(self):
         self.overlay = pygame.surface.Surface((self.WIDTH / 2, self.HEIGHT)).convert_alpha()
         self.overlay.fill(pygame.Color(200, 200, 200, 50))
         self.overlay_rect = self.overlay.get_rect(left=self.WIDTH / 2)
 
-        self.generate()
-        self.show = False
-
-    def generate(self):
         self.title = self.font.render('Menu', False, 'white')
         self.title_rect = self.title.get_rect(center=(self.WIDTH * 3 / 4, 50))
 
@@ -67,9 +68,6 @@ class Settings:
         self.turnfactor_slider.value = self.TURNFACTOR
         self.turnfactor_slider.slider_ball.centerx = self.turnfactor_slider.ballPosFromValue()
 
-        self.runslow_button = CheckButton(None, (self.WIDTH * 3 / 4, 650), 'Maze generates slowly', self.font, 'white', 'gray')
-        self.runslow_button.value = self.RUNSLOW
-
     def switch(self):
         self.show = not self.show
 
@@ -83,14 +81,11 @@ class Settings:
             self.mazewidth_slider.update(self.screen)
             self.mazeheight_slider.update(self.screen)
             self.turnfactor_slider.update(self.screen)
-            self.runslow_button.update(self.screen)
 
             self.TILESIZE = int(self.tilesize_slider.getValue())
             self.MAZEWIDTH = int(self.mazewidth_slider.getValue())
             self.MAZEHEIGHT = int(self.mazeheight_slider.getValue())
             self.TURNFACTOR = int(self.turnfactor_slider.getValue())
-
-            self.runslow_button.value = self.RUNSLOW
 
     def run(self):
         self.blit()

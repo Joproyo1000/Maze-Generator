@@ -16,7 +16,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
 
         # initialize OpenGL shader
-        self.shader = Shader(self.settings.RESOLUTION)
+        if self.settings.shadersOn:
+            self.shader = Shader(self.settings.RESOLUTION)
 
         # precalculate half the width and half the height of the screen
         self.half_width = self.screen.get_width() // 2
@@ -32,8 +33,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         """
         Sets the light object of the player
         """
-        lightColor = (255, 255, 200)
-        lightSize = 250 * self.settings.TILESIZE//60
+        lightColor = self.settings.LIGHTCOLOR
+        lightSize = self.settings.LIGHTRADIUS
         self.light = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
         # create shadow objects (walls, etc...)
         # the rect's y parameter must be adjusted to the TILESIZE
@@ -47,7 +48,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         lights_display = pygame.Surface((self.screen.get_size()))
 
         # global light darkens the background
-        lights_display.blit(global_light(self.screen.get_size(), 40), (0, 0))
+        lights_display.blit(global_light(self.screen.get_size(), self.settings.LIGHTINTENSITY), (0, 0))
         # main light
         self.light.main(self.shadow_objects, self.offset, lights_display, self.half_width, self.half_height)
 
@@ -98,9 +99,11 @@ class YSortCameraGroup(pygame.sprite.Group):
                     # remove wall sprite from player,
                     if sprite.rect.centery > player.rect.centery:
                         pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
-                                         pygame.Rect(sprite.rect.centerx - player.rect.centerx - 13,
+                                         pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
                                                     (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
                                                      self.settings.TILESIZE, self.settings.TILESIZE))
+            elif str(type(sprite)) == "<class 'enemy.Enemy'>":
+                self.blit(sprite)
 
         # lighting
         self.renderLight()
@@ -109,8 +112,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.blit(player, customImage=cutPlayerSprite)
 
         # and finally render screen
-        self.shader.render(self.screen)
-        # pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
+        if self.settings.shadersOn:
+            self.shader.render(self.screen)
+        else:
+            pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 
     def draw_map(self, pos: (int, int), map, player: pygame.sprite.Sprite, enemies, size):
         display = pygame.display.get_surface()
