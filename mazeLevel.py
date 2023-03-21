@@ -22,8 +22,8 @@ class Maze(pygame.sprite.Group):
         self.screen = pygame.display.get_surface()
 
         # calculate number of columns and rows
-        self.cols = int(self.settings.MAZEWIDTH // self.settings.TILESIZE / 2) * 2 + 1
-        self.rows = int(self.settings.MAZEHEIGHT // self.settings.TILESIZE / 2) * 2 + 1
+        self.cols = int(self.settings.MAZEWIDTHS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
+        self.rows = int(self.settings.MAZEHEIGHTS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
 
         # create two groups, one for sprites that need to be drawn on th screen, the other for the ones with collisions
         self.visible_sprites = YSortCameraGroup(self.settings)
@@ -57,7 +57,13 @@ class Maze(pygame.sprite.Group):
             self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
             pygame.time.set_timer(self.enemyEvents[i], 1000)
 
-            self.enemies.add(Enemy((self.goal.rect.centerx - randint(0, 1200), self.goal.rect.centery), 'wolf', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites))
+            # enemy class initializes like this Enemy(pos, type, settings, groups, obstacle_sprites)
+            self.enemies.add(Enemy((self.goal.rect.centerx - randint(0, self.settings.MAZEWIDTHS[self.settings.currentLevel]), self.goal.rect.centery),
+                                   'wolf',
+                                   700,
+                                   self.settings,
+                                   [self.visible_sprites],
+                                   self.obstacle_sprites))
 
         #region variables
         # True if maze is done generating
@@ -197,7 +203,6 @@ class Maze(pygame.sprite.Group):
         self.current_tile.isWall = False
 
         self.update_tile_colors()
-        self.current_tile.draw_current()
 
         # sets next cell to a random neighbor of the current cell
         next_tile = self.check_neighbors(self.current_tile.rect.x // self.settings.TILESIZE, self.current_tile.rect.y // self.settings.TILESIZE)
@@ -224,23 +229,32 @@ class Maze(pygame.sprite.Group):
         return baked_map, baked_map.get_rect()
 
     def enemyBehavior(self):
-        for i, enemy in enumerate(self.enemies.sprites()):
-            # get the tile where the enemy and the player are
-            enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
-                                       enemy.rect.centery // self.settings.TILESIZE)
-            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
-                                        self.player.rect.centery // self.settings.TILESIZE)
+        if self.mazeGenerated:
+            for i, enemy in enumerate(self.enemies.sprites()):
+                # get the tile where the enemy and the player are
+                enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
+                                           enemy.rect.centery // self.settings.TILESIZE)
+                playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                            self.player.rect.centery // self.settings.TILESIZE)
 
-            # if both exists (failsafe) pathfind to player
-            if enemyPos and playerPos:
-                if distance(enemyPos, playerPos) > 20:
-                    path = self.pathFinder.findPath(enemyPos, playerPos)
-                    enemy.followPath(path=path, replace=True)
+                # if both exists (failsafe) pathfind to player
+                if enemyPos and playerPos:
 
-            # activate pathfinding for enemy
-            pygame.time.set_timer(self.enemyEvents[i], int(distance(enemyPos, playerPos) + 1) * 3)
-            if len(enemy.path) != 0:
-                enemy.followPath()
+                    # activate pathfinding for enemy
+                    pygame.time.set_timer(self.enemyEvents[i], int(distance(enemyPos, playerPos) + 1) * 3)
+                    if len(enemy.path) != 0:
+                        enemy.followPath()
+
+                    # if close enough to player, follow him
+                    if distance(enemyPos, playerPos) < enemy.range:
+                        path = self.pathFinder.findPath(enemyPos, playerPos)
+                        enemy.followPath(path=path, replace=True)
+                    # else chose random location and pathfind there
+                    else:
+                        randomPos = self.grid_cells[self.get_tile_pos_in_grid(randint(0, self.rows//2) * 2 - 1, randint(0, self.cols//2) * 2 - 1)]
+
+                        path = self.pathFinder.findPath(enemyPos, randomPos)
+                        enemy.followPath(path=path, replace=True)
 
     def check_victory(self):
         """
@@ -263,8 +277,13 @@ class Maze(pygame.sprite.Group):
         Check if game is supposed to end
         """
         if self.check_victory():
-            self.reset()
+            self.settings.currentLevel += 1
+            if self.settings.currentLevel >= self.settings.numLevels:
+                print('YOU WON !')
+            else:
+                self.reset()
         if self.check_death():
+            print('YOU DIED !')
             self.reset()
 
     def reset(self):

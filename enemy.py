@@ -2,13 +2,21 @@ import pygame
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos, type, TILESIZE, groups, obstacle_sprites):
+    def __init__(self, pos: (int, int), type: str, range:int,  settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
+        """
+        :param pos: spawn position of the enemy
+        :param type: type of the enemy
+        :param range: distance at which the player can see the enemy in pixels
+        :param settings: general settings (same as in the maze level)
+        :param groups: groups in which the enemy should be
+        :param obstacle_sprites: group of obstacles
+        """
         super().__init__(groups)
         # get the display surface
         self.screen = pygame.display.get_surface()
 
         if type == 'wolf':
-            self.frames = [pygame.transform.scale(pygame.image.load('graphics/enemies/test.png').convert_alpha(), (TILESIZE, TILESIZE))]
+            self.frames = [pygame.transform.scale(pygame.image.load('graphics/enemies/test.png').convert_alpha(), (settings.TILESIZE, settings.TILESIZE))]
 
         self.enemy_walk_change = 0.1
         self.enemy_index = 0
@@ -18,17 +26,19 @@ class Enemy(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.center = pos
-        self.hitbox = self.rect.inflate(-TILESIZE//3, -TILESIZE//3)
+        self.hitbox = self.rect.inflate(-settings.TILESIZE//3, -settings.TILESIZE//3)
 
         self.direction = pygame.math.Vector2()
         self.speed = 0.5
-        self.speed *= TILESIZE/10
+        self.speed *= settings.TILESIZE/10
         self.path = []
+
+        self.range = range
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
 
-        self.TILESIZE = TILESIZE
+        self.TILESIZE = settings.TILESIZE
 
     def move(self, speed):
         if self.direction.magnitude() != 0:

@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
 
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
-        self.speed = 0.3
+        self.speed = 0.5
         self.speed *= TILESIZE/10
 
         self.obstacle_sprites = obstacle_sprites

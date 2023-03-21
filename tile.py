@@ -44,9 +44,6 @@ class Tile(pygame.sprite.Sprite):
         self.gCost = 0
         self.hCost = 0
 
-    def draw_current(self):
-        self.color = self.settings.CURRENTCOLOR
-
     def update_color(self):
         if self.isWall:
             self.color = self.settings.WALLCOLOR
