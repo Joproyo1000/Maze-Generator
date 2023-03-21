@@ -14,7 +14,7 @@ class Settings:
         self.numLevels = 3
         self.MAZEWIDTHS, self.MAZEHEIGHTS = [0] * self.numLevels, [0] * self.numLevels
         for i in range(self.numLevels):
-            self.MAZEWIDTHS[i], self.MAZEHEIGHTS[i] = (i+1) * 1000, (i+1) * 1000
+            self.MAZEWIDTHS[i], self.MAZEHEIGHTS[i] = (i+1) * 2000, (i+1) * 2000
 
         self.currentLevel = 0
 
@@ -38,7 +38,7 @@ class Settings:
         self.LIGHTINTENSITY = 40
 
         # shaders
-        self.shadersOn = False
+        self.shadersOn = True
 
         # set FPS
         self.GAMEFPS = 60

@@ -6,7 +6,7 @@ from shaders import Shader
 
 
 class YSortCameraGroup(pygame.sprite.Group):
-    def __init__(self, settings: settings.Settings):
+    def __init__(self, settings: settings.Settings, get_neighbors, check_tile):
         super().__init__()
 
         # copy settings to self to access them in the whole class
@@ -29,7 +29,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         # perspectiveOffset is used to offset each tile by a percentage (1 being no offset) to create fake perspective
         self.perspectiveOffset = 1.3
 
-    def initLight(self):
+        self.get_neighbors = get_neighbors
+        self.check_tile = check_tile
+
+    def init_light(self):
         """
         Sets the light object of the player
         """
@@ -40,7 +43,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         # the rect's y parameter must be adjusted to the TILESIZE
         self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/12, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
 
-    def renderLight(self):
+    def render_light(self):
         """
         Blits the light on the screen with shadows cast from the shadow_objects
         """
@@ -96,17 +99,22 @@ class YSortCameraGroup(pygame.sprite.Group):
                 if sprite.isWall:
                     self.blit(sprite)
 
-                    # remove wall sprite from player,
-                    if sprite.rect.centery > player.rect.centery:
-                        pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
-                                         pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
-                                                    (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
-                                                     self.settings.TILESIZE, self.settings.TILESIZE))
             elif str(type(sprite)) == "<class 'enemy.Enemy'>":
                 self.blit(sprite)
 
+        # remove surrounding wall sprites from player image
+        for sprite in self.get_neighbors(self.check_tile(player.rect.centerx // self.settings.TILESIZE,
+                                                         player.rect.centery // self.settings.TILESIZE)):
+            if sprite.isWall:
+                if sprite.rect.centery > player.rect.centery:
+                    pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
+                                     pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
+                                                (sprite.rect.centery - player.rect.centery - 12.5) / self.perspectiveOffset,
+                                                 self.settings.TILESIZE, self.settings.TILESIZE))
+
+
         # lighting
-        self.renderLight()
+        self.render_light()
 
         # draw player after lighting so that it is not affected
         self.blit(player, customImage=cutPlayerSprite)

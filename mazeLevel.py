@@ -1,3 +1,4 @@
+import sys
 from random import randint
 import pygame
 
@@ -26,7 +27,7 @@ class Maze(pygame.sprite.Group):
         self.rows = int(self.settings.MAZEHEIGHTS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
 
         # create two groups, one for sprites that need to be drawn on th screen, the other for the ones with collisions
-        self.visible_sprites = YSortCameraGroup(self.settings)
+        self.visible_sprites = YSortCameraGroup(self.settings, self.get_neighbors, self.check_tile)
         self.obstacle_sprites = HashMap(self.settings.TILESIZE, self.cols)
 
         # initialize the grid of cells
@@ -80,7 +81,7 @@ class Maze(pygame.sprite.Group):
         self.obstacle_sprites.generate_hashmap()
         self.map = self.bake_maze(self.map_size)
         self.mazeGenerated = True
-        self.visible_sprites.initLight()
+        self.visible_sprites.init_light()
 
         # initialize pathfinder
         self.pathFinder = PathFinder(self)
@@ -268,7 +269,8 @@ class Maze(pygame.sprite.Group):
         """
         Check if player hits enemy
         """
-        if pygame.sprite.spritecollideany(self.player, self.enemies):
+        # if pygame.sprite.spritecollideany(self.player, self.enemies):
+        if self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies)):
             return True
         return False
 
@@ -278,10 +280,14 @@ class Maze(pygame.sprite.Group):
         """
         if self.check_victory():
             self.settings.currentLevel += 1
+            # check if player as reached exit of last level
             if self.settings.currentLevel >= self.settings.numLevels:
                 print('YOU WON !')
+                pygame.quit()
+                sys.exit()
             else:
                 self.reset()
+
         if self.check_death():
             print('YOU DIED !')
             self.reset()
@@ -298,6 +304,3 @@ class Maze(pygame.sprite.Group):
             self.visible_sprites.custom_draw(self.player)
 
             self.check_game_state()
-            # self.enemyBehavior()
-
-            # self.visible_sprites.draw_map((50, 50), self.map, self.player, self.enemies, self.map_size)
