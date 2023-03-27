@@ -49,22 +49,7 @@ class Maze(pygame.sprite.Group):
         self.player = Player(self.start_tile.rect.center, 'girl', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites)
 
         # initialize enemies
-        numberOfEnemies = self.settings.currentLevel * 2 + 1
-        self.enemyEvents = [0] * numberOfEnemies
-
         self.enemies = pygame.sprite.Group()
-
-        for i in range(numberOfEnemies):
-            self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
-            pygame.time.set_timer(self.enemyEvents[i], 1000 + i*200)
-
-            # enemy class initializes like this Enemy(pos, type, settings, groups, obstacle_sprites)
-            self.enemies.add(Enemy((self.goal.rect.centerx - randint(0, self.settings.MAZEWIDTHS[self.settings.currentLevel]), self.goal.rect.centery),
-                                   'wolf',
-                                   700,
-                                   self.settings,
-                                   [self.visible_sprites],
-                                   self.obstacle_sprites))
 
         #region variables
         # True if maze is done generating
@@ -76,7 +61,7 @@ class Maze(pygame.sprite.Group):
 
         # generate maze
         while self.stack or self.grid_cells[self.cols + 1].isWall:
-            self.generate_maze()
+            self.init_maze()
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
@@ -84,6 +69,8 @@ class Maze(pygame.sprite.Group):
 
         self.mazeGenerated = True
 
+        # initialize main things in maze
+        self.init_enemies()
         self.visible_sprites.init_background()
         self.visible_sprites.init_light()
 
@@ -164,6 +151,20 @@ class Maze(pygame.sprite.Group):
 
         return neighbors
 
+    def get_random_pos_in_maze(self, distanceFromPlayer):
+        """
+        :param distanceFromPlayer: 0 is close, 1 is middle, 2 is far
+        :return: a random pos that is not a wall in the grid and that is at least further away than the given distance
+        """
+        if distanceFromPlayer < 0 or distanceFromPlayer > 2:
+            raise ValueError(f'distanceFromPlayer cannot be {distanceFromPlayer}. It must be either 0, 1 or 2')
+
+        return self.check_tile(randint(int(distanceFromPlayer / 3 * self.cols),
+                                       (int((distanceFromPlayer + 1) / 3 * self.cols))) // 2 + 1,
+                               randint(int(distanceFromPlayer / 3 * self.cols),
+                                       (int((distanceFromPlayer + 1) / 3 * self.cols))) // 2 + 1
+                               ).rect.center
+
     def remove_walls(self, next_tile: object):
         """
         Removes walls between current and next tile
@@ -200,7 +201,7 @@ class Maze(pygame.sprite.Group):
         for tile in self.grid_cells:
             tile.update_color()
 
-    def generate_maze(self):
+    def init_maze(self):
         """
         generate maze using the Depth First Search (DFS) algorithm
         """
@@ -222,6 +223,24 @@ class Maze(pygame.sprite.Group):
         # else go back in the stack until a new cell is available again
         elif self.stack:
             self.current_tile = self.stack.pop()
+
+    def init_enemies(self):
+        numberOfEnemies = self.settings.currentLevel * 2 + 1
+        self.enemyEvents = [0] * numberOfEnemies
+
+        for i in range(numberOfEnemies):
+            self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
+            pygame.time.set_timer(self.enemyEvents[i], 1000 + i*200)
+
+            # enemy class initializes like this Enemy(pos, type, speed, FOV, settings, groups, obstacle_sprites)
+            enemy = Enemy(self.get_random_pos_in_maze(2),
+                          'wolf',
+                          0.5,
+                          700,
+                          self.settings,
+                          [self.visible_sprites],
+                          self.obstacle_sprites)
+            self.enemies.add(enemy)
 
     def bake_maze(self, size: int) -> (pygame.Surface, pygame.Rect):
         """
@@ -253,7 +272,7 @@ class Maze(pygame.sprite.Group):
                 if enemyPos and playerPos:
 
                     # activate pathfinding for enemy
-                    pygame.time.set_timer(self.enemyEvents[i], int(distance(enemyPos, playerPos) + 1) * (i+4))
+                    pygame.time.set_timer(self.enemyEvents[i], int((distance(enemyPos, playerPos) + 1)))
                     if len(enemy.path) != 0:
                         enemy.followPath()
 

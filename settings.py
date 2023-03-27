@@ -26,7 +26,7 @@ class Settings:
         self.TILESIZE = 120
 
         # randomness of the maze
-        self.TURNFACTOR = 10
+        self.TURNFACTOR = 5
 
         # colors
         self.WALLCOLOR = 'darkgreen'

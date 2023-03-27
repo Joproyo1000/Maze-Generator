@@ -2,11 +2,11 @@ import pygame
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), type: str, range:int,  settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
+    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
         """
         :param pos: spawn position of the enemy
         :param type: type of the enemy
-        :param range: distance at which the player can see the enemy in pixels
+        :param FOV: distance at which the player can see the enemy in pixels
         :param settings: general settings (same as in the maze level)
         :param groups: groups in which the enemy should be
         :param obstacle_sprites: group of obstacles
@@ -29,11 +29,11 @@ class Enemy(pygame.sprite.Sprite):
         self.hitbox = self.rect.inflate(-settings.TILESIZE//3, -settings.TILESIZE//3)
 
         self.direction = pygame.math.Vector2()
-        self.speed = 0.5
+        self.speed = speed
         self.speed *= settings.TILESIZE/10
         self.path = []
 
-        self.range = range
+        self.range = FOV
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
