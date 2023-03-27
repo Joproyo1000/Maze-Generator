@@ -4,7 +4,7 @@ import pygame
 
 from tile import Tile
 from random import choice
-from ySortCamera import YSortCameraGroup
+from cameras import YSortCameraGroup
 from player import Player
 from enemy import Enemy
 from spatial_hashmap import HashMap
@@ -21,6 +21,13 @@ class Maze(pygame.sprite.Group):
 
         # get the screen
         self.screen = pygame.display.get_surface()
+
+        # value to control fade in transition
+        self.transition = 255
+
+        # surface for the fade in transition
+        self.blackGradient = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
+        self.blackGradient.fill('black')
 
         # calculate number of columns and rows
         self.cols = int(self.settings.MAZEWIDTHS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
@@ -40,7 +47,7 @@ class Maze(pygame.sprite.Group):
         # first tile to start the maze from
         self.start_tile = self.grid_cells[self.cols + 1]
         self.current_tile = self.start_tile
-        self.goal = self.grid_cells[(self.cols) * (self.rows) - self.cols - 2]
+        self.goal = self.grid_cells[self.cols * self.rows - self.cols - 2]
 
         # initialize the stack (used to generate the maze)
         self.stack = []
@@ -330,7 +337,13 @@ class Maze(pygame.sprite.Group):
 
     def run(self):
         if self.mazeGenerated:
+
+            # fade in transition
+            if self.transition >= 0:
+                self.transition -= 2
+                self.blackGradient.set_alpha(self.transition)
+
             self.visible_sprites.update()
-            self.visible_sprites.custom_draw(self.player)
+            self.visible_sprites.custom_draw(self.player, self.blackGradient)
 
             self.check_game_state()

@@ -28,6 +28,9 @@ class Settings:
         # randomness of the maze
         self.TURNFACTOR = 5
 
+        # initialize font
+        self.font = pygame.font.Font('font/Pixeltype.ttf', 70)
+
         # colors
         self.WALLCOLOR = 'darkgreen'
         self.PATHCOLOR = 'green'
@@ -35,7 +38,7 @@ class Settings:
         # lighting
         self.LIGHTCOLOR = (255, 255, 200)
         self.LIGHTRADIUS = 250 * self.TILESIZE//60
-        self.LIGHTINTENSITY = 40
+        self.LIGHTINTENSITY = 10
 
         # shaders
         self.shadersOn = True

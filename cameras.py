@@ -92,7 +92,7 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
                                             sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
 
-    def custom_draw(self, player: pygame.sprite.Sprite):
+    def custom_draw(self, player: pygame.sprite.Sprite, blackGradient):
         """
         :param player: player sprite (used to calculate the offset to center the screen)
         :return: draws with perspective all the sprites in the visible_sprites group
@@ -128,15 +128,17 @@ class YSortCameraGroup(pygame.sprite.Group):
             if sprite.isWall and sprite.rect.centery > player.rect.centery:
                 pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
                                  pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
-                                            (sprite.rect.centery - player.rect.centery - 7) / self.perspectiveOffset,
+                                            (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
                                              self.settings.TILESIZE, self.settings.TILESIZE))
 
-
         # lighting
-        # self.render_light()
+        self.render_light()
 
         # draw player after lighting so that it is not affected
         self.blit(player, customImage=cutPlayerSprite)
+
+        # fade in transition
+        self.screen.blit(blackGradient, blackGradient.get_rect())
 
         # and finally render screen
         if self.settings.shadersOn:

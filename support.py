@@ -21,6 +21,30 @@ def distance(a:tile, b:tile):
     return math.sqrt(sum((a.pos[i] - b.pos[i])**2 for i in range(2)))
 
 
+def transitionStart(screen: pygame.Surface, shader=None):
+    blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
+    blackGradient.fill('black')
+    for a in range(255):
+        blackGradient.set_alpha(a)
+        screen.blit(blackGradient, (0, 0))
+        if shader is None:
+            pygame.display.update()
+        else:
+            shader.render(screen)
+        pygame.time.delay(5)
+
+
+def transitionEnd(screen: pygame.Surface):
+    blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
+    blackGradient.fill('black')
+    for a in range(255, 0, -1):
+        print(a)
+        blackGradient.set_alpha(a)
+        screen.blit(blackGradient, (0, 0))
+        pygame.display.update()
+        pygame.time.delay(5)
+
+
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image

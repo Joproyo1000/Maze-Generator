@@ -34,7 +34,7 @@ class Shader:
     def render(self, img):
         """
         :param img: image to render
-        :return: renders the image applying color modification using GPU optimization
+        Renders the image applying color modification using GPU optimization
         """
 
         self.display.fill((0, 0, 0))
