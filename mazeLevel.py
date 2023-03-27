@@ -49,14 +49,14 @@ class Maze(pygame.sprite.Group):
         self.player = Player(self.start_tile.rect.center, 'girl', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites)
 
         # initialize enemies
-        numberOfEnemies = 2
+        numberOfEnemies = self.settings.currentLevel * 2 + 1
         self.enemyEvents = [0] * numberOfEnemies
 
         self.enemies = pygame.sprite.Group()
 
         for i in range(numberOfEnemies):
             self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
-            pygame.time.set_timer(self.enemyEvents[i], 1000)
+            pygame.time.set_timer(self.enemyEvents[i], 1000 + i*200)
 
             # enemy class initializes like this Enemy(pos, type, settings, groups, obstacle_sprites)
             self.enemies.add(Enemy((self.goal.rect.centerx - randint(0, self.settings.MAZEWIDTHS[self.settings.currentLevel]), self.goal.rect.centery),
@@ -77,10 +77,14 @@ class Maze(pygame.sprite.Group):
         # generate maze
         while self.stack or self.grid_cells[self.cols + 1].isWall:
             self.generate_maze()
+
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
         self.map = self.bake_maze(self.map_size)
+
         self.mazeGenerated = True
+
+        self.visible_sprites.init_background()
         self.visible_sprites.init_light()
 
         # initialize pathfinder
@@ -220,6 +224,10 @@ class Maze(pygame.sprite.Group):
             self.current_tile = self.stack.pop()
 
     def bake_maze(self, size: int) -> (pygame.Surface, pygame.Rect):
+        """
+        :param size: size of the baked map
+        :return: a baked version of the map onto a Surface
+        """
         baked_map = pygame.Surface((self.settings.TILESIZE * self.cols, self.settings.TILESIZE * self.rows))
         for tile in self.grid_cells:
             tile_image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
@@ -230,6 +238,9 @@ class Maze(pygame.sprite.Group):
         return baked_map, baked_map.get_rect()
 
     def enemyBehavior(self):
+        """
+        Enemy behavior method, basically just pathfinding
+        """
         if self.mazeGenerated:
             for i, enemy in enumerate(self.enemies.sprites()):
                 # get the tile where the enemy and the player are
@@ -242,7 +253,7 @@ class Maze(pygame.sprite.Group):
                 if enemyPos and playerPos:
 
                     # activate pathfinding for enemy
-                    pygame.time.set_timer(self.enemyEvents[i], int(distance(enemyPos, playerPos) + 1) * 3)
+                    pygame.time.set_timer(self.enemyEvents[i], int(distance(enemyPos, playerPos) + 1) * (i+4))
                     if len(enemy.path) != 0:
                         enemy.followPath()
 

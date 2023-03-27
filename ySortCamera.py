@@ -12,8 +12,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         # copy settings to self to access them in the whole class
         self.settings = settings
 
-        # get the display surface
+        # get the display surface and initialize background surface
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
+        self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.currentLevel],
+                                          self.settings.MAZEHEIGHTS[self.settings.currentLevel]))
+        self.backgroundRect = self.background.get_rect()
 
         # initialize OpenGL shader
         if self.settings.shadersOn:
@@ -31,6 +34,18 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         self.get_neighbors = get_neighbors
         self.check_tile = check_tile
+
+    def init_background(self):
+        self.ySortSprites = []
+
+        for sprite in self.sprites():
+            if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
+                if not sprite.isWall:
+                    self.blit(sprite, customScreen=self.background)
+                else:
+                    self.ySortSprites.append(sprite)
+            else:
+                self.ySortSprites.append(sprite)
 
     def init_light(self):
         """
@@ -58,14 +73,21 @@ class YSortCameraGroup(pygame.sprite.Group):
         # show the light on the screen
         self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
 
-    def blit(self, sprite: pygame.sprite.Sprite, customImage=None):
+    def blit(self, sprite: pygame.sprite.Sprite, customScreen=None, customImage=None):
         """
         :param sprite: sprite to blit on the screen
-        :return: blits the sprite on the screen after applying the perspective offset
+        :param customScreen: custom screen onto which blit the image instead of the normal screen
+        :param customImage: custom image to blit on the screen instead of the sprite's image
+        Blits the sprite on the screen after applying the perspective offset
         """
         if customImage is not None:
             self.screen.blit(customImage, (sprite.rect.topleft[0] - self.offset.x,
                                            sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
+
+        elif customScreen is not None:
+            customScreen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
+                                             sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
+
         else:
             self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
                                             sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
@@ -82,18 +104,16 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.offset.x = player.rect.centerx - self.half_width
         self.offset.y = player.rect.centery / self.perspectiveOffset - self.half_height
 
-        mazeSprites = [sprite for sprite in self.sprites() if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>")]
-
-        for sprite in mazeSprites:
-            if not sprite.isWall:
-                self.blit(sprite)
+        backgroundRect = pygame.Rect(self.backgroundRect.x - self.offset.x, self.backgroundRect.y - self.offset.y,
+                                     self.backgroundRect.width, self.backgroundRect.height)
+        self.screen.blit(self.background, backgroundRect)
 
         # we create a copy of the player sprite that we are going to cut to prevent overlap with the walls
         # we do that so that the player sprite isn't affected by lighting since it would cause some bugs
         cutPlayerSprite = player.image.copy()
 
         # draw every sprite sorted by y coordinate
-        for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
+        for sprite in sorted(self.ySortSprites, key=lambda sprite: sprite.rect.centery):
             # separate the player from the tiles
             if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
                 if sprite.isWall:
@@ -105,12 +125,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         # remove surrounding wall sprites from player image
         for sprite in self.get_neighbors(self.check_tile(player.rect.centerx // self.settings.TILESIZE,
                                                          player.rect.centery // self.settings.TILESIZE)):
-            if sprite.isWall:
-                if sprite.rect.centery > player.rect.centery:
-                    pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
-                                     pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
-                                                (sprite.rect.centery - player.rect.centery - 12.5) / self.perspectiveOffset,
-                                                 self.settings.TILESIZE, self.settings.TILESIZE))
+            if sprite.isWall and sprite.rect.centery > player.rect.centery:
+                pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),dddd
+                                 pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
+                                            (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
+                                             self.settings.TILESIZE, self.settings.TILESIZE))
 
 
         # lighting
