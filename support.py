@@ -24,7 +24,7 @@ def distance(a:tile, b:tile):
 def transitionStart(screen: pygame.Surface, shader=None):
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
-    for a in range(255):
+    for a in range(150):
         blackGradient.set_alpha(a)
         screen.blit(blackGradient, (0, 0))
         if shader is None:
@@ -34,14 +34,19 @@ def transitionStart(screen: pygame.Surface, shader=None):
         pygame.time.delay(5)
 
 
-def transitionEnd(screen: pygame.Surface):
+def transitionEnd(screen: pygame.Surface, shader=None):
+    background = screen.copy()
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
-    for a in range(255, 0, -1):
-        print(a)
+    for a in range(180, -1, -3):
         blackGradient.set_alpha(a)
+        screen.blit(background, (0, 0))
         screen.blit(blackGradient, (0, 0))
-        pygame.display.update()
+
+        if shader is None:
+            pygame.display.update()
+        else:
+            shader.render(screen)
         pygame.time.delay(5)
 
 
@@ -140,12 +145,12 @@ class CheckButton:
 
 
 class Slider:
-    def __init__(self, pos, text_input, range, font, base_color, interior_color, hovering_color, ball_color, size):
-        self.base_color, self.interior_color, self.hovering_color, self.ball_color = base_color, interior_color, hovering_color, ball_color
+    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color, ball_color, size, startVal):
+        self.base_color, self.exterior_color, self.interior_color, self.hovering_color, self.ball_color = base_color, exterior_color, interior_color, hovering_color, ball_color
 
-        # main rectangle of the slider (biggest one)
+        # main rectangle of the slider (the biggest one)
         self.slider = pygame.Surface((100 * size, 16.666 * size))
-        self.slider.fill(self.base_color)
+        self.slider.fill(self.exterior_color)
         self.rect = self.slider.get_rect(center=(pos[0], pos[1]))
 
         # second rectangle of the slider (smaller one in which the ball is)
@@ -171,7 +176,8 @@ class Slider:
         self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos - 13.333 * size))
 
         # value of the slider
-        self.value = 0
+        self.value = startVal
+        self.slider_ball.x = self.ballPosFromValue()
 
     def checkForInput(self):
         """
@@ -187,11 +193,11 @@ class Slider:
         self.checkForInput()
 
         # show slider
-        screen.blit(self.slider, self.rect)  # show slider
-        screen.blit(self.slider_small, self.slider_small_rect)  # small slider
+        pygame.draw.rect(screen, self.exterior_color, self.rect, border_radius=50)  # exterior rect
+        screen.blit(self.slider_small, self.slider_small_rect)  # interior rect
         pygame.draw.circle(screen, self.ball_color, self.slider_ball.center, self.slider_ball.width / 1.5)  # ball
-        self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True,
-                                     self.base_color)  # render text
+        self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True, self.base_color)  # text
+        self.text_rect.centerx = self.x_pos - (len(": " + str(round(self.value))) * 20) / 2
         screen.blit(self.text, self.text_rect)  # show text
 
         self.value = self.valueFromBallPos()  # update value
@@ -206,9 +212,6 @@ class Slider:
             self.text = self.font.render(self.text_input, True, self.hovering_color)
         else:
             self.text = self.font.render(self.text_input, True, self.base_color)
-
-    def getValue(self):
-        return self.value
 
     def valueFromBallPos(self):
         # value from pos = ((distance between right of the small slider and ball / - width of the slider) + 1) * 100

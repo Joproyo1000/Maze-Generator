@@ -20,7 +20,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # initialize OpenGL shader
         if self.settings.shadersOn:
-            self.shader = Shader(self.settings.RESOLUTION)
+            self.shader = Shader(self.settings.RESOLUTION, self.settings)
 
         # precalculate half the width and half the height of the screen
         self.half_width = self.screen.get_width() // 2

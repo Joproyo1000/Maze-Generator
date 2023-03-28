@@ -23,7 +23,7 @@ class Maze(pygame.sprite.Group):
         self.screen = pygame.display.get_surface()
 
         # value to control fade in transition
-        self.transition = 255
+        self.transition = 200
 
         # surface for the fade in transition
         self.blackGradient = pygame.Surface((self.screen.get_width(), self.screen.get_height()))

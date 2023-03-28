@@ -42,6 +42,7 @@ class Settings:
 
         # shaders
         self.shadersOn = True
+        self.gamma = 10
 
         # set FPS
         self.GAMEFPS = 60

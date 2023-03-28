@@ -5,10 +5,12 @@ import moderngl
 
 
 class Shader:
-    def __init__(self, resolution):
+    def __init__(self, resolution, settings):
         # initialize display
         self.display = pygame.Surface(resolution)
         self.t = 0
+
+        self.settings = settings
 
         # initialize context
         self.ctx = moderngl.create_context()
@@ -46,6 +48,7 @@ class Shader:
         frame_tex.use(0)
         self.program['tex'] = 0
         self.program['time'] = self.t
+        self.program['gamma'] = self.settings.gamma/10
         self.render_object.render(mode=moderngl.TRIANGLE_STRIP)
 
         pygame.display.flip()

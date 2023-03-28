@@ -3,6 +3,7 @@
 precision mediump float;
 uniform sampler2D tex;
 uniform float time;
+uniform float gamma;
 
 in vec2 uvs;
 out vec4 f_color;
@@ -31,6 +32,7 @@ void main() {
     float b = texture(tex, uvs2 + vec2(chromatic_aberration * off_center)).z;
 
     f_color = vec4(r, g, b, 1.0);
+    // f_color = vec4(texture(tex, uvs2).rgb, 0);
 
     // Determine the brightness of the pixel
     float brightness = (f_color.r + f_color.g + f_color.b) / 5.0;
@@ -60,5 +62,8 @@ void main() {
 
     // darken the color if it is in a "TV stripe"
     f_color.rgb*=fv;
+
+    // apply gamma correction
+    f_color.rgb = pow(f_color.rgb, vec3(1.0/gamma));
   }
 }
