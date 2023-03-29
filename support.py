@@ -130,10 +130,8 @@ class CheckButton:
         position = pygame.mouse.get_pos()
         if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
                                                                                           self.rect.bottom):
-            self.value = True
-            return True
-        self.value = False
-        return False
+            self.value = not self.value
+            return self.value
 
     def changeColor(self):
         position = pygame.mouse.get_pos()

@@ -83,18 +83,20 @@ class MazeGame:
             # set FPS
             self.clock.tick(self.maze.FPS)
 
-    def settings_menu(self, start):
+    def settings_menu(self, start: classmethod):
         """
         Settings menu to change game settings
         """
 
-        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 3.6), 'DIFFICULTY',
+        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), 'DIFFICULTY',
                                (1, 3), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 1),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.7), 'GAMMA',
+                        CheckButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3.0), 'HEART BEAT EFFECT',
+                                    self.settings.font, 'darkgray', 'gray'),
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'GAMMA',
                                (5, 20), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.gamma),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'VOLUME',
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'VOLUME',
                                (0, 100), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.volume),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.5), 'FPS',
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'FPS',
                                (30, 120), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 60),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'EXIT',
                                self.settings.font, 'darkgray', 'gray')]
@@ -115,11 +117,11 @@ class MazeGame:
                         if button.checkForInput():
                             if i == len(self.buttons)-1:
                                 transitionStart(self.screen, self.shader)
-                                self.maze.FPS = self.buttons[3].value
+                                self.maze.FPS = self.buttons[4].value
                                 start()
 
-            self.settings.gamma = self.buttons[1].value
-            self.settings.volume = self.buttons[2].value
+            self.settings.gamma = self.buttons[2].value
+            self.settings.volume = self.buttons[3].value
             self.settings.music.set_volume(self.settings.volume/100)
 
             self.draw_screen()

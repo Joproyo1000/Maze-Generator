@@ -49,7 +49,7 @@ class Shader:
         self.program['tex'] = 0
         self.program['time'] = self.t
         self.program['gamma'] = self.settings.gamma/10
-        if self.settings.showHeatBeatEffect:
+        if self.settings.showHeartBeatEffect:
             self.program['dst'] = self.settings.dstToClosestEnemy
         else:
             self.program['dst'] = 0

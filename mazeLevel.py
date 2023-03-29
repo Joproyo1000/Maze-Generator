@@ -302,7 +302,6 @@ class Maze(pygame.sprite.Group):
 
                     path = self.pathFinder.findPath(enemyPos, randomPos)
                     enemy.followPath(path=path, replace=True)
-            print(closestEnemy)
             self.settings.dstToClosestEnemy = closestEnemy
 
     def check_victory(self):
