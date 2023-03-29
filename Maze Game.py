@@ -16,6 +16,10 @@ class MazeGame:
 
         # general setup for pygame and display
         pygame.init()
+        pygame.mixer.init()
+
+        self.settings.music.play(loops=-1)
+
         # changes screen mode to adapt if shaders are activated or not
         if self.settings.shadersOn:
             self.screen = pygame.display.set_mode(self.settings.RESOLUTION, pygame.OPENGL | pygame.DOUBLEBUF)
@@ -40,6 +44,8 @@ class MazeGame:
         self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 - 50), 'START GAME',
                                self.settings.font, 'darkgray', 'white'),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 + 50), 'PARAMETERS',
+                               self.settings.font, 'darkgray', 'white'),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 + 150), 'QUIT GAME',
                                self.settings.font, 'darkgray', 'white')]
 
         self.draw_screen()
@@ -63,6 +69,9 @@ class MazeGame:
                             if i == 1:
                                 transitionStart(self.screen, self.shader)
                                 self.settings_menu(self.main_menu)
+                            if i == 2:
+                                pygame.quit()
+                                exit()
 
             self.draw_screen()
 
@@ -79,10 +88,12 @@ class MazeGame:
         Settings menu to change game settings
         """
 
-        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 3), 'DIFFICULTY',
+        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 3.6), 'DIFFICULTY',
                                (1, 3), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 1),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'GAMMA',
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.7), 'GAMMA',
                                (5, 20), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.gamma),
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'VOLUME',
+                               (0, 100), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.volume),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.5), 'FPS',
                                (30, 120), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 60),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'EXIT',
@@ -104,10 +115,12 @@ class MazeGame:
                         if button.checkForInput():
                             if i == len(self.buttons)-1:
                                 transitionStart(self.screen, self.shader)
-                                self.maze.FPS = self.buttons[2].value
+                                self.maze.FPS = self.buttons[3].value
                                 start()
 
             self.settings.gamma = self.buttons[1].value
+            self.settings.volume = self.buttons[2].value
+            self.settings.music.set_volume(self.settings.volume/100)
 
             self.draw_screen()
 
@@ -137,21 +150,18 @@ class MazeGame:
                     pygame.quit()
                     exit()
 
-                # update all enemies
-                for enemyEvent in self.maze.enemyEvents:
-                    if event.type == pygame.KEYDOWN:
-                        key = pygame.key.get_pressed()
-                        if key[pygame.K_ESCAPE]:
-                            self.pause_menu()
+                if event.type == pygame.KEYDOWN:
+                    key = pygame.key.get_pressed()
+                    if key[pygame.K_ESCAPE]:
+                        self.pause_menu()
 
+                # update all enemies
+                for i, enemyEvent in enumerate(self.maze.enemyEvents):
                     if event.type == enemyEvent:
-                        self.maze.enemyBehavior()
+                        self.maze.enemyBehavior(i)
 
             # run the level
             self.maze.run()
-
-            # debug FPS count
-            debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
 
             if not self.settings.shadersOn:
                 pygame.display.update()

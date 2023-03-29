@@ -1,3 +1,5 @@
+import random
+
 import pygame.sprite
 
 import settings
@@ -140,9 +142,18 @@ class YSortCameraGroup(pygame.sprite.Group):
         # fade in transition
         self.screen.blit(blackGradient, blackGradient.get_rect())
 
+        if self.settings.dstToClosestEnemy < 400:
+            hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
+
+            scaledScreen = pygame.transform.scale(self.screen, (1400+hearBeatEffectFactor*10, 800+hearBeatEffectFactor*10))
+            scaledScreen.blit(scaledScreen, (random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5,
+                                             random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5))
+        else:
+            scaledScreen = self.screen
+
         # and finally render screen
         if self.settings.shadersOn:
-            self.shader.render(self.screen)
+            self.shader.render(scaledScreen)
         else:
             pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 

@@ -263,36 +263,47 @@ class Maze(pygame.sprite.Group):
         baked_map = pygame.transform.scale(baked_map, (self.settings.TILESIZE * self.cols / size, self.settings.TILESIZE * self.rows / size))
         return baked_map, baked_map.get_rect()
 
-    def enemyBehavior(self):
+    def enemyBehavior(self, i):
         """
+        :param i: index of the current enemy being updated
         Enemy behavior method, basically just pathfinding
         """
         if self.mazeGenerated:
-            for i, enemy in enumerate(self.enemies.sprites()):
-                # get the tile where the enemy and the player are
-                enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
-                                           enemy.rect.centery // self.settings.TILESIZE)
-                playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
-                                            self.player.rect.centery // self.settings.TILESIZE)
+            closestEnemy = 100000
 
-                # if both exists (failsafe) pathfind to player
-                if enemyPos and playerPos:
+            enemy = self.enemies.sprites()[i]
 
-                    # activate pathfinding for enemy
-                    pygame.time.set_timer(self.enemyEvents[i], int((distance(enemyPos, playerPos) + 1)))
-                    if len(enemy.path) != 0:
-                        enemy.followPath()
+            # get the tile where the enemy and the player are
+            enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
+                                       enemy.rect.centery // self.settings.TILESIZE)
+            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                        self.player.rect.centery // self.settings.TILESIZE)
 
-                    # if close enough to player, follow him
-                    if distance(enemyPos, playerPos) < enemy.range:
-                        path = self.pathFinder.findPath(enemyPos, playerPos)
-                        enemy.followPath(path=path, replace=True)
-                    # else chose random location and pathfind there
-                    else:
-                        randomPos = self.grid_cells[self.get_tile_pos_in_grid(randint(0, self.rows//2) * 2 - 1, randint(0, self.cols//2) * 2 - 1)]
+            # if both exists (failsafe) pathfind to player
+            if enemyPos and playerPos:
 
-                        path = self.pathFinder.findPath(enemyPos, randomPos)
-                        enemy.followPath(path=path, replace=True)
+                # activate pathfinding for enemy
+                enemyDst = distance(enemyPos, playerPos)
+
+                if enemyDst < closestEnemy:
+                    closestEnemy = enemyDst
+
+                pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1)))
+                if len(enemy.path) != 0:
+                    enemy.followPath()
+
+                # if close enough to player, follow him
+                if enemyDst < enemy.range:
+                    path = self.pathFinder.findPath(enemyPos, playerPos)
+                    enemy.followPath(path=path, replace=True)
+                # else chose random location and pathfind there
+                else:
+                    randomPos = self.grid_cells[self.get_tile_pos_in_grid(randint(0, self.rows//2) * 2 - 1, randint(0, self.cols//2) * 2 - 1)]
+
+                    path = self.pathFinder.findPath(enemyPos, randomPos)
+                    enemy.followPath(path=path, replace=True)
+            print(closestEnemy)
+            self.settings.dstToClosestEnemy = closestEnemy
 
     def check_victory(self):
         """

@@ -49,6 +49,10 @@ class Shader:
         self.program['tex'] = 0
         self.program['time'] = self.t
         self.program['gamma'] = self.settings.gamma/10
+        if self.settings.showHeatBeatEffect:
+            self.program['dst'] = self.settings.dstToClosestEnemy
+        else:
+            self.program['dst'] = 0
         self.render_object.render(mode=moderngl.TRIANGLE_STRIP)
 
         pygame.display.flip()

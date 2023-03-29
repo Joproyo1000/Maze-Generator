@@ -46,3 +46,13 @@ class Settings:
 
         # set FPS
         self.GAMEFPS = 60
+
+        # initialize music
+        self.music = pygame.mixer.Sound('sound/Horror3.1.mp3')
+        self.volume = 100
+
+        # toggle heart beat effect in shaders
+        self.showHeatBeatEffect = True
+
+        # keep track of distance to the closest enemy
+        self.dstToClosestEnemy = 1000000

@@ -2,6 +2,7 @@
 
 precision mediump float;
 uniform sampler2D tex;
+uniform float dst;
 uniform float time;
 uniform float gamma;
 
@@ -65,5 +66,9 @@ void main() {
 
     // apply gamma correction
     f_color.rgb = pow(f_color.rgb, vec3(1.0/gamma));
+
+    if (dst < 600 && dst != 0) {
+      f_color.r *= (-dst + 700)/100;
+    }
   }
 }
