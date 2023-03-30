@@ -118,11 +118,13 @@ class CheckButton:
             screen.blit(self.image, self.rect)
 
         screen.blit(self.text, self.text_rect)
-        pygame.draw.rect(screen, self.base_color, self.box, 4)
+        pygame.draw.rect(screen, self.base_color, self.box, 8)
 
         if self.value:
-            pygame.draw.line(screen, self.base_color, self.cross_rect.topleft, self.cross_rect.bottomright, 4)
-            pygame.draw.line(screen, self.base_color, self.cross_rect.bottomleft, self.cross_rect.topright, 4)
+            pygame.draw.line(screen, self.base_color, (self.cross_rect.left + 4, self.cross_rect.top + 4),
+                                                      (self.cross_rect.right - 4, self.cross_rect.bottom - 4), 8)
+            pygame.draw.line(screen, self.base_color, (self.cross_rect.left + 4, self.cross_rect.bottom - 4),
+                                                      (self.cross_rect.right - 4, self.cross_rect.top + 4), 8)
 
         self.changeColor()
 
@@ -143,7 +145,7 @@ class CheckButton:
 
 
 class Slider:
-    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color, ball_color, size, startVal):
+    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color, ball_color, size, startVal, custom=None):
         self.base_color, self.exterior_color, self.interior_color, self.hovering_color, self.ball_color = base_color, exterior_color, interior_color, hovering_color, ball_color
 
         # main rectangle of the slider (the biggest one)
@@ -177,6 +179,9 @@ class Slider:
         self.value = startVal
         self.slider_ball.x = self.ballPosFromValue()
 
+        # custom text/value dictionnary
+        self.custom = custom
+
     def checkForInput(self):
         """
         Updates the position of the ball if the mouse drags it
@@ -194,8 +199,12 @@ class Slider:
         pygame.draw.rect(screen, self.exterior_color, self.rect, border_radius=50)  # exterior rect
         screen.blit(self.slider_small, self.slider_small_rect)  # interior rect
         pygame.draw.circle(screen, self.ball_color, self.slider_ball.center, self.slider_ball.width / 1.5)  # ball
-        self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True, self.base_color)  # text
-        self.text_rect.centerx = self.x_pos - (len(": " + str(round(self.value))) * 20) / 2
+        if self.custom is None:
+            self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True, self.base_color)  # text
+            self.text_rect.centerx = self.x_pos - (len(": " + str(round(self.value))) * 20) / 2
+        else:
+            self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True, self.base_color)  # text
+            self.text_rect.centerx = self.x_pos - (len(": " + self.custom[round(self.value)]) * 20) / 2
         screen.blit(self.text, self.text_rect)  # show text
 
         self.value = self.valueFromBallPos()  # update value
