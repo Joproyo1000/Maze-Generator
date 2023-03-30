@@ -1,12 +1,14 @@
 import pygame
+from support import import_folder
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
+    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, AI:bool, settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
         """
         :param pos: spawn position of the enemy
         :param type: type of the enemy
-        :param FOV: distance at which the player can see the enemy in pixels
+        :param FOV: distance at which the player can be seen by the enemy in pixels
+        :param AI: activates or no pathfinding for enemy
         :param settings: general settings (same as in the maze level)
         :param groups: groups in which the enemy should be
         :param obstacle_sprites: group of obstacles
@@ -15,32 +17,85 @@ class Enemy(pygame.sprite.Sprite):
         # get the display surface
         self.screen = pygame.display.get_surface()
 
-        if type == 'wolf':
-            self.frames = [pygame.transform.scale(pygame.image.load('graphics/enemies/test.png').convert_alpha(), (settings.TILESIZE, settings.TILESIZE))]
+        self.type = type
 
-        self.enemy_walk_change = 0.1
-        self.enemy_index = 0
-        self.image = self.frames[self.enemy_index]
+        # graphics setup
+        self.import_ennemy_assets()
+        self.status = 'left'
+        self.frame_index = 0
+        self.animation_speed = 0.15
 
         self.color = 'darkred'
 
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_bounding_rect()
         self.rect.center = pos
-        self.hitbox = self.rect.inflate(-settings.TILESIZE//3, -settings.TILESIZE//3)
+        self.hitbox = self.rect
 
         self.direction = pygame.math.Vector2()
         self.speed = speed
         self.speed *= settings.TILESIZE/10
         self.path = []
+        self.AI = AI
 
         self.range = FOV
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
 
-        self.TILESIZE = settings.TILESIZE
+        self.settings = settings
 
-    def move(self, speed):
+        self.set_enemy_behavior()
+    def import_ennemy_assets(self):
+        """
+        :param type: type of the ennemy
+        Loads the corresponding animation frames onto the ennemy
+        """
+        if self.type == 'wolf':
+            character_path = 'graphics/enemies/wolf/'
+            self.animations = {'left': [], 'right': [],
+                               'left_idle': [], 'right_idle': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path, 1.6)
+
+        if self.type == 'spider':
+            character_path = 'graphics/enemies/spider/'
+            self.animations = {'left': [], 'right': [],
+                               'left_idle': [], 'right_idle': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path, 1.6)
+
+        if self.type == 'slime':
+            character_path = 'graphics/enemies/slime/'
+            self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
+                               'up_idle': [], 'left_idle': [], 'down_idle': [], 'right_idle': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path, 1.6)
+
+        self.image = self.animations['left_idle'][0]
+
+    def set_enemy_behavior(self):
+        """
+        Sets the characteristics of the enemy based on its type (ex: speed, FOV, ...)
+        """
+        if self.type == 'wolf':
+            self.speed = 0.5 + self.settings.DIFFICULTY/10
+            self.speed *= self.settings.TILESIZE / 10
+            # not follow if player isn't moving
+        if self.type == 'spider':
+            self.speed = 0.3 + self.settings.DIFFICULTY/10
+            self.speed *= self.settings.TILESIZE / 10
+            # spawn webs
+        if self.type == 'slime':
+            self.speed = 0.1 + self.settings.DIFFICULTY/10
+            self.speed *= self.settings.TILESIZE / 10
+
+    def move(self, speed: float):
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
@@ -50,6 +105,33 @@ class Enemy(pygame.sprite.Sprite):
             self.collision('vertical')
 
             self.rect.center = self.hitbox.center
+
+    def set_status(self):
+        """
+        Set the current status of the enemy for animation
+        """
+        if self.direction.y < 0 and self.type == 'slime':
+            self.status = 'up'
+
+        elif self.direction.y > 0 and self.type == 'slime':
+            self.status = 'down'
+
+        if self.direction.x < 0:
+            self.status = 'left'
+
+        elif self.direction.x > 0:
+            self.status = 'right'
+
+        if self.direction.y < 0 and 0 > self.direction.x > self.direction.y and self.type == 'slime':
+            self.status = 'up'
+
+        if self.direction.y > 0 and 0 < self.direction.x < self.direction.y and self.type == 'slime':
+            self.status = 'down'
+
+        # idle status
+        if self.direction.x == 0 and self.direction.y == 0:
+            if '_idle' not in self.status:
+                self.status = self.status + '_idle'
 
     def followPath(self, path=True, replace=False):
         if path:
@@ -61,7 +143,7 @@ class Enemy(pygame.sprite.Sprite):
                                                  target.rect.centery - self.rect.centery)
 
             if pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
-                                   target.rect.centery - self.rect.centery).length() < self.TILESIZE/2:
+                                   target.rect.centery - self.rect.centery).length() < self.settings.TILESIZE/2:
                 self.path.pop(0)
 
     def collision(self, direction):
@@ -83,12 +165,22 @@ class Enemy(pygame.sprite.Sprite):
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
 
-    def animation_state(self):
-        self.enemy_index += self.enemy_walk_change
-        if self.enemy_index >= len(self.frames)-0.1 or self.enemy_index <= 0:
-            self.enemy_walk_change = -self.enemy_walk_change
-        self.image = self.frames[int(self.enemy_index)]
+    def animate(self):
+        """
+        Animates the ennemy based on the current status
+        """
+        animation = self.animations[self.status]
+
+        # loop over the frame index
+        self.frame_index += self.animation_speed
+        if self.frame_index >= len(animation) - self.animation_speed:
+            self.frame_index = 0
+
+        # set the image
+        self.image = animation[int(self.frame_index)]
+        self.rect = self.image.get_rect(center = self.hitbox.center)
 
     def update(self):
-        self.move(self.speed)
-        self.animation_state()
+        self.set_status()  # set status
+        self.animate()  # animate based on status
+        self.move(self.speed)  # move based on path

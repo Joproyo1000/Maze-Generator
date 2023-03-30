@@ -14,11 +14,13 @@ class MazeGame:
         # initialize settings
         self.settings = Settings()
 
-        # general setup for pygame and display
+        # initialize pygame and mixer
         pygame.init()
         pygame.mixer.init()
 
+        # start music playback
         self.settings.music.play(loops=-1)
+        self.settings.music.set_volume(self.settings.volume)
 
         # changes screen mode to adapt if shaders are activated or not
         if self.settings.shadersOn:
@@ -29,9 +31,10 @@ class MazeGame:
         # initialize maze
         self.maze = Maze(self.settings)
 
-        # initialize to render menus
+        # initialize the render menus
         self.buttons = []
-        self.shader = Shader(self.screen.get_size(), self.settings)
+        if self.settings.shadersOn:
+            self.shader = Shader(self.screen.get_size(), self.settings)
 
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
@@ -41,16 +44,17 @@ class MazeGame:
         Main menu, runs at start
         """
 
-        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 - 50), 'START GAME',
+        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'START GAME',
                                self.settings.font, 'darkgray', 'white'),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 + 50), 'PARAMETERS',
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'PARAMETERS',
                                self.settings.font, 'darkgray', 'white'),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2 + 150), 'QUIT GAME',
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUIT GAME',
                                self.settings.font, 'darkgray', 'white')]
 
         self.draw_screen()
 
-        transitionEnd(self.screen, self.shader)
+
+        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # used for taking inputs
@@ -63,11 +67,11 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == 0:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.maze.reset()
                                 self.game()
                             if i == 1:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.settings_menu(self.main_menu)
                             if i == 2:
                                 pygame.quit()
@@ -88,22 +92,28 @@ class MazeGame:
         Settings menu to change game settings
         """
 
+        sliderSize = self.settings.HEIGHT//230
+
         self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), 'DIFFICULTY',
-                               (1, 3), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 1),
+                               (0, 2), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray',
+                               sliderSize, 0, custom={0: 'EASY', 1: 'MEDIUM', 2: 'HARD'}),
                         CheckButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3.0), 'HEART BEAT EFFECT',
                                     self.settings.font, 'darkgray', 'gray'),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'GAMMA',
-                               (5, 20), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.gamma),
+                               (5, 20), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray',
+                               sliderSize, self.settings.gamma),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'VOLUME',
-                               (0, 100), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, self.settings.volume),
+                               (0, 100), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray',
+                               sliderSize, self.settings.volume),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'FPS',
-                               (30, 120), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray', 3, 60),
+                               (30, 120), self.settings.font, 'darkgray', 'gray28', 'black', 'black', 'darkgray',
+                               sliderSize, 60),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'EXIT',
                                self.settings.font, 'darkgray', 'gray')]
 
         self.draw_screen()
 
-        transitionEnd(self.screen, self.shader)
+        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # used for taking inputs
@@ -116,10 +126,12 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == len(self.buttons)-1:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                self.settings.DIFFICULTY = self.buttons[0].value
                                 self.maze.FPS = self.buttons[4].value
                                 start()
 
+            self.settings.showHeartBeatEffect = self.buttons[1].value
             self.settings.gamma = self.buttons[2].value
             self.settings.volume = self.buttons[3].value
             self.settings.music.set_volume(self.settings.volume/100)
@@ -140,7 +152,7 @@ class MazeGame:
         """
 
         self.maze.run()
-        transitionEnd(self.screen, self.shader)
+        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # set background color
@@ -185,7 +197,7 @@ class MazeGame:
 
         self.draw_screen()
 
-        transitionEnd(self.screen, self.shader)
+        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # set background color
@@ -206,14 +218,14 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == 0:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.maze.transition = 200
                                 self.game()
                             elif i == 1:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.settings_menu(self.pause_menu)
                             elif i == 2:
-                                transitionStart(self.screen, self.shader)
+                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.main_menu()
 
             self.draw_screen()
@@ -227,6 +239,9 @@ class MazeGame:
             self.clock.tick(self.maze.FPS)
 
     def draw_screen(self):
+        """
+        Draws background, buttons and additional debug info for menus
+        """
         self.screen.fill(pygame.Color(46, 60, 87))
 
         # debug FPS count
@@ -238,4 +253,4 @@ class MazeGame:
 
 if __name__ == '__main__':
     mazeGen = MazeGame()
-    mazeGen.main_menu()
+    mazeGen.game()

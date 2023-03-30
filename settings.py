@@ -1,5 +1,5 @@
 import pygame
-from support import Button, CheckButton, Slider
+from screeninfo import get_monitors
 
 
 class Settings:
@@ -8,7 +8,8 @@ class Settings:
         self.screen = pygame.display.get_surface()
 
         # set size of screen
-        self.WIDTH, self.HEIGHT = 1400, 800
+        # self.WIDTH, self.HEIGHT = 1400, 800
+        self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
 
         # set size of maze for each level
         self.numLevels = 3
@@ -28,8 +29,16 @@ class Settings:
         # randomness of the maze
         self.TURNFACTOR = 5
 
+        # difficulty of the maze 0=easy 1=medium 2=hard
+        self.DIFFICULTY = 2
+
+        # proportion of enemies for a 1000*1000 maze
+        self.WOLFPROPORTION = 0.5
+        self.SPIDERPROPORTION = 1.5
+        self.SLIMEPROPORTION = 3
+
         # initialize font
-        self.font = pygame.font.Font('font/Pixeltype.ttf', 70)
+        self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
 
         # colors
         self.WALLCOLOR = 'darkgreen'
@@ -41,7 +50,7 @@ class Settings:
         self.LIGHTINTENSITY = 10
 
         # shaders
-        self.shadersOn = True
+        self.shadersOn = False
         self.gamma = 10
 
         # set FPS
@@ -49,7 +58,7 @@ class Settings:
 
         # initialize music
         self.music = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.volume = 100
+        self.volume = 0
 
         # toggle heart beat effect in shaders
         self.showHeartBeatEffect = True

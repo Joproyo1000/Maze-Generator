@@ -80,16 +80,16 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
-    def get_status(self):
+    def set_status(self):
         """
         Set the current status of the player for animation
         """
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
-            if not '_idle' in self.status:
+            if '_idle' not in self.status:
                 self.status = self.status + '_idle'
 
-    def move(self, speed: int):
+    def move(self, speed: float):
         """
         :param speed: speed of the player when moving
         Moves the player after applying collisions
@@ -147,6 +147,6 @@ class Player(pygame.sprite.Sprite):
         Main update method
         """
         self.input()  # get inputs
-        self.get_status()  # get status
+        self.set_status()  # set status
         self.animate()  # animate based on status
         self.move(self.speed)  # move based on inputs

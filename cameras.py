@@ -134,7 +134,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                                              self.settings.TILESIZE, self.settings.TILESIZE))
 
         # lighting
-        self.render_light()
+        # self.render_light()
 
         # draw player after lighting so that it is not affected
         self.blit(player, customImage=cutPlayerSprite)
@@ -142,14 +142,15 @@ class YSortCameraGroup(pygame.sprite.Group):
         # fade in transition
         self.screen.blit(blackGradient, blackGradient.get_rect())
 
-        if self.settings.dstToClosestEnemy < 400:
-            hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
+        # apply heart beat effect if activated
+        scaledScreen = self.screen
+        if self.settings.showHeartBeatEffect:
+            if self.settings.dstToClosestEnemy < 400:
+                hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
 
-            scaledScreen = pygame.transform.scale(self.screen, (1400+hearBeatEffectFactor*10, 800+hearBeatEffectFactor*10))
-            scaledScreen.blit(scaledScreen, (random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5,
-                                             random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5))
-        else:
-            scaledScreen = self.screen
+                scaledScreen = pygame.transform.scale(self.screen, (self.settings.WIDTH + hearBeatEffectFactor*10, self.settings.HEIGHT + hearBeatEffectFactor*10))
+                scaledScreen.blit(scaledScreen, (random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5,
+                                                 random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5))
 
         # and finally render screen
         if self.settings.shadersOn:
