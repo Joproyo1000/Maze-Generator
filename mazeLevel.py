@@ -1,4 +1,5 @@
 import sys
+import time
 from random import randint
 import pygame
 from math import floor
@@ -24,7 +25,7 @@ class Maze(pygame.sprite.Group):
         self.screen = pygame.display.get_surface()
 
         # value to control fade in transition
-        self.transition = 200
+        self.transition = 300
 
         # surface for the fade in transition
         self.blackGradient = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
@@ -54,7 +55,7 @@ class Maze(pygame.sprite.Group):
         self.stack = []
 
         # initialize the player and put it on the first tile
-        self.player = Player(self.start_tile.rect.center, 'girl', self.settings.TILESIZE, [self.visible_sprites], self.obstacle_sprites)
+        self.player = Player(self.start_tile.rect.center, 'girl', self.settings, [self.visible_sprites], self.obstacle_sprites)
 
         # initialize enemies
         self.enemies = pygame.sprite.Group()
@@ -65,6 +66,9 @@ class Maze(pygame.sprite.Group):
 
         # set FPS for the game
         self.FPS = self.settings.GAMEFPS
+
+        # time
+        self.currentTime = time.time()
         #endregion
 
         # generate maze
@@ -79,11 +83,86 @@ class Maze(pygame.sprite.Group):
 
         # initialize main things in maze
         self.init_enemies()
+        print(list(e.rect.center for e in self.enemies.sprites()))
         self.visible_sprites.init_background()
         self.visible_sprites.init_light()
 
         # initialize pathfinder
         self.pathFinder = PathFinder(self)
+
+    def init_maze(self):
+        """
+        generate maze using the Depth First Search (DFS) algorithm
+        """
+        # runs while maze not finished
+        self.current_tile.isWall = False
+
+        self.update_tile_colors()
+
+        # sets next cell to a random neighbor of the current cell
+        next_tile = self.check_neighbors(self.current_tile.rect.x // self.settings.TILESIZE, self.current_tile.rect.y // self.settings.TILESIZE)
+
+        # if a neighboring cell is available, set it as current
+        if next_tile:
+            next_tile.isWall = False
+            self.stack.append(self.current_tile)
+            self.remove_walls(next_tile)
+            self.current_tile = next_tile
+
+        # else go back in the stack until a new cell is available again
+        elif self.stack:
+            self.current_tile = self.stack.pop()
+
+    def init_enemies(self):
+        numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
+        numberOfSpiders = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SPIDERPROPORTION + self.settings.DIFFICULTY))
+        numberOfSlimes = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SLIMEPROPORTION + self.settings.DIFFICULTY))
+
+        self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes)
+
+        # initializes all enemies
+        # enemy class initializes like this Enemy(pos, type, speed, FOV, AI, settings, groups, obstacle_sprites)
+        for i in range(numberOfWolfs):
+            self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
+            pygame.time.set_timer(self.enemyEvents[i], 1000 + i * 200)
+
+            wolf = Enemy(self.get_random_tile_in_maze(3).rect.center,
+                         'wolf',
+                         1,
+                         700,
+                         True,
+                         self.settings,
+                         [self.visible_sprites],
+                         self.obstacle_sprites)
+            self.enemies.add(wolf)
+
+        for i in range(numberOfSpiders):
+            self.enemyEvents[i + numberOfWolfs] = pygame.USEREVENT + (i + 1)
+            pygame.time.set_timer(self.enemyEvents[i + numberOfWolfs], 1000 + i * 200)
+
+            spider = Enemy(self.get_random_tile_in_maze(2).rect.center,
+                           'spider',
+                           0.7,
+                           400,
+                           True,
+                           self.settings,
+                           [self.visible_sprites],
+                           self.obstacle_sprites)
+            self.enemies.add(spider)
+
+        for i in range(numberOfSlimes):
+            self.enemyEvents[i + numberOfWolfs + numberOfSpiders] = pygame.USEREVENT + (i + 1)
+            pygame.time.set_timer(self.enemyEvents[i + numberOfWolfs + numberOfSpiders], 5000 + i*1000)
+
+            slime = Enemy(self.get_random_tile_in_maze(2).rect.center,
+                          'slime',
+                          0.4,
+                          200,
+                          False,
+                          self.settings,
+                          [self.visible_sprites],
+                          self.obstacle_sprites)
+            self.enemies.add(slime)
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
         """
@@ -212,82 +291,6 @@ class Maze(pygame.sprite.Group):
         for tile in self.grid_cells:
             tile.update_color()
 
-    def init_maze(self):
-        """
-        generate maze using the Depth First Search (DFS) algorithm
-        """
-        # runs while maze not finished
-        self.current_tile.isWall = False
-
-        self.update_tile_colors()
-
-        # sets next cell to a random neighbor of the current cell
-        next_tile = self.check_neighbors(self.current_tile.rect.x // self.settings.TILESIZE, self.current_tile.rect.y // self.settings.TILESIZE)
-
-        # if a neighboring cell is available, set it as current
-        if next_tile:
-            next_tile.isWall = False
-            self.stack.append(self.current_tile)
-            self.remove_walls(next_tile)
-            self.current_tile = next_tile
-
-        # else go back in the stack until a new cell is available again
-        elif self.stack:
-            self.current_tile = self.stack.pop()
-
-    def init_enemies(self):
-        numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
-        numberOfSpiders = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SPIDERPROPORTION + self.settings.DIFFICULTY))
-        numberOfSlimes = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SLIMEPROPORTION + self.settings.DIFFICULTY))
-
-        print(numberOfWolfs, self.settings.DIFFICULTY)
-
-        self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes)
-
-        # initializes all enemies
-        # enemy class initializes like this Enemy(pos, type, speed, FOV, AI, settings, groups, obstacle_sprites)
-        for i in range(numberOfWolfs):
-            self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
-            pygame.time.set_timer(self.enemyEvents[i], 1000 + i * 200)
-
-            wolf = Enemy(self.get_random_tile_in_maze(3).rect.center,
-                         'wolf',
-                         0.5,
-                         700,
-                         True,
-                         self.settings,
-                         [self.visible_sprites],
-                         self.obstacle_sprites)
-            self.enemies.add(wolf)
-
-        for i in range(numberOfSpiders):
-            self.enemyEvents[i + numberOfWolfs] = pygame.USEREVENT + (i + 1)
-            pygame.time.set_timer(self.enemyEvents[i + numberOfWolfs], 1000 + i * 200)
-
-            spider = Enemy(self.get_random_tile_in_maze(2).rect.center,
-                           'spider',
-                           0.4,
-                           400,
-                           True,
-                           self.settings,
-                           [self.visible_sprites],
-                           self.obstacle_sprites)
-            self.enemies.add(spider)
-
-        for i in range(numberOfSlimes):
-            self.enemyEvents[i + numberOfWolfs + numberOfSpiders] = pygame.USEREVENT + (i + 1)
-            pygame.time.set_timer(self.enemyEvents[i + numberOfWolfs + numberOfSpiders], 1000 + i * 200)
-
-            slime = Enemy(self.get_random_tile_in_maze(2).rect.center,
-                          'slime',
-                          0.2,
-                          200,
-                          False,
-                          self.settings,
-                          [self.visible_sprites],
-                          self.obstacle_sprites)
-            self.enemies.add(slime)
-
     def bake_maze(self, size: int) -> (pygame.Surface, pygame.Rect):
         """
         :param size: size of the baked map
@@ -314,28 +317,25 @@ class Maze(pygame.sprite.Group):
             enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
                                        enemy.rect.centery // self.settings.TILESIZE)
 
+            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                        self.player.rect.centery // self.settings.TILESIZE)
+
+            enemyDst = distance(enemyPos, playerPos)
+
             # the wolf is blind, so he won't go towards the player unless it moves
             if enemy.type == 'wolf' and self.player.direction.magnitude() == 0:
                 randomPos = self.get_random_tile_in_maze(1)
 
                 path = self.pathFinder.findPath(enemyPos, randomPos)
                 enemy.followPath(path=path, replace=True)
+            # activate enemy pathfinding
             elif enemy.AI:
-                closestEnemy = 100000
-
-                playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
-                                            self.player.rect.centery // self.settings.TILESIZE)
 
                 # if both exists (failsafe) pathfind to player
                 if enemyPos and playerPos:
 
-                    # activate pathfinding for enemy
-                    enemyDst = distance(enemyPos, playerPos)
-
-                    if enemyDst < closestEnemy:
-                        closestEnemy = enemyDst
-
-                    pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1)))
+                    # optimization : update enemy more frequently if close to player
+                    pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1000)))
                     if len(enemy.path) != 0:
                         enemy.followPath()
 
@@ -350,13 +350,13 @@ class Maze(pygame.sprite.Group):
 
                         path = self.pathFinder.findPath(enemyPos, randomPos)
                         enemy.followPath(path=path, replace=True)
-
-                self.settings.dstToClosestEnemy = closestEnemy
             else:
                 randomPos = self.get_random_tile_in_maze(1)
-
+                # print(enemyPos)
                 path = self.pathFinder.findPath(enemyPos, randomPos)
                 enemy.followPath(path=path, replace=True)
+
+            return enemyDst
 
     def check_victory(self):
         """
@@ -370,8 +370,9 @@ class Maze(pygame.sprite.Group):
         """
         Check if player hits enemy
         """
-        if self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies)):
-            return True
+        # if self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies)):
+        #     return True
+        # return False
         return False
 
     def check_game_state(self):
@@ -398,7 +399,7 @@ class Maze(pygame.sprite.Group):
         """
         self.__init__(self.settings)
 
-    def run(self):
+    def run(self, deltaTime):
         if self.mazeGenerated:
 
             # fade in transition
@@ -406,7 +407,8 @@ class Maze(pygame.sprite.Group):
                 self.transition -= 2
                 self.blackGradient.set_alpha(self.transition)
 
-            self.visible_sprites.update()
             self.visible_sprites.custom_draw(self.player, self.blackGradient)
+
+            self.visible_sprites.update(deltaTime)
 
             self.check_game_state()

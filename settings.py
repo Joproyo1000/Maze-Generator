@@ -30,7 +30,7 @@ class Settings:
         self.TURNFACTOR = 5
 
         # difficulty of the maze 0=easy 1=medium 2=hard
-        self.DIFFICULTY = 2
+        self.DIFFICULTY = 0
 
         # proportion of enemies for a 1000*1000 maze
         self.WOLFPROPORTION = 0.5
@@ -50,8 +50,8 @@ class Settings:
         self.LIGHTINTENSITY = 10
 
         # shaders
-        self.shadersOn = False
-        self.gamma = 10
+        self.shadersOn = True
+        self.gamma = 20
 
         # set FPS
         self.GAMEFPS = 60

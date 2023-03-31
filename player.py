@@ -1,13 +1,16 @@
 import pygame
 
+import settings
 from support import import_folder
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), type: str, TILESIZE: int, groups: [pygame.sprite.Group], obstacle_sprites: [pygame.sprite.Sprite]):
+    def __init__(self, pos: (int, int), type: str, settings: settings.Settings, groups: [pygame.sprite.Group], obstacle_sprites: [pygame.sprite.Sprite]):
         super().__init__(groups)
         # get the display surface
         self.screen = pygame.display.get_surface()
+
+        self.settings = settings
 
         # graphics setup
         self.import_player_assets(type)
@@ -20,17 +23,14 @@ class Player(pygame.sprite.Sprite):
 
         # initialize rect (bounding box of the image) and hitbox (bounding box of the collision detection)
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(0, -TILESIZE//10)  # the 10 must be adjusted to the TILESIZE
+        self.hitbox = self.rect.inflate(0, -self.settings.TILESIZE//10)  # the 10 must be adjusted to the TILESIZE
 
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
-        self.speed = 0.5
-        self.speed *= TILESIZE/10
+        self.speed = 1
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
-
-        self.TILESIZE = TILESIZE
 
     def import_player_assets(self, type: str):
         """
@@ -89,7 +89,7 @@ class Player(pygame.sprite.Sprite):
             if '_idle' not in self.status:
                 self.status = self.status + '_idle'
 
-    def move(self, speed: float):
+    def move(self, speed: float, dt: float):
         """
         :param speed: speed of the player when moving
         Moves the player after applying collisions
@@ -97,9 +97,9 @@ class Player(pygame.sprite.Sprite):
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
-        self.hitbox.x += self.direction.x * speed
+        self.hitbox.x += self.direction.x * speed * dt * 250
         self.collision('horizontal')
-        self.hitbox.y += self.direction.y * speed
+        self.hitbox.y += self.direction.y * speed * dt * 250
         self.collision('vertical')
 
         self.rect.center = self.hitbox.center
@@ -127,14 +127,14 @@ class Player(pygame.sprite.Sprite):
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
 
-    def animate(self):
+    def animate(self, dt):
         """
         Animates the player based on the current status
         """
         animation = self.animations[self.status]
 
         # loop over the frame index
-        self.frame_index += self.animation_speed
+        self.frame_index += self.animation_speed * dt * 50
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
@@ -142,11 +142,11 @@ class Player(pygame.sprite.Sprite):
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
-    def update(self):
+    def update(self, dt):
         """
         Main update method
         """
         self.input()  # get inputs
         self.set_status()  # set status
-        self.animate()  # animate based on status
-        self.move(self.speed)  # move based on inputs
+        self.animate(dt)  # animate based on status
+        self.move(self.speed, dt)  # move based on inputs

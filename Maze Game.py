@@ -1,3 +1,4 @@
+import time
 from sys import exit
 import pygame
 
@@ -127,7 +128,7 @@ class MazeGame:
                         if button.checkForInput():
                             if i == len(self.buttons)-1:
                                 transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
-                                self.settings.DIFFICULTY = self.buttons[0].value
+                                self.settings.DIFFICULTY = int(self.buttons[0].value)
                                 self.maze.FPS = self.buttons[4].value
                                 start()
 
@@ -151,10 +152,16 @@ class MazeGame:
         Main game loop
         """
 
-        self.maze.run()
+        self.maze.run(0)
         transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
+        currentTime = time.time()
+
         while True:
+            # calculate deltaTime to make the speed go at the same rate regardless of the FPS
+            deltaTime = time.time() - currentTime
+            currentTime = time.time()
+
             # set background color
             self.screen.fill(pygame.Color(46, 60, 87))
 
@@ -170,12 +177,18 @@ class MazeGame:
                         self.pause_menu()
 
                 # update all enemies
+                # dstsToPlayer = []
                 for i, enemyEvent in enumerate(self.maze.enemyEvents):
                     if event.type == enemyEvent:
                         self.maze.enemyBehavior(i)
+                        # dstsToPlayer.append(self.maze.enemyBehavior(i))
+                # if len(dstsToPlayer) > 0:
+                #     closestEnemy = sorted(dstsToPlayer)[0]
+                #     if closestEnemy <= 400:
+                #         self.settings.dstToClosestEnemy = closestEnemy
 
             # run the level
-            self.maze.run()
+            self.maze.run(deltaTime)
 
             if not self.settings.shadersOn:
                 pygame.display.update()

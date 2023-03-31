@@ -1,9 +1,11 @@
 import pygame
+
+import settings
 from support import import_folder
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, AI:bool, settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
+    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, AI:bool, settings: settings.Settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
         """
         :param pos: spawn position of the enemy
         :param type: type of the enemy
@@ -33,7 +35,6 @@ class Enemy(pygame.sprite.Sprite):
 
         self.direction = pygame.math.Vector2()
         self.speed = speed
-        self.speed *= settings.TILESIZE/10
         self.path = []
         self.AI = AI
 
@@ -84,24 +85,21 @@ class Enemy(pygame.sprite.Sprite):
         Sets the characteristics of the enemy based on its type (ex: speed, FOV, ...)
         """
         if self.type == 'wolf':
-            self.speed = 0.5 + self.settings.DIFFICULTY/10
-            self.speed *= self.settings.TILESIZE / 10
+            self.speed = self.speed + self.settings.DIFFICULTY/10
             # not follow if player isn't moving
         if self.type == 'spider':
-            self.speed = 0.3 + self.settings.DIFFICULTY/10
-            self.speed *= self.settings.TILESIZE / 10
+            self.speed = self.speed + self.settings.DIFFICULTY/10
             # spawn webs
         if self.type == 'slime':
-            self.speed = 0.1 + self.settings.DIFFICULTY/10
-            self.speed *= self.settings.TILESIZE / 10
+            self.speed = self.speed + self.settings.DIFFICULTY/10
 
-    def move(self, speed: float):
+    def move(self, speed: float, dt:float):
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
-            self.hitbox.x += self.direction.x * speed
+            self.hitbox.x += self.direction.x * speed * dt * 250
             self.collision('horizontal')
-            self.hitbox.y += self.direction.y * speed
+            self.hitbox.y += self.direction.y * speed * dt * 250
             self.collision('vertical')
 
             self.rect.center = self.hitbox.center
@@ -165,14 +163,14 @@ class Enemy(pygame.sprite.Sprite):
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
 
-    def animate(self):
+    def animate(self, dt):
         """
         Animates the ennemy based on the current status
         """
         animation = self.animations[self.status]
 
         # loop over the frame index
-        self.frame_index += self.animation_speed
+        self.frame_index += self.animation_speed * dt * 50
         if self.frame_index >= len(animation) - self.animation_speed:
             self.frame_index = 0
 
@@ -180,7 +178,7 @@ class Enemy(pygame.sprite.Sprite):
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
-    def update(self):
+    def update(self, dt):
         self.set_status()  # set status
-        self.animate()  # animate based on status
-        self.move(self.speed)  # move based on path
+        self.animate(dt)  # animate based on status
+        self.move(self.speed, dt)  # move based on path

@@ -134,7 +134,8 @@ class YSortCameraGroup(pygame.sprite.Group):
                                              self.settings.TILESIZE, self.settings.TILESIZE))
 
         # lighting
-        # self.render_light()
+        if self.settings.shadersOn:
+            self.render_light()
 
         # draw player after lighting so that it is not affected
         self.blit(player, customImage=cutPlayerSprite)
