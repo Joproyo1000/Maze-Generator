@@ -136,7 +136,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 if sprite.isWall:
                     self.blit(sprite)
 
-            elif str(type(sprite)) == "<class 'enemy.Enemy'>" or str(type(sprite)) == "<class 'objects.Torch'>":
+            elif str(type(sprite)) != "<class 'player.Player'>":
                 self.blit(sprite)
 
         # remove surrounding wall sprites from player image

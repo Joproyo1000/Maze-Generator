@@ -50,7 +50,7 @@ class Settings:
         self.LIGHTINTENSITY = 10
 
         # shaders
-        self.shadersOn = True
+        self.shadersOn = False
         self.gamma = 20
 
         # set FPS

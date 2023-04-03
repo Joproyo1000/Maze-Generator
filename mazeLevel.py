@@ -9,7 +9,7 @@ from random import choice
 from cameras import YSortCameraGroup
 from player import Player
 from enemy import Enemy
-from objects import Torch
+from objects import Torch, Chest
 from spatial_hashmap import HashMap
 from pathFinding import PathFinder
 from support import distance
@@ -118,8 +118,8 @@ class Maze(pygame.sprite.Group):
         for r in range(self.settings.currentLevel + 1):
             center = self.get_random_tile_in_maze(2)
 
-            torch = Torch(center.rect.center, 'right', self.settings, [self.visible_sprites])
-            print(torch.rect)
+            Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
+            Chest(center.rect.center, self.settings, [self.visible_sprites])
 
             for neighbor in self.get_neighbors(center):
                 if neighbor.rect.left != 0 and neighbor.rect.top != 0 and neighbor.rect.right != self.cols * self.settings.TILESIZE and neighbor.rect.bottom != self.rows * self.settings.TILESIZE:
@@ -368,6 +368,29 @@ class Maze(pygame.sprite.Group):
                 return enemyDst
 
         return None
+
+    def rayCast(self, origin: Tile, direction: str, size: float) -> [Tile]:
+        """
+        :param origin: center of the ray
+        :param direction: direction in which the ray should be cast
+        :param size: size of the ray (in tiles)
+        :return: a list of tiles that has been touched by the ray
+        """
+        directions = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
+        res = []
+
+        target = origin
+        origin = pygame.Vector2(origin.rect.x // self.settings.TILESIZE, origin.rect.y // self.settings.TILESIZE)
+
+        ray = pygame.Vector2(directions[direction])
+        while ray.magnitude() < size and not target.isWall:
+            target = self.check_tile(int((origin + ray).x), int((origin + ray).y))
+            if target:
+                res.append(target)
+
+            ray.scale_to_length(ray.magnitude() + 1)
+
+        return res
 
     def check_victory(self):
         """
