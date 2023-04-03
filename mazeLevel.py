@@ -9,6 +9,7 @@ from random import choice
 from cameras import YSortCameraGroup
 from player import Player
 from enemy import Enemy
+from objects import Torch
 from spatial_hashmap import HashMap
 from pathFinding import PathFinder
 from support import distance
@@ -74,6 +75,7 @@ class Maze(pygame.sprite.Group):
         # generate maze
         while self.stack or self.grid_cells[self.cols + 1].isWall:
             self.init_maze()
+        self.init_rooms()
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
@@ -83,7 +85,6 @@ class Maze(pygame.sprite.Group):
 
         # initialize main things in maze
         self.init_enemies()
-        print(list(e.rect.center for e in self.enemies.sprites()))
         self.visible_sprites.init_background()
         self.visible_sprites.init_light()
 
@@ -112,6 +113,17 @@ class Maze(pygame.sprite.Group):
         # else go back in the stack until a new cell is available again
         elif self.stack:
             self.current_tile = self.stack.pop()
+
+    def init_rooms(self):
+        for r in range(self.settings.currentLevel + 1):
+            center = self.get_random_tile_in_maze(2)
+
+            torch = Torch(center.rect.center, 'right', self.settings, [self.visible_sprites])
+            print(torch.rect)
+
+            for neighbor in self.get_neighbors(center):
+                if neighbor.rect.left != 0 and neighbor.rect.top != 0 and neighbor.rect.right != self.cols * self.settings.TILESIZE and neighbor.rect.bottom != self.rows * self.settings.TILESIZE:
+                    neighbor.isWall = False
 
     def init_enemies(self):
         numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
@@ -241,7 +253,7 @@ class Maze(pygame.sprite.Group):
     def get_random_tile_in_maze(self, distanceFromPlayer):
         """
         :param distanceFromPlayer: 1 is close, 2 is middle, 3 is far
-        :return: a random pos that is not a wall in the grid and that is at least further away than the given distance
+        :return: a random pos tile is not a wall in the grid and that is at least further away than the given distance
         """
         if distanceFromPlayer < 1 or distanceFromPlayer > 3:
             raise ValueError(f'distanceFromPlayer cannot be {distanceFromPlayer}. It must be either 1, 2 or 3')
@@ -320,20 +332,17 @@ class Maze(pygame.sprite.Group):
             playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
                                         self.player.rect.centery // self.settings.TILESIZE)
 
-            enemyDst = distance(enemyPos, playerPos)
+            # if both exists (failsafe) pathfind to player
+            if enemyPos and playerPos:
+                enemyDst = distance(enemyPos, playerPos)
 
-            # the wolf is blind, so he won't go towards the player unless it moves
-            if enemy.type == 'wolf' and self.player.direction.magnitude() == 0:
-                randomPos = self.get_random_tile_in_maze(1)
-
-                path = self.pathFinder.findPath(enemyPos, randomPos)
-                enemy.followPath(path=path, replace=True)
-            # activate enemy pathfinding
-            elif enemy.AI:
-
-                # if both exists (failsafe) pathfind to player
-                if enemyPos and playerPos:
-
+                # the wolf is blind, so he won't go towards the player unless it moves
+                if enemy.type == 'wolf' and self.player.direction.magnitude() == 0:
+                    randomPos = self.get_random_tile_in_maze(1)
+                    path = self.pathFinder.findPath(enemyPos, randomPos)
+                    enemy.followPath(path=path, replace=True)
+                # activate enemy pathfinding to player
+                elif enemy.AI:
                     # optimization : update enemy more frequently if close to player
                     pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1000)))
                     if len(enemy.path) != 0:
@@ -350,13 +359,15 @@ class Maze(pygame.sprite.Group):
 
                         path = self.pathFinder.findPath(enemyPos, randomPos)
                         enemy.followPath(path=path, replace=True)
-            else:
-                randomPos = self.get_random_tile_in_maze(1)
-                # print(enemyPos)
-                path = self.pathFinder.findPath(enemyPos, randomPos)
-                enemy.followPath(path=path, replace=True)
+                # activate enemy pathfinding to random location
+                else:
+                    randomPos = self.get_random_tile_in_maze(1)
+                    path = self.pathFinder.findPath(enemyPos, randomPos)
+                    enemy.followPath(path=path, replace=True)
 
-            return enemyDst
+                return enemyDst
+
+        return None
 
     def check_victory(self):
         """

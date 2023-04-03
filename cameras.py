@@ -41,7 +41,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.ySortSprites = []
 
         for sprite in self.sprites():
-            if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
+            if str(type(sprite)) == "<class 'tile.Tile'>":
                 if not sprite.isWall:
                     self.blit(sprite, customScreen=self.background)
                 else:
@@ -56,9 +56,20 @@ class YSortCameraGroup(pygame.sprite.Group):
         lightColor = self.settings.LIGHTCOLOR
         lightSize = self.settings.LIGHTRADIUS
         self.light = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
+
+
         # create shadow objects (walls, etc...)
         # the rect's y parameter must be adjusted to the TILESIZE
-        self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/12, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if not (str(type(tile)) == "<class 'player.Player'>" or str(type(tile)) == "<class 'enemy.Enemy'>") and tile.isWall]
+        self.shadow_objects = [pygame.Rect(tile.rect.topleft[0], tile.rect.topleft[1] / self.perspectiveOffset - self.settings.TILESIZE/12, self.settings.TILESIZE, self.settings.TILESIZE).inflate(0, -14) for tile in self.sprites() if str(type(tile)) == "<class 'tile.Tile'>" and tile.isWall]
+
+        self.torches = []
+        for sprite in self.sprites():
+            if str(type(sprite)) == "<class 'objects.Torch'>":
+                torch = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
+                pos = (sprite.rect.centerx, sprite.rect.centery / self.perspectiveOffset)
+                torch.baked_lighting(self.shadow_objects, pos[0], pos[1], pygame.Vector2(0, 0), False)
+
+                self.torches.append([torch, pos])
 
     def render_light(self):
         """
@@ -69,8 +80,12 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # global light darkens the background
         lights_display.blit(global_light(self.screen.get_size(), self.settings.LIGHTINTENSITY), (0, 0))
-        # main light
+
+        # show lights
         self.light.main(self.shadow_objects, self.offset, lights_display, self.half_width, self.half_height)
+
+        for torch, pos in self.torches:
+            torch.main([], (0, 0), lights_display, pos[0] - self.offset.x, pos[1] - self.offset.y)
 
         # show the light on the screen
         self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
@@ -117,11 +132,11 @@ class YSortCameraGroup(pygame.sprite.Group):
         # draw every sprite sorted by y coordinate
         for sprite in sorted(self.ySortSprites, key=lambda sprite: sprite.rect.centery):
             # separate the player from the tiles
-            if not (str(type(sprite)) == "<class 'player.Player'>" or str(type(sprite)) == "<class 'enemy.Enemy'>"):
+            if str(type(sprite)) == "<class 'tile.Tile'>":
                 if sprite.isWall:
                     self.blit(sprite)
 
-            elif str(type(sprite)) == "<class 'enemy.Enemy'>":
+            elif str(type(sprite)) == "<class 'enemy.Enemy'>" or str(type(sprite)) == "<class 'objects.Torch'>":
                 self.blit(sprite)
 
         # remove surrounding wall sprites from player image
@@ -146,7 +161,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         # apply heart beat effect if activated
         scaledScreen = self.screen
         if self.settings.showHeartBeatEffect:
-            if self.settings.dstToClosestEnemy < 400:
+            if self.settings.dstToClosestEnemy <= 400:
                 hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
 
                 scaledScreen = pygame.transform.scale(self.screen, (self.settings.WIDTH + hearBeatEffectFactor*10, self.settings.HEIGHT + hearBeatEffectFactor*10))

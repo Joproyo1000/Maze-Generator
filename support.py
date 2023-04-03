@@ -18,6 +18,11 @@ def import_folder(path, size):
 
 
 def distance(a:tile, b:tile):
+    if isinstance(a, bool):
+        raise TypeError(f'A should be of type Tile and not {a}')
+    if isinstance(b, bool):
+        raise TypeError(f'B should be of type Tile and not {b}')
+
     return math.sqrt(sum((a.pos[i] - b.pos[i])**2 for i in range(2)))
 
 

@@ -16,12 +16,12 @@ class LIGHT:
         self.baked_pixel_shader_surf = pixel_shader.copy()
         self.render_surface.set_colorkey((0, 0, 0))
 
-    def baked_lighting(self, tiles, x, y, reset_surface):
+    def baked_lighting(self, tiles, x, y, offset, reset_surface):
         if reset_surface: self.baked_pixel_shader_surf = self.pixel_shader_surf.copy()
 
         dx, dy = x - self.radius, y - self.radius
 
-        for point in self.get_tiles(tiles, x, y):
+        for point in self.get_tiles(tiles, x, y, offset):
             corners = self.get_corners(point, x, y)
             corners = [[corners[0][0] - dx, corners[0][1] - dy], [corners[1][0] - dx, corners[1][1] - dy],
                        [corners[2][0] - dx, corners[2][1] - dy]]

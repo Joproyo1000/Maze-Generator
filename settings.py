@@ -61,7 +61,7 @@ class Settings:
         self.volume = 0
 
         # toggle heart beat effect in shaders
-        self.showHeartBeatEffect = True
+        self.showHeartBeatEffect = False
 
         # keep track of distance to the closest enemy
         self.dstToClosestEnemy = 1000000

@@ -10,7 +10,11 @@ class Player(pygame.sprite.Sprite):
         # get the display surface
         self.screen = pygame.display.get_surface()
 
+        # get settings
         self.settings = settings
+
+        # set type
+        self.type = type
 
         # graphics setup
         self.import_player_assets(type)
@@ -98,9 +102,9 @@ class Player(pygame.sprite.Sprite):
             self.direction = self.direction.normalize()
 
         self.hitbox.x += self.direction.x * speed * dt * 250
-        self.collision('horizontal')
+        # self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed * dt * 250
-        self.collision('vertical')
+        # self.collision('vertical')
 
         self.rect.center = self.hitbox.center
 

@@ -19,6 +19,10 @@ class Enemy(pygame.sprite.Sprite):
         # get the display surface
         self.screen = pygame.display.get_surface()
 
+        # get settings
+        self.settings = settings
+
+        # set type
         self.type = type
 
         # graphics setup
@@ -42,8 +46,6 @@ class Enemy(pygame.sprite.Sprite):
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
-
-        self.settings = settings
 
         self.set_enemy_behavior()
     def import_ennemy_assets(self):

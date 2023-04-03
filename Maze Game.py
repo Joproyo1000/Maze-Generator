@@ -177,15 +177,16 @@ class MazeGame:
                         self.pause_menu()
 
                 # update all enemies
-                # dstsToPlayer = []
+                dstsToPlayer = []
                 for i, enemyEvent in enumerate(self.maze.enemyEvents):
                     if event.type == enemyEvent:
-                        self.maze.enemyBehavior(i)
-                        # dstsToPlayer.append(self.maze.enemyBehavior(i))
-                # if len(dstsToPlayer) > 0:
-                #     closestEnemy = sorted(dstsToPlayer)[0]
-                #     if closestEnemy <= 400:
-                #         self.settings.dstToClosestEnemy = closestEnemy
+                        d = self.maze.enemyBehavior(i)
+                        if d is not None:
+                            dstsToPlayer.append(d)
+                # keep track of closest enemy to player
+                if len(dstsToPlayer) > 0:
+                    closestEnemy = sorted(dstsToPlayer)[0]
+                    self.settings.dstToClosestEnemy = closestEnemy
 
             # run the level
             self.maze.run(deltaTime)
@@ -255,7 +256,8 @@ class MazeGame:
         """
         Draws background, buttons and additional debug info for menus
         """
-        self.screen.fill(pygame.Color(46, 60, 87))
+        # self.screen.fill(pygame.Color(46, 60, 87))
+        self.screen.fill('white')
 
         # debug FPS count
         debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
