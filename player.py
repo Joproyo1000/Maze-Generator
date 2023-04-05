@@ -32,6 +32,10 @@ class Player(pygame.sprite.Sprite):
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
         self.speed = 1
+        self.getInput = True
+
+        # initialize inventory
+        self.inventory = []
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
@@ -150,7 +154,14 @@ class Player(pygame.sprite.Sprite):
         """
         Main update method
         """
-        self.input()  # get inputs
+        if self.getInput:
+            self.input()  # get inputs
+        else:
+            self.direction *= 0
         self.set_status()  # set status
         self.animate(dt)  # animate based on status
         self.move(self.speed, dt)  # move based on inputs
+
+        # items = {0:' freeze', 1: 'heal', 2: map, 3: 'scissors'}
+        # for item in self.inventory:
+        #     print(items[item])

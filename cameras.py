@@ -128,6 +128,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         # we create a copy of the player sprite that we are going to cut to prevent overlap with the walls
         # we do that so that the player sprite isn't affected by lighting since it would cause some bugs
         cutPlayerSprite = player.image.copy()
+        objects = []
 
         # draw every sprite sorted by y coordinate
         for sprite in sorted(self.ySortSprites, key=lambda sprite: sprite.rect.centery):
@@ -137,7 +138,21 @@ class YSortCameraGroup(pygame.sprite.Group):
                     self.blit(sprite)
 
             elif str(type(sprite)) != "<class 'player.Player'>":
+                # draw objects and enemies
+                objects.append(sprite)
                 self.blit(sprite)
+
+        # remove all objects from player image
+        for object in objects:
+            if object.rect.centery > player.rect.centery:
+                if str(type(object)) == "<class 'objects.Chest'>":
+                    offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx + 9, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 7.5, object.rect.width, object.rect.height)
+                if str(type(object)) == "<class 'objects.Torch'>":
+                    offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx - 15, (object.rect.centery - player.rect.centery) / self.perspectiveOffset - 30, object.rect.width, object.rect.height)
+                    cutPlayerSprite.blit(object.image, offsetRect)
+                if str(type(object)) == "<class 'enemy.Enemy'>":
+                    offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 2, object.rect.width, object.rect.height)
+                cutPlayerSprite.blit(object.image, offsetRect)
 
         # remove surrounding wall sprites from player image
         for sprite in self.get_neighbors(self.check_tile(player.rect.centerx // self.settings.TILESIZE,

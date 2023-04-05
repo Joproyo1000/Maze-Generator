@@ -8,7 +8,6 @@ class Settings:
         self.screen = pygame.display.get_surface()
 
         # set size of screen
-        # self.WIDTH, self.HEIGHT = 1400, 800
         self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
 
         # set size of maze for each level
@@ -19,11 +18,11 @@ class Settings:
 
         self.currentLevel = 0
 
-        # set the resolution for the screen
+        # set the resolution for the screen and the maze
         self.RESOLUTION = self.WIDTH, self.HEIGHT
         self.MAZERESOLUTION = self.MAZEWIDTHS[self.currentLevel], self.MAZEHEIGHTS[self.currentLevel]
 
-        # set the tilesize (larger ones means smaller maze)
+        # set the tilesize in the maze (larger ones means smaller maze)
         self.TILESIZE = 120
 
         # randomness of the maze
@@ -41,24 +40,24 @@ class Settings:
         self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
 
         # colors
-        self.WALLCOLOR = 'darkgreen'
-        self.PATHCOLOR = 'green'
+        self.WALLCOLOR = 'darkgreen'  # color of the wall on the map
+        self.PATHCOLOR = 'green'  # color of the path on the map
 
         # lighting
-        self.LIGHTCOLOR = (255, 255, 200)
-        self.LIGHTRADIUS = 250 * self.TILESIZE//60
-        self.LIGHTINTENSITY = 10
+        self.LIGHTCOLOR = (255, 255, 200)  # color of the light
+        self.LIGHTRADIUS = 250 * self.TILESIZE//60  # size of the light
+        self.LIGHTINTENSITY = 10  # intensity of the light
 
         # shaders
-        self.shadersOn = False
-        self.gamma = 20
+        self.shadersOn = False  # activate shader
+        self.gamma = 20  # default gamma value
 
         # set FPS
         self.GAMEFPS = 60
 
         # initialize music
         self.music = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.volume = 0
+        self.volume = 0  # default volume
 
         # toggle heart beat effect in shaders
         self.showHeartBeatEffect = False

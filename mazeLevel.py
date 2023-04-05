@@ -39,6 +39,8 @@ class Maze(pygame.sprite.Group):
         # create two groups, one for sprites that need to be drawn on th screen, the other for the ones with collisions
         self.visible_sprites = YSortCameraGroup(self.settings, self.get_neighbors, self.check_tile)
         self.obstacle_sprites = HashMap(self.settings.TILESIZE, self.cols)
+        # initialize enemies group
+        self.enemies = pygame.sprite.Group()
 
         # initialize the grid of cells
         self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites]) for row in range(self.rows) for col in range(self.cols)]
@@ -52,15 +54,6 @@ class Maze(pygame.sprite.Group):
         self.current_tile = self.start_tile
         self.goal = self.grid_cells[self.cols * self.rows - self.cols - 2]
 
-        # initialize the stack (used to generate the maze)
-        self.stack = []
-
-        # initialize the player and put it on the first tile
-        self.player = Player(self.start_tile.rect.center, 'girl', self.settings, [self.visible_sprites], self.obstacle_sprites)
-
-        # initialize enemies
-        self.enemies = pygame.sprite.Group()
-
         #region variables
         # True if maze is done generating
         self.mazeGenerated = False
@@ -72,10 +65,17 @@ class Maze(pygame.sprite.Group):
         self.currentTime = time.time()
         #endregion
 
+        # initialize the stack (used to generate the maze)
+        self.stack = []
+
         # generate maze
+        self.chests = []
         while self.stack or self.grid_cells[self.cols + 1].isWall:
             self.init_maze()
         self.init_rooms()
+
+        # initialize the player and put it on the first tile
+        self.player = Player(self.start_tile.rect.center, 'girl', self.settings, [self.visible_sprites], self.obstacle_sprites)
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
@@ -83,7 +83,7 @@ class Maze(pygame.sprite.Group):
 
         self.mazeGenerated = True
 
-        # initialize main things in maze
+        # initialize lighting, objects and enemies in maze
         self.init_enemies()
         self.visible_sprites.init_background()
         self.visible_sprites.init_light()
@@ -115,17 +115,27 @@ class Maze(pygame.sprite.Group):
             self.current_tile = self.stack.pop()
 
     def init_rooms(self):
-        for r in range(self.settings.currentLevel + 1):
+        """
+        Initialize all rooms with a chest in the middle and a torch on top
+        """
+        # repeat for every room
+        for _ in range(self.settings.currentLevel + 1):
+            # get center of the room
             center = self.get_random_tile_in_maze(2)
 
+            # initialize torch and chest objects
             Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
-            Chest(center.rect.center, self.settings, [self.visible_sprites])
+            self.chests.append(Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites]))
 
+            # remove all tiles in a 3*3 square to form a room
             for neighbor in self.get_neighbors(center):
                 if neighbor.rect.left != 0 and neighbor.rect.top != 0 and neighbor.rect.right != self.cols * self.settings.TILESIZE and neighbor.rect.bottom != self.rows * self.settings.TILESIZE:
                     neighbor.isWall = False
 
     def init_enemies(self):
+        """
+        Initialize all enemies (wolves, spiders and slimes) and spawns them in maze according to the difficulty
+        """
         numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
         numberOfSpiders = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SPIDERPROPORTION + self.settings.DIFFICULTY))
         numberOfSlimes = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SLIMEPROPORTION + self.settings.DIFFICULTY))
@@ -133,7 +143,7 @@ class Maze(pygame.sprite.Group):
         self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes)
 
         # initializes all enemies
-        # enemy class initializes like this Enemy(pos, type, speed, FOV, AI, settings, groups, obstacle_sprites)
+        # enemy class initializes like this Enemy(position, type, speed, FOV, AI, settings, groups, obstacle sprites)
         for i in range(numberOfWolfs):
             self.enemyEvents[i] = pygame.USEREVENT + (i + 1)
             pygame.time.set_timer(self.enemyEvents[i], 1000 + i * 200)
@@ -234,6 +244,10 @@ class Maze(pygame.sprite.Group):
         return choice(neighbors) if neighbors else False
 
     def get_neighbors(self, tile):
+        """
+        :param tile: target tile
+        :return: all existing neighbors of the target tile
+        """
         neighbors = []
         for x in range(-1, 2):
             for y in range(-1, 2):
@@ -392,6 +406,11 @@ class Maze(pygame.sprite.Group):
 
         return res
 
+    def check_chest(self):
+        for chest in self.chests:
+            if self.player.hitbox.colliderect(chest.rect):
+                chest.open(self.player)
+
     def check_victory(self):
         """
         Check if player reaches goal
@@ -406,13 +425,14 @@ class Maze(pygame.sprite.Group):
         """
         # if self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies)):
         #     return True
-        # return False
         return False
 
     def check_game_state(self):
         """
         Check if game is supposed to end
         """
+        self.check_chest()
+
         if self.check_victory():
             self.settings.currentLevel += 1
             # check if player as reached exit of last level
@@ -433,7 +453,12 @@ class Maze(pygame.sprite.Group):
         """
         self.__init__(self.settings)
 
-    def run(self, deltaTime):
+    def run(self, deltaTime, getInput=True):
+        """
+        :param deltaTime: time interval between two frames
+        :param getInput: activate or no player input
+        Updates all sprites in maze and takes care of the game state
+        """
         if self.mazeGenerated:
 
             # fade in transition
@@ -443,6 +468,7 @@ class Maze(pygame.sprite.Group):
 
             self.visible_sprites.custom_draw(self.player, self.blackGradient)
 
+            self.player.getInput = getInput
             self.visible_sprites.update(deltaTime)
 
             self.check_game_state()

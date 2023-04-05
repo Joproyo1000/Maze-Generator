@@ -48,6 +48,7 @@ class Enemy(pygame.sprite.Sprite):
         self.obstacle = pygame.sprite.Group()
 
         self.set_enemy_behavior()
+
     def import_ennemy_assets(self):
         """
         :param type: type of the ennemy
@@ -179,6 +180,7 @@ class Enemy(pygame.sprite.Sprite):
         # set the image
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.hitbox.center)
+
 
     def update(self, dt):
         self.set_status()  # set status

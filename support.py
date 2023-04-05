@@ -17,16 +17,16 @@ def import_folder(path, size):
     return surface_list
 
 
-def distance(a:tile, b:tile):
+def distance(a: tile, b: tile):
     if isinstance(a, bool):
         raise TypeError(f'A should be of type Tile and not {a}')
     if isinstance(b, bool):
         raise TypeError(f'B should be of type Tile and not {b}')
 
-    return math.sqrt(sum((a.pos[i] - b.pos[i])**2 for i in range(2)))
+    return math.sqrt(sum((a.pos[i] - b.pos[i]) ** 2 for i in range(2)))
 
 
-def transitionStart(screen: pygame.Surface, shader=None):
+def fadeTransitionStart(screen: pygame.Surface, shader=None):
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
     for a in range(150):
@@ -39,7 +39,7 @@ def transitionStart(screen: pygame.Surface, shader=None):
         pygame.time.delay(5)
 
 
-def transitionEnd(screen: pygame.Surface, shader=None):
+def fadeTransitionEnd(screen: pygame.Surface, shader=None):
     background = screen.copy()
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
@@ -52,6 +52,42 @@ def transitionEnd(screen: pygame.Surface, shader=None):
             pygame.display.update()
         else:
             shader.render(screen)
+        pygame.time.delay(5)
+
+
+def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface):
+    background = screen.copy()
+    rect = screen.get_rect(topleft=screen.get_rect().bottomleft)
+
+    screen.blit(surface, rect)
+    j = screen.get_height() // 6
+    while rect.y > 0:
+        screen.blit(background, (0, 0))
+        screen.blit(surface, rect)
+
+        pygame.display.flip()
+
+        rect.y -= j
+        j -= j // 6
+
+        pygame.time.delay(5)
+
+
+def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface):
+    background = screen.copy()
+    rect = screen.get_rect()
+
+    screen.blit(surface, rect)
+    j = screen.get_height() // 6
+    while rect.y < screen.get_height():
+        screen.blit(background, (0, 0))
+        screen.blit(surface, rect)
+
+        pygame.display.flip()
+
+        rect.y += j
+        j += j // 6
+
         pygame.time.delay(5)
 
 
@@ -127,9 +163,9 @@ class CheckButton:
 
         if self.value:
             pygame.draw.line(screen, self.base_color, (self.cross_rect.left + 4, self.cross_rect.top + 4),
-                                                      (self.cross_rect.right - 4, self.cross_rect.bottom - 4), 8)
+                             (self.cross_rect.right - 4, self.cross_rect.bottom - 4), 8)
             pygame.draw.line(screen, self.base_color, (self.cross_rect.left + 4, self.cross_rect.bottom - 4),
-                                                      (self.cross_rect.right - 4, self.cross_rect.top + 4), 8)
+                             (self.cross_rect.right - 4, self.cross_rect.top + 4), 8)
 
         self.changeColor()
 
@@ -150,7 +186,8 @@ class CheckButton:
 
 
 class Slider:
-    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color, ball_color, size, startVal, custom=None):
+    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color,
+                 ball_color, size, startVal, custom=None):
         self.base_color, self.exterior_color, self.interior_color, self.hovering_color, self.ball_color = base_color, exterior_color, interior_color, hovering_color, ball_color
 
         # main rectangle of the slider (the biggest one)
@@ -208,7 +245,8 @@ class Slider:
             self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True, self.base_color)  # text
             self.text_rect.centerx = self.x_pos - (len(": " + str(round(self.value))) * 20) / 2
         else:
-            self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True, self.base_color)  # text
+            self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True,
+                                         self.base_color)  # text
             self.text_rect.centerx = self.x_pos - (len(": " + self.custom[round(self.value)]) * 20) / 2
         screen.blit(self.text, self.text_rect)  # show text
 
@@ -229,7 +267,7 @@ class Slider:
         # value from pos = ((distance between right of the small slider and ball / - width of the slider) + 1) * 100
         #                   * (range of values / 100) + minimum value
         value = ((self.slider_small_rect.right - self.slider_ball.centerx) / (
-                    self.slider_small_rect.left - self.slider_small_rect.right) + 1) * 100
+                self.slider_small_rect.left - self.slider_small_rect.right) + 1) * 100
         value = value * ((self.range[1] - self.range[0]) / 100) + self.range[0]
 
         return value

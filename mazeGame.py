@@ -1,12 +1,13 @@
 import time
 from sys import exit
+
 import pygame
 
 from mazeLevel import Maze
 from settings import Settings
 from shaders import Shader
 from debug import debug
-from support import Button, CheckButton, Slider, transitionStart, transitionEnd
+from support import *
 
 
 class MazeGame:
@@ -55,7 +56,7 @@ class MazeGame:
         self.draw_screen()
 
 
-        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
+        fadeTransitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # used for taking inputs
@@ -68,11 +69,11 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == 0:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.maze.reset()
                                 self.game()
                             if i == 1:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.settings_menu(self.main_menu)
                             if i == 2:
                                 pygame.quit()
@@ -114,7 +115,7 @@ class MazeGame:
 
         self.draw_screen()
 
-        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
+        fadeTransitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # used for taking inputs
@@ -127,7 +128,7 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == len(self.buttons)-1:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.settings.DIFFICULTY = int(self.buttons[0].value)
                                 self.maze.FPS = self.buttons[4].value
                                 start()
@@ -147,13 +148,14 @@ class MazeGame:
             # set FPS
             self.clock.tick(self.maze.FPS)
 
-    def game(self):
+    def game(self, doTransition=True):
         """
         Main game loop
         """
 
-        self.maze.run(0)
-        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
+        if doTransition:
+            self.maze.run(0)
+            fadeTransitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         currentTime = time.time()
 
@@ -175,12 +177,15 @@ class MazeGame:
                     key = pygame.key.get_pressed()
                     if key[pygame.K_ESCAPE]:
                         self.pause_menu()
+                    if key[pygame.K_m]:
+                        self.map()
 
                 # update all enemies
                 dstsToPlayer = []
                 for i, enemyEvent in enumerate(self.maze.enemyEvents):
                     if event.type == enemyEvent:
-                        d = self.maze.enemyBehavior(i)
+                        # d = self.maze.enemyBehavior(i)
+                        d = None
                         if d is not None:
                             dstsToPlayer.append(d)
                 # keep track of closest enemy to player
@@ -190,6 +195,51 @@ class MazeGame:
 
             # run the level
             self.maze.run(deltaTime)
+
+            if not self.settings.shadersOn:
+                pygame.display.update()
+
+            # set FPS
+            self.clock.tick(self.maze.FPS)
+
+    def map(self):
+        """
+        Map display
+        """
+        currentTime = time.time()
+
+        self.maze.run(0, getInput=False)
+        mapImg = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(), (self.screen.get_size()))
+        slideTransitionStart(self.screen, mapImg)
+
+        while True:
+            # calculate deltaTime to make the speed go at the same rate regardless of the FPS
+            deltaTime = time.time() - currentTime
+            currentTime = time.time()
+
+            # set background color
+            self.screen.fill(pygame.Color(46, 60, 87))
+
+            # used for taking inputs
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    key = pygame.key.get_pressed()
+                    if key[pygame.K_ESCAPE]:
+                        self.maze.run(0, getInput=False)
+                        slideTransitionEnd(self.screen, mapImg)
+                        self.game(0)
+                    if key[pygame.K_m]:
+                        self.maze.run(0, getInput=False)
+                        slideTransitionEnd(self.screen, mapImg)
+                        self.game(0)
+
+            # run the level
+            self.maze.run(deltaTime, getInput=False)
+            self.screen.blit(mapImg, (0, 0))
 
             if not self.settings.shadersOn:
                 pygame.display.update()
@@ -211,7 +261,7 @@ class MazeGame:
 
         self.draw_screen()
 
-        transitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
+        fadeTransitionEnd(self.screen, self.shader if self.settings.shadersOn else None)
 
         while True:
             # set background color
@@ -232,14 +282,14 @@ class MazeGame:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
                             if i == 0:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.maze.transition = 200
                                 self.game()
                             elif i == 1:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.settings_menu(self.pause_menu)
                             elif i == 2:
-                                transitionStart(self.screen, self.shader if self.settings.shadersOn else None)
+                                fadeTransitionStart(self.screen, self.shader if self.settings.shadersOn else None)
                                 self.main_menu()
 
             self.draw_screen()
@@ -256,8 +306,8 @@ class MazeGame:
         """
         Draws background, buttons and additional debug info for menus
         """
-        # self.screen.fill(pygame.Color(46, 60, 87))
-        self.screen.fill('white')
+        self.screen.fill(pygame.Color(46, 60, 87))
+        # self.screen.fill('white')
 
         # debug FPS count
         debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10))
