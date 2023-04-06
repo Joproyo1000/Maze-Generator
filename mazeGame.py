@@ -1,7 +1,6 @@
 import time
-from sys import exit
 
-import pygame
+from sys import exit
 
 from mazeLevel import Maze
 from settings import Settings
@@ -209,8 +208,10 @@ class MazeGame:
         currentTime = time.time()
 
         self.maze.run(0, getInput=False)
-        mapImg = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(), (self.screen.get_size()))
-        slideTransitionStart(self.screen, mapImg)
+        mapImg = self.maze.bake_map()
+        mapSurf = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(), (self.screen.get_size()))
+        mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
+        slideTransitionStart(self.screen, mapSurf)
 
         while True:
             # calculate deltaTime to make the speed go at the same rate regardless of the FPS
@@ -230,16 +231,16 @@ class MazeGame:
                     key = pygame.key.get_pressed()
                     if key[pygame.K_ESCAPE]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, mapImg)
+                        slideTransitionEnd(self.screen, mapSurf)
                         self.game(0)
                     if key[pygame.K_m]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, mapImg)
+                        slideTransitionEnd(self.screen, mapSurf)
                         self.game(0)
 
             # run the level
             self.maze.run(deltaTime, getInput=False)
-            self.screen.blit(mapImg, (0, 0))
+            self.screen.blit(mapSurf, (0, 0))
 
             if not self.settings.shadersOn:
                 pygame.display.update()

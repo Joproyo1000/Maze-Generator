@@ -148,7 +148,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 if str(type(object)) == "<class 'objects.Chest'>":
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx + 9, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 7.5, object.rect.width, object.rect.height)
                 if str(type(object)) == "<class 'objects.Torch'>":
-                    offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx - 15, (object.rect.centery - player.rect.centery) / self.perspectiveOffset - 30, object.rect.width, object.rect.height)
+                    offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx - 15, (object.rect.centery - player.rect.centery) / self.perspectiveOffset - 32, object.rect.width, object.rect.height)
                     cutPlayerSprite.blit(object.image, offsetRect)
                 if str(type(object)) == "<class 'enemy.Enemy'>":
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 2, object.rect.width, object.rect.height)

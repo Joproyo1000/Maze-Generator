@@ -14,7 +14,7 @@ class Settings:
         self.numLevels = 3
         self.MAZEWIDTHS, self.MAZEHEIGHTS = [0] * self.numLevels, [0] * self.numLevels
         for i in range(self.numLevels):
-            self.MAZEWIDTHS[i], self.MAZEHEIGHTS[i] = (i+1) * 2000, (i+1) * 2000
+            self.MAZEWIDTHS[i], self.MAZEHEIGHTS[i] = (i+1) * 3200, (i+1) * 2000
 
         self.currentLevel = 0
 
@@ -40,8 +40,11 @@ class Settings:
         self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
 
         # colors
-        self.WALLCOLOR = 'darkgreen'  # color of the wall on the map
-        self.PATHCOLOR = 'green'  # color of the path on the map
+        self.WALLCOLOR = 'darkgoldenrod'  # color of the wall on the map
+        self.PATHCOLOR = 'darkgoldenrod2'  # color of the path on the map
+        self.PLAYERCOLOR = 'blue'
+        self.GOALCOLOR = 'gold'
+        self.CHESTCOLOR = 'chocolate4'
 
         # lighting
         self.LIGHTCOLOR = (255, 255, 200)  # color of the light

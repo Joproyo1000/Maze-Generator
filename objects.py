@@ -86,7 +86,7 @@ class Chest(pygame.sprite.Sprite):
         self.hitbox = self.rect
 
         # set color on the minimap
-        self.color = 'brown'
+        self.color = self.settings.CHESTCOLOR
 
         # chose random item to put in the chest 0=freeze, 1=map, 2=scissors, 3=heal
         self.item = randint(0, 3)

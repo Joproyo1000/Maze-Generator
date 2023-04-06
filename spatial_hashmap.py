@@ -4,7 +4,7 @@ from math import floor
 
 class HashMap(pygame.sprite.Group):
     """
-    Optimized version of getting collisions sprites with a complexity of 1
+    Optimized version of getting collisions sprites with a complexity of O(1)
     """
     def __init__(self, TILESIZE, cols):
         super().__init__()
@@ -41,5 +41,6 @@ class HashMap(pygame.sprite.Group):
 
     def generate_hashmap(self):
         for sprite in self.sprites():
-            #print(sprite.rect.x, sprite.rect.y)
-            self.set(sprite.rect.x + sprite.rect.y * self.cols, sprite)
+            alignedSpriteCoords = floor(sprite.rect.x / self.TILESIZE) * self.TILESIZE + \
+                                  floor(sprite.rect.y / self.TILESIZE) * self.TILESIZE * self.cols
+            self.set(alignedSpriteCoords, sprite)

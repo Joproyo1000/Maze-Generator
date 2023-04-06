@@ -43,11 +43,7 @@ class Maze(pygame.sprite.Group):
         self.enemies = pygame.sprite.Group()
 
         # initialize the grid of cells
-        self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites]) for row in range(self.rows) for col in range(self.cols)]
-
-        # initialize map
-        self.map = None
-        self.map_size = 5
+        self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites]) for row in range(self.rows) for col in range(self.cols)]
 
         # first tile to start the maze from
         self.start_tile = self.grid_cells[self.cols + 1]
@@ -70,8 +66,7 @@ class Maze(pygame.sprite.Group):
 
         # generate maze
         self.chests = []
-        while self.stack or self.grid_cells[self.cols + 1].isWall:
-            self.init_maze()
+        self.init_maze()
         self.init_rooms()
 
         # initialize the player and put it on the first tile
@@ -79,7 +74,6 @@ class Maze(pygame.sprite.Group):
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
-        self.map = self.bake_maze(self.map_size)
 
         self.mazeGenerated = True
 
@@ -95,24 +89,40 @@ class Maze(pygame.sprite.Group):
         """
         generate maze using the Depth First Search (DFS) algorithm
         """
-        # runs while maze not finished
-        self.current_tile.isWall = False
+        # keep track of furthest tile
+        dst = 0
+        furthestDst = 0
+        while self.stack or self.grid_cells[self.cols + 1].isWall:
+            # runs while maze not finished
+            self.current_tile.isWall = False
 
-        self.update_tile_colors()
+            self.update_tile_colors()
 
-        # sets next cell to a random neighbor of the current cell
-        next_tile = self.check_neighbors(self.current_tile.rect.x // self.settings.TILESIZE, self.current_tile.rect.y // self.settings.TILESIZE)
+            # sets next cell to a random neighbor of the current cell
+            next_tile = self.random_neighbor(self.current_tile.rect.x // self.settings.TILESIZE, self.current_tile.rect.y // self.settings.TILESIZE)
 
-        # if a neighboring cell is available, set it as current
-        if next_tile:
-            next_tile.isWall = False
-            self.stack.append(self.current_tile)
-            self.remove_walls(next_tile)
-            self.current_tile = next_tile
+            # if a neighboring cell is available, set it as current
+            if next_tile:
+                dst += 1
+                next_tile.isWall = False
+                self.stack.append(self.current_tile)
+                self.remove_walls(next_tile)
+                self.current_tile = next_tile
 
-        # else go back in the stack until a new cell is available again
-        elif self.stack:
-            self.current_tile = self.stack.pop()
+            # else go back in the stack until a new cell is available again
+            elif self.stack:
+                dst -= 1
+                self.current_tile = self.stack.pop()
+
+            if dst > furthestDst:
+                furthestDst = dst
+                furthestTile = next_tile
+        # set the end goal to the furthest tile from the start
+        self.goal = furthestTile
+
+        for tile in self.grid_cells:
+            if tile.isWall:
+                self.obstacle_sprites.add(tile)
 
     def init_rooms(self):
         """
@@ -125,12 +135,14 @@ class Maze(pygame.sprite.Group):
 
             # initialize torch and chest objects
             Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
-            self.chests.append(Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites]))
+            chest = Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites])
+            self.chests.append(chest)
 
             # remove all tiles in a 3*3 square to form a room
             for neighbor in self.get_neighbors(center):
                 if neighbor.rect.left != 0 and neighbor.rect.top != 0 and neighbor.rect.right != self.cols * self.settings.TILESIZE and neighbor.rect.bottom != self.rows * self.settings.TILESIZE:
                     neighbor.isWall = False
+                    self.obstacle_sprites.remove(neighbor)
 
     def init_enemies(self):
         """
@@ -208,7 +220,7 @@ class Maze(pygame.sprite.Group):
         # else return the tile in the grid corresponding to the coordinates
         return self.grid_cells[self.get_tile_pos_in_grid(x, y)]
 
-    def check_neighbors(self, x: int, y: int) -> pygame.sprite.Sprite:
+    def random_neighbor(self, x: int, y: int) -> pygame.sprite.Sprite:
         """
         Checks for neighbors in the tiles surrounding the current tile
         :return: returns any possible neighbors to the current tile
@@ -317,19 +329,39 @@ class Maze(pygame.sprite.Group):
         for tile in self.grid_cells:
             tile.update_color()
 
-    def bake_maze(self, size: int) -> (pygame.Surface, pygame.Rect):
+    def bake_map(self) -> pygame.Surface:
         """
-        :param size: size of the baked map
         :return: a baked version of the map onto a Surface
         """
+        # initialize baked map surface
         baked_map = pygame.Surface((self.settings.TILESIZE * self.cols, self.settings.TILESIZE * self.rows))
-        for tile in self.grid_cells:
-            tile_image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
-            tile_image.fill(tile.color)
-            baked_map.blit(tile_image, tile.rect)
 
-        baked_map = pygame.transform.scale(baked_map, (self.settings.TILESIZE * self.cols / size, self.settings.TILESIZE * self.rows / size))
-        return baked_map, baked_map.get_rect()
+        image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
+        # draw every tile onto it
+        for tile in self.grid_cells:
+            image.fill(tile.color)
+            baked_map.blit(image, tile.rect)
+        for chest in self.chests:
+            image.fill(chest.color)
+            baked_map.blit(image, self.check_tile(chest.rect.centerx // self.settings.TILESIZE,
+                                                  chest.rect.centery // self.settings.TILESIZE).rect)
+        # draw player onto it
+        image.fill(self.player.color)
+        baked_map.blit(image, self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                              self.player.rect.centery // self.settings.TILESIZE).rect)
+        # draw goal tile
+        image.fill(self.settings.GOALCOLOR)
+        baked_map.blit(image, self.goal.rect)
+
+        ratio = baked_map.get_width() / baked_map.get_height()
+        scaledWidth = self.settings.WIDTH
+        scaledHeight = scaledWidth * ratio
+        if scaledHeight > self.settings.HEIGHT:
+            scaledHeight = self.settings.HEIGHT
+            scaledWidth = scaledHeight * ratio
+
+        baked_map = pygame.transform.scale(baked_map, (scaledWidth * 0.75, scaledHeight * 0.75))
+        return baked_map
 
     def enemyBehavior(self, i):
         """

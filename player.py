@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.15
 
         # set color on the minimap
-        self.color = 'gold'
+        self.color = self.settings.PLAYERCOLOR
 
         # initialize rect (bounding box of the image) and hitbox (bounding box of the collision detection)
         self.rect = self.image.get_rect(center=pos)
@@ -119,21 +119,19 @@ class Player(pygame.sprite.Sprite):
         """
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.isWall:
-                    if sprite.hitbox.colliderect(self.hitbox):
-                        if self.direction.x > 0:  # moving right
-                            self.hitbox.right = sprite.hitbox.left
-                        if self.direction.x < 0:  # moving left
-                            self.hitbox.left = sprite.hitbox.right
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if self.direction.x > 0:  # moving right
+                        self.hitbox.right = sprite.hitbox.left
+                    if self.direction.x < 0:  # moving left
+                        self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.isWall:
-                    if sprite.hitbox.colliderect(self.hitbox):
-                        if self.direction.y > 0:  # moving down
-                            self.hitbox.bottom = sprite.hitbox.top
-                        if self.direction.y < 0:  # moving up
-                            self.hitbox.top = sprite.hitbox.bottom
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if self.direction.y > 0:  # moving down
+                        self.hitbox.bottom = sprite.hitbox.top
+                    if self.direction.y < 0:  # moving up
+                        self.hitbox.top = sprite.hitbox.bottom
 
     def animate(self, dt):
         """
