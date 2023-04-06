@@ -50,7 +50,7 @@ class Maze(pygame.sprite.Group):
         self.current_tile = self.start_tile
         self.goal = self.grid_cells[self.cols * self.rows - self.cols - 2]
 
-        #region variables
+        # region variables
         # True if maze is done generating
         self.mazeGenerated = False
 
@@ -59,7 +59,7 @@ class Maze(pygame.sprite.Group):
 
         # time
         self.currentTime = time.time()
-        #endregion
+        # endregion
 
         # initialize the stack (used to generate the maze)
         self.stack = []
@@ -129,9 +129,9 @@ class Maze(pygame.sprite.Group):
         Initialize all rooms with a chest in the middle and a torch on top
         """
         # repeat for every room
-        for _ in range(self.settings.currentLevel + 1):
+        for _ in range(self.settings.currentLevel * 2 + 1):
             # get center of the room
-            center = self.get_random_tile_in_maze(2)
+            center = self.get_random_tile_in_maze(1)
 
             # initialize torch and chest objects
             Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
@@ -287,11 +287,11 @@ class Maze(pygame.sprite.Group):
         xRange = self.cols // 2 - 1
         yRange = self.rows // 2 - 1
         if randint(0, 1):
-            return self.check_tile(randint(int(xRange * distanceFromPlayer/3 - 1), xRange) * 2 + 1,
+            return self.check_tile(randint(int(xRange * distanceFromPlayer / 4 - 1), xRange) * 2 + 1,
                                    randint(0, yRange) * 2 + 1)
         else:
             return self.check_tile(randint(0, xRange) * 2 + 1,
-                                   randint(int(yRange * distanceFromPlayer / 3 - 1), yRange) * 2 + 1)
+                                   randint(int(yRange * distanceFromPlayer / 4 - 1), yRange) * 2 + 1)
 
     def remove_walls(self, next_tile: object):
         """
@@ -366,11 +366,16 @@ class Maze(pygame.sprite.Group):
     def enemyBehavior(self, i):
         """
         :param i: index of the current enemy being updated
-        Enemy behavior method, basically just pathfinding
+        Enemy behavior method, handles different enemies behavior
         """
         if self.mazeGenerated:
             enemy = self.enemies.sprites()[i]
 
+            if enemy.type == 'spider':
+                if randint(0, 20) == 0:
+                    enemy.spawnCobweb(self.visible_sprites)
+
+            # region pathfinding
             # get the tile where the enemy and the player are
             enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
                                        enemy.rect.centery // self.settings.TILESIZE)
@@ -412,6 +417,7 @@ class Maze(pygame.sprite.Group):
                     enemy.followPath(path=path, replace=True)
 
                 return enemyDst
+            # endregion
 
         return None
 
@@ -438,9 +444,9 @@ class Maze(pygame.sprite.Group):
 
         return res
 
-    def check_chest(self):
+    def check_interactables(self):
         for chest in self.chests:
-            if self.player.hitbox.colliderect(chest.rect):
+            if self.player.hitbox.colliderect(chest.hitbox):
                 chest.open(self.player)
 
     def check_victory(self):
@@ -461,9 +467,9 @@ class Maze(pygame.sprite.Group):
 
     def check_game_state(self):
         """
-        Check if game is supposed to end
+        Update game state and interactables
         """
-        self.check_chest()
+        # self.check_interactables()
 
         if self.check_victory():
             self.settings.currentLevel += 1

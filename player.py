@@ -117,21 +117,36 @@ class Player(pygame.sprite.Sprite):
         :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
         If collision occurs, stop the player
         """
+        inCobweb = False
+
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
                 if sprite.hitbox.colliderect(self.hitbox):
-                    if self.direction.x > 0:  # moving right
-                        self.hitbox.right = sprite.hitbox.left
-                    if self.direction.x < 0:  # moving left
-                        self.hitbox.left = sprite.hitbox.right
+                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
+                        self.speed = 0.5
+                        inCobweb = True
+                    else:
+                        if self.direction.x > 0:  # moving right
+                            self.hitbox.right = sprite.hitbox.left
+                        if self.direction.x < 0:  # moving left
+                            self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
                 if sprite.hitbox.colliderect(self.hitbox):
-                    if self.direction.y > 0:  # moving down
-                        self.hitbox.bottom = sprite.hitbox.top
-                    if self.direction.y < 0:  # moving up
-                        self.hitbox.top = sprite.hitbox.bottom
+                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
+                        self.speed = 0.5
+                        inCobweb = True
+                    else:
+                        if self.direction.y > 0:  # moving down
+                            self.hitbox.bottom = sprite.hitbox.top
+                        if self.direction.y < 0:  # moving up
+                            self.hitbox.top = sprite.hitbox.bottom
+                if str(type(sprite)) == "<class 'objects.Chest'>":
+                    sprite.open(self)
+
+        if not inCobweb:
+            self.speed = 1
 
     def animate(self, dt):
         """
@@ -160,6 +175,5 @@ class Player(pygame.sprite.Sprite):
         self.animate(dt)  # animate based on status
         self.move(self.speed, dt)  # move based on inputs
 
-        # items = {0:' freeze', 1: 'heal', 2: map, 3: 'scissors'}
         # for item in self.inventory:
-        #     print(items[item])
+        #     print(item)

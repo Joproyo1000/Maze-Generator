@@ -19,7 +19,8 @@ class HashMap(pygame.sprite.Group):
         return gridPos
 
     def get_neighbors(self, pos):
-        neighborsIndex = [self.get_grid_pos(pos[0] - self.TILESIZE, pos[1] - self.TILESIZE),  # topleft
+        neighborsIndex = [self.get_grid_pos(pos[0], pos[1]),  # center
+                          self.get_grid_pos(pos[0] - self.TILESIZE, pos[1] - self.TILESIZE),  # topleft
                           self.get_grid_pos(pos[0], pos[1] - self.TILESIZE),  # top
                           self.get_grid_pos(pos[0] + self.TILESIZE, pos[1] - self.TILESIZE),  # topright
                           self.get_grid_pos(pos[0] - self.TILESIZE, pos[1]),  # left
@@ -37,10 +38,10 @@ class HashMap(pygame.sprite.Group):
         return neighbors
 
     def set(self, key, value):
-        self.grid[key] = value
+        alignedKey = floor(key[0] / self.TILESIZE) * self.TILESIZE + \
+                     floor(key[1] / self.TILESIZE) * self.TILESIZE * self.cols
+        self.grid[alignedKey] = value
 
     def generate_hashmap(self):
         for sprite in self.sprites():
-            alignedSpriteCoords = floor(sprite.rect.x / self.TILESIZE) * self.TILESIZE + \
-                                  floor(sprite.rect.y / self.TILESIZE) * self.TILESIZE * self.cols
-            self.set(alignedSpriteCoords, sprite)
+            self.set(sprite.rect.center, sprite)

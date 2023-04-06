@@ -26,7 +26,7 @@ class Settings:
         self.TILESIZE = 120
 
         # randomness of the maze
-        self.TURNFACTOR = 5
+        self.TURNFACTOR = 10
 
         # difficulty of the maze 0=easy 1=medium 2=hard
         self.DIFFICULTY = 0

@@ -1,6 +1,8 @@
 import pygame
 import settings
+import spatial_hashmap
 
+from math import floor
 from support import import_folder
 from random import randint
 
@@ -63,6 +65,7 @@ class Torch(pygame.sprite.Sprite):
         """
         self.animate(dt)  # animate based on status
 
+
 class Chest(pygame.sprite.Sprite):
     def __init__(self, pos: (int, int), settings: settings.Settings, groups: [pygame.sprite.Group]):
         super().__init__(groups)
@@ -89,7 +92,8 @@ class Chest(pygame.sprite.Sprite):
         self.color = self.settings.CHESTCOLOR
 
         # chose random item to put in the chest 0=freeze, 1=map, 2=scissors, 3=heal
-        self.item = randint(0, 3)
+        items = {0: Freeze(), 1: Map(self.rect.center), 2: Scissors(), 3: Heal()}
+        self.item = items[randint(0, 3)]
 
     def import_object_assets(self):
         """
@@ -124,3 +128,56 @@ class Chest(pygame.sprite.Sprite):
 
         animation = self.animations['closed']
         self.image = animation[0]
+
+
+class CobWeb(pygame.sprite.Sprite):
+    def __init__(self, pos, groups: [pygame.sprite.Group], obstacle_sprites: spatial_hashmap):
+        super().__init__(groups)
+        self.image = pygame.image.load('graphics/special/cobweb.png').convert_alpha()
+        self.image = pygame.transform.scale_by(self.image, 3)
+        self.rect = self.image.get_rect(topleft=pos)
+        self.hitbox = self.rect.copy()
+        self.pos = pos
+
+        obstacle_sprites.set(self.pos, self)
+
+
+class Useable(pygame.sprite.Sprite):
+    def use(self, *args, **kwargs):
+        self.kill()
+
+
+class Map(Useable):
+    def __init__(self, pos):
+        super().__init__()
+        self.pos = pos
+
+    def use(self):
+        self.kill()
+
+
+class Freeze(Useable):
+    def __init__(self):
+        super().__init__()
+
+    def use(self):
+        # TODO freeze if facing enemy
+        self.kill()
+
+
+class Heal(Useable):
+    def __init__(self):
+        super().__init__()
+
+    def use(self):
+        # TODO freeze if facing enemy
+        self.kill()
+
+
+class Scissors(Useable):
+    def __init__(self):
+        super().__init__()
+
+    def use(self):
+        # TODO cut facing wall
+        self.kill()

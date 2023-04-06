@@ -1,11 +1,13 @@
 import pygame
-
 import settings
+
+from math import floor
 from support import import_folder
+from objects import CobWeb
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, AI:bool, settings: settings.Settings, groups: [pygame.sprite.Group], obstacle_sprites: pygame.sprite.Group):
+    def __init__(self, pos: (int, int), type: str, speed: float, FOV: int, AI:bool, settings: settings.Settings, groups: [pygame.sprite.Group], obstacle_sprites: [pygame.sprite.Sprite]):
         """
         :param pos: spawn position of the enemy
         :param type: type of the enemy
@@ -37,17 +39,19 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.center = pos
         self.hitbox = self.rect
 
+        # movement
         self.direction = pygame.math.Vector2()
-        self.speed = speed
+        self.normalSpeed = speed + self.settings.DIFFICULTY/10
+        self.slowedSpeed = self.normalSpeed / 2
+        self.speed = self.normalSpeed
+
+        # pathfinding
         self.path = []
         self.AI = AI
-
         self.range = FOV
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
-
-        self.set_enemy_behavior()
 
     def import_ennemy_assets(self):
         """
@@ -82,30 +86,6 @@ class Enemy(pygame.sprite.Sprite):
                 self.animations[animation] = import_folder(full_path, 1.6)
 
         self.image = self.animations['left_idle'][0]
-
-    def set_enemy_behavior(self):
-        """
-        Sets the characteristics of the enemy based on its type (ex: speed, FOV, ...)
-        """
-        if self.type == 'wolf':
-            self.speed = self.speed + self.settings.DIFFICULTY/10
-            # not follow if player isn't moving
-        if self.type == 'spider':
-            self.speed = self.speed + self.settings.DIFFICULTY/10
-            # spawn webs
-        if self.type == 'slime':
-            self.speed = self.speed + self.settings.DIFFICULTY/10
-
-    def move(self, speed: float, dt:float):
-        if self.direction.magnitude() != 0:
-            self.direction = self.direction.normalize()
-
-            self.hitbox.x += self.direction.x * speed * dt * 250
-            self.collision('horizontal')
-            self.hitbox.y += self.direction.y * speed * dt * 250
-            self.collision('vertical')
-
-            self.rect.center = self.hitbox.center
 
     def set_status(self):
         """
@@ -147,11 +127,31 @@ class Enemy(pygame.sprite.Sprite):
                                    target.rect.centery - self.rect.centery).length() < self.settings.TILESIZE/2:
                 self.path.pop(0)
 
+    def move(self, speed: float, dt: float):
+        if self.direction.magnitude() != 0:
+            self.direction = self.direction.normalize()
+
+            self.hitbox.x += self.direction.x * speed * dt * 250
+            self.collision('horizontal')
+            self.hitbox.y += self.direction.y * speed * dt * 250
+            self.collision('vertical')
+
+            self.rect.center = self.hitbox.center
+
     def collision(self, direction):
+        """
+        :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
+        If collision occurs, stop the enemy
+        """
+        inCobweb = False
+
         if direction == 'horizontal':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.isWall:
-                    if sprite.hitbox.colliderect(self.hitbox):
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
+                        if self.type != 'spider':
+                            inCobweb = True
+                    else:
                         if self.direction.x > 0:  # moving right
                             self.hitbox.right = sprite.hitbox.left
                         if self.direction.x < 0:  # moving left
@@ -159,12 +159,28 @@ class Enemy(pygame.sprite.Sprite):
 
         if direction == 'vertical':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.isWall:
-                    if sprite.hitbox.colliderect(self.hitbox):
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
+                        if self.type != 'spider':
+                            inCobweb = True
+                    else:
                         if self.direction.y > 0:  # moving down
                             self.hitbox.bottom = sprite.hitbox.top
                         if self.direction.y < 0:  # moving up
                             self.hitbox.top = sprite.hitbox.bottom
+
+        if inCobweb:
+            self.speed = self.slowedSpeed
+        else:
+            self.speed = self.normalSpeed
+
+    def spawnCobweb(self, visible_sprites):
+        # pos = (floor(self.rect.centerx / self.settings.TILESIZE) * self.settings.TILESIZE,
+        #        floor(self.rect.centery / self.settings.TILESIZE) * self.settings.TILESIZE)
+        cobweb = CobWeb(self.rect.center, [visible_sprites], self.obstacle_sprites)
+        visible_sprites.ySortSprites.append(cobweb)
+
+        return cobweb
 
     def animate(self, dt):
         """
@@ -180,7 +196,6 @@ class Enemy(pygame.sprite.Sprite):
         # set the image
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.hitbox.center)
-
 
     def update(self, dt):
         self.set_status()  # set status

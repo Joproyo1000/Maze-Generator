@@ -37,6 +37,9 @@ class MazeGame:
         if self.settings.shadersOn:
             self.shader = Shader(self.screen.get_size(), self.settings)
 
+        self.mapSurf = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(),
+                                         (self.screen.get_size()))
+
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
 
@@ -183,11 +186,10 @@ class MazeGame:
                 dstsToPlayer = []
                 for i, enemyEvent in enumerate(self.maze.enemyEvents):
                     if event.type == enemyEvent:
-                        # d = self.maze.enemyBehavior(i)
-                        d = None
+                        d = self.maze.enemyBehavior(i)
                         if d is not None:
                             dstsToPlayer.append(d)
-                # keep track of closest enemy to player
+                # keep track of the closest enemy to player
                 if len(dstsToPlayer) > 0:
                     closestEnemy = sorted(dstsToPlayer)[0]
                     self.settings.dstToClosestEnemy = closestEnemy
@@ -209,9 +211,8 @@ class MazeGame:
 
         self.maze.run(0, getInput=False)
         mapImg = self.maze.bake_map()
-        mapSurf = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(), (self.screen.get_size()))
-        mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
-        slideTransitionStart(self.screen, mapSurf)
+        self.mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
+        slideTransitionStart(self.screen, self.mapSurf)
 
         while True:
             # calculate deltaTime to make the speed go at the same rate regardless of the FPS
@@ -231,16 +232,16 @@ class MazeGame:
                     key = pygame.key.get_pressed()
                     if key[pygame.K_ESCAPE]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, mapSurf)
+                        slideTransitionEnd(self.screen, self.mapSurf)
                         self.game(0)
                     if key[pygame.K_m]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, mapSurf)
+                        slideTransitionEnd(self.screen, self.mapSurf)
                         self.game(0)
 
             # run the level
             self.maze.run(deltaTime, getInput=False)
-            self.screen.blit(mapSurf, (0, 0))
+            self.screen.blit(self.mapSurf, (0, 0))
 
             if not self.settings.shadersOn:
                 pygame.display.update()
