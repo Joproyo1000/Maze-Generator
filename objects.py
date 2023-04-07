@@ -92,8 +92,14 @@ class Chest(pygame.sprite.Sprite):
         self.color = self.settings.CHESTCOLOR
 
         # chose random item to put in the chest 0=freeze, 1=map, 2=scissors, 3=heal
-        items = {0: Freeze(), 1: Map(self.rect.center), 2: Scissors(), 3: Heal()}
-        self.item = items[randint(0, 3)]
+        items = {0: Freeze(),
+                 1: Map((self.rect.centerx / self.settings.MAZEWIDTHS[self.settings.currentLevel],
+                        self.rect.centery / self.settings.MAZEHEIGHTS[self.settings.currentLevel])),
+                 2: Scissors(),
+                 3: Heal()}
+        # self.item = items[randint(0, 3)]
+        self.item = items[1]
+        print(self.item.pos)
 
     def import_object_assets(self):
         """

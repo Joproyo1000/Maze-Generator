@@ -106,9 +106,9 @@ class Player(pygame.sprite.Sprite):
             self.direction = self.direction.normalize()
 
         self.hitbox.x += self.direction.x * speed * dt * 250
-        # self.collision('horizontal')
+        self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed * dt * 250
-        # self.collision('vertical')
+        self.collision('vertical')
 
         self.rect.center = self.hitbox.center
 

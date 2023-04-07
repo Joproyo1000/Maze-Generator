@@ -9,7 +9,7 @@ from random import choice
 from cameras import YSortCameraGroup
 from player import Player
 from enemy import Enemy
-from objects import Torch, Chest
+from objects import Torch, Chest, Map
 from spatial_hashmap import HashMap
 from pathFinding import PathFinder
 from support import distance
@@ -337,7 +337,7 @@ class Maze(pygame.sprite.Group):
         baked_map = pygame.Surface((self.settings.TILESIZE * self.cols, self.settings.TILESIZE * self.rows))
 
         image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
-        # draw every tile onto it
+        # draw every tile and chest onto it
         for tile in self.grid_cells:
             image.fill(tile.color)
             baked_map.blit(image, tile.rect)
@@ -345,15 +345,16 @@ class Maze(pygame.sprite.Group):
             image.fill(chest.color)
             baked_map.blit(image, self.check_tile(chest.rect.centerx // self.settings.TILESIZE,
                                                   chest.rect.centery // self.settings.TILESIZE).rect)
-        # draw player onto it
+        # draw player
         image.fill(self.player.color)
         baked_map.blit(image, self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
                                               self.player.rect.centery // self.settings.TILESIZE).rect)
-        # draw goal tile
-        image.fill(self.settings.GOALCOLOR)
+        # draw end
+        image.fill(self.settings.ENDCOLOR)
         baked_map.blit(image, self.goal.rect)
 
         ratio = baked_map.get_width() / baked_map.get_height()
+
         scaledWidth = self.settings.WIDTH
         scaledHeight = scaledWidth * ratio
         if scaledHeight > self.settings.HEIGHT:
@@ -361,6 +362,16 @@ class Maze(pygame.sprite.Group):
             scaledWidth = scaledHeight * ratio
 
         baked_map = pygame.transform.scale(baked_map, (scaledWidth * 0.75, scaledHeight * 0.75))
+
+        # mask the baked map to show only areas where player as found map
+        mask = pygame.Surface(self.screen.get_size()).convert_alpha()
+        mask.fill('black')
+        for map in [object for object in self.player.inventory if isinstance(object, Map)]:
+            pygame.draw.circle(mask, (0, 0, 0, 0), (map.pos[0] * baked_map.get_width(), map.pos[1] * baked_map.get_height()), 400 - 50 * self.settings.currentLevel * self.settings.DIFFICULTY)
+
+        baked_map.blit(mask, mask.get_rect())
+        baked_map.set_colorkey('black')
+
         return baked_map
 
     def enemyBehavior(self, i):

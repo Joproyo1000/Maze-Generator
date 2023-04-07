@@ -43,7 +43,7 @@ class Settings:
         self.WALLCOLOR = 'darkgoldenrod'  # color of the wall on the map
         self.PATHCOLOR = 'darkgoldenrod2'  # color of the path on the map
         self.PLAYERCOLOR = 'blue'
-        self.GOALCOLOR = 'gold'
+        self.ENDCOLOR = 'gold'
         self.CHESTCOLOR = 'chocolate4'
 
         # lighting
