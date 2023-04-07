@@ -40,8 +40,8 @@ class Settings:
         self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
 
         # colors
-        self.WALLCOLOR = 'darkgoldenrod'  # color of the wall on the map
-        self.PATHCOLOR = 'darkgoldenrod2'  # color of the path on the map
+        self.WALLCOLOR = 'goldenrod4'  # color of the wall on the map
+        self.PATHCOLOR = 'gold4'  # color of the path on the map
         self.PLAYERCOLOR = 'blue'
         self.ENDCOLOR = 'gold'
         self.CHESTCOLOR = 'chocolate4'
@@ -52,7 +52,7 @@ class Settings:
         self.LIGHTINTENSITY = 10  # intensity of the light
 
         # shaders
-        self.shadersOn = False  # activate shader
+        self.shadersOn = True  # activate shader
         self.gamma = 20  # default gamma value
 
         # set FPS

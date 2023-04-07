@@ -109,10 +109,11 @@ class YSortCameraGroup(pygame.sprite.Group):
             self.screen.blit(sprite.image, (sprite.rect.topleft[0] - self.offset.x,
                                             sprite.rect.topleft[1] / self.perspectiveOffset - self.offset.y))
 
-    def custom_draw(self, player: pygame.sprite.Sprite, blackGradient):
+    def custom_draw(self, player: pygame.sprite.Sprite, blackGradient, getInput=True):
         """
         :param player: player sprite (used to calculate the offset to center the screen)
         :return: draws with perspective all the sprites in the visible_sprites group
+        :param blackGradient: black surface used for transition
         """
         # reset screen
         self.screen.fill('black')
@@ -186,10 +187,12 @@ class YSortCameraGroup(pygame.sprite.Group):
                                                  random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5))
 
         # and finally render screen
-        if self.settings.shadersOn:
+        if self.settings.shadersOn and getInput:
             self.shader.render(scaledScreen)
         else:
             pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
+
+        return scaledScreen
 
     def draw_map(self, pos: (int, int), map, player: pygame.sprite.Sprite, enemies, size):
         display = pygame.display.get_surface()

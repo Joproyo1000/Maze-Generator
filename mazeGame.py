@@ -212,7 +212,7 @@ class MazeGame:
         self.maze.run(0, getInput=False)
         mapImg = self.maze.bake_map()
         self.mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
-        slideTransitionStart(self.screen, self.mapSurf)
+        slideTransitionStart(self.screen, self.mapSurf, self.shader)
 
         while True:
             # calculate deltaTime to make the speed go at the same rate regardless of the FPS
@@ -232,17 +232,19 @@ class MazeGame:
                     key = pygame.key.get_pressed()
                     if key[pygame.K_ESCAPE]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, self.mapSurf)
-                        self.game(0)
+                        slideTransitionEnd(self.screen, self.mapSurf, self.shader)
+                        self.game(doTransition=False)
                     if key[pygame.K_m]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, self.mapSurf)
-                        self.game(0)
+                        slideTransitionEnd(self.screen, self.mapSurf, self.shader)
+                        self.game(doTransition=False)
 
             # run the level
-            self.maze.run(deltaTime, getInput=False)
+            mazeScreen = self.maze.run(deltaTime, getInput=False)
+            self.screen.blit(mazeScreen, mazeScreen.get_rect())
             self.screen.blit(self.mapSurf, (0, 0))
 
+            self.shader.render(self.screen)
             if not self.settings.shadersOn:
                 pygame.display.update()
 

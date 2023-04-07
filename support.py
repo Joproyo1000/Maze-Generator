@@ -55,7 +55,7 @@ def fadeTransitionEnd(screen: pygame.Surface, shader=None):
         pygame.time.delay(5)
 
 
-def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface):
+def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface, shader=None):
     background = screen.copy()
     rect = screen.get_rect(topleft=screen.get_rect().bottomleft)
 
@@ -65,7 +65,10 @@ def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface):
         screen.blit(background, (0, 0))
         screen.blit(surface, rect)
 
-        pygame.display.flip()
+        if shader is None:
+            pygame.display.update()
+        else:
+            shader.render(screen)
 
         rect.y -= j
         j -= j // 6
@@ -73,7 +76,7 @@ def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface):
         pygame.time.delay(5)
 
 
-def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface):
+def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface, shader=None):
     background = screen.copy()
     rect = screen.get_rect()
 
@@ -83,7 +86,10 @@ def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface):
         screen.blit(background, (0, 0))
         screen.blit(surface, rect)
 
-        pygame.display.flip()
+        if shader is None:
+            pygame.display.update()
+        else:
+            shader.render(screen)
 
         rect.y += j
         j += j // 6

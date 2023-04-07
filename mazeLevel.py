@@ -515,9 +515,9 @@ class Maze(pygame.sprite.Group):
                 self.transition -= 2
                 self.blackGradient.set_alpha(self.transition)
 
-            self.visible_sprites.custom_draw(self.player, self.blackGradient)
-
             self.player.getInput = getInput
             self.visible_sprites.update(deltaTime)
 
             self.check_game_state()
+
+            return self.visible_sprites.custom_draw(self.player, self.blackGradient, getInput)

@@ -99,7 +99,6 @@ class Chest(pygame.sprite.Sprite):
                  3: Heal()}
         # self.item = items[randint(0, 3)]
         self.item = items[1]
-        print(self.item.pos)
 
     def import_object_assets(self):
         """
