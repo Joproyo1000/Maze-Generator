@@ -1,5 +1,6 @@
 import pygame
 
+import objects
 import settings
 from support import import_folder
 
@@ -22,6 +23,8 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.15
 
+        self.lives = 1
+
         # set color on the minimap
         self.color = self.settings.PLAYERCOLOR
 
@@ -32,10 +35,12 @@ class Player(pygame.sprite.Sprite):
         # initialize direction vector and speed which is proportional to the tilesize
         self.direction = pygame.math.Vector2()
         self.speed = 1
+
         self.getInput = True
 
         # initialize inventory
-        self.inventory = []
+        self.inventory = [None]
+        self.currentItemIndex = 0
 
         self.obstacle_sprites = obstacle_sprites
         self.obstacle = pygame.sprite.Group()
@@ -117,36 +122,45 @@ class Player(pygame.sprite.Sprite):
         :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
         If collision occurs, stop the player
         """
+        # keep track of if player is in cobweb
         inCobweb = False
 
-        if direction == 'horizontal':
-            for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.hitbox.colliderect(self.hitbox):
-                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
-                        self.speed = 0.5
-                        inCobweb = True
-                    else:
-                        if self.direction.x > 0:  # moving right
-                            self.hitbox.right = sprite.hitbox.left
-                        if self.direction.x < 0:  # moving left
-                            self.hitbox.left = sprite.hitbox.right
+        # if direction == 'horizontal':
+        #     for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
+        #         if sprite.hitbox.colliderect(self.hitbox):
+        #             # if player is inside cobweb reduce speed
+        #             if isinstance(sprite, objects.CobWeb):
+        #                 self.speed = 0.5
+        #                 inCobweb = True
+        #             else:
+        #                 if self.direction.x > 0:  # moving right
+        #                     self.hitbox.right = sprite.hitbox.left
+        #                 if self.direction.x < 0:  # moving left
+        #                     self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                if sprite.hitbox.colliderect(self.hitbox):
-                    if str(type(sprite)) == "<class 'objects.CobWeb'>":
-                        self.speed = 0.5
-                        inCobweb = True
-                    else:
-                        if self.direction.y > 0:  # moving down
-                            self.hitbox.bottom = sprite.hitbox.top
-                        if self.direction.y < 0:  # moving up
-                            self.hitbox.top = sprite.hitbox.bottom
-                if str(type(sprite)) == "<class 'objects.Chest'>":
+                # if sprite.hitbox.colliderect(self.hitbox):
+                #     # if player is inside cobweb reduce speed
+                #     if isinstance(sprite, objects.CobWeb):
+                #         self.speed = 0.5
+                #         inCobweb = True
+                #     else:
+                #         if self.direction.y > 0:  # moving down
+                #             self.hitbox.bottom = sprite.hitbox.top
+                #         if self.direction.y < 0:  # moving up
+                #             self.hitbox.top = sprite.hitbox.bottom
+                if isinstance(sprite, objects.Chest):
                     sprite.open(self)
 
+        # if player is not inside cobweb set back original speed
         if not inCobweb:
             self.speed = 1
+
+    def use(self):
+        self.inventory[self.currentItemIndex].use(self)
+        self.inventory.pop(self.currentItemIndex)
+        self.currentItemIndex = self.currentItemIndex % len(self.inventory)
 
     def animate(self, dt):
         """
@@ -174,6 +188,3 @@ class Player(pygame.sprite.Sprite):
         self.set_status()  # set status
         self.animate(dt)  # animate based on status
         self.move(self.speed, dt)  # move based on inputs
-
-        # for item in self.inventory:
-        #     print(item)

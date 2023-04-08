@@ -91,11 +91,18 @@ class Enemy(pygame.sprite.Sprite):
         """
         Set the current status of the enemy for animation
         """
-        if self.direction.y < 0 and self.type == 'slime':
-            self.status = 'up'
+        if self.type == 'slime':
+            if self.direction.y < 0:
+                self.status = 'up'
 
-        elif self.direction.y > 0 and self.type == 'slime':
-            self.status = 'down'
+            elif self.direction.y > 0:
+                self.status = 'down'
+
+            if self.direction.y < 0 and 0 > self.direction.x > self.direction.y:
+                self.status = 'up'
+
+            if self.direction.y > 0 and 0 < self.direction.x < self.direction.y:
+                self.status = 'down'
 
         if self.direction.x < 0:
             self.status = 'left'
@@ -103,28 +110,21 @@ class Enemy(pygame.sprite.Sprite):
         elif self.direction.x > 0:
             self.status = 'right'
 
-        if self.direction.y < 0 and 0 > self.direction.x > self.direction.y and self.type == 'slime':
-            self.status = 'up'
-
-        if self.direction.y > 0 and 0 < self.direction.x < self.direction.y and self.type == 'slime':
-            self.status = 'down'
-
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
             if '_idle' not in self.status:
                 self.status = self.status + '_idle'
 
     def followPath(self, path=True, replace=False):
-        if path:
-            if replace:
-                self.path = path
+        if replace and path:
+            self.path = path
+        if len(self.path) != 0:
             target = self.path[0]
 
             self.direction = pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
                                                  target.rect.centery - self.rect.centery)
 
-            if pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
-                                   target.rect.centery - self.rect.centery).length() < self.settings.TILESIZE/2:
+            if self.direction.length() < self.settings.TILESIZE/2:
                 self.path.pop(0)
 
     def move(self, speed: float, dt: float):
@@ -175,8 +175,6 @@ class Enemy(pygame.sprite.Sprite):
             self.speed = self.normalSpeed
 
     def spawnCobweb(self, visible_sprites):
-        # pos = (floor(self.rect.centerx / self.settings.TILESIZE) * self.settings.TILESIZE,
-        #        floor(self.rect.centery / self.settings.TILESIZE) * self.settings.TILESIZE)
         cobweb = CobWeb(self.rect.center, [visible_sprites], self.obstacle_sprites)
         visible_sprites.ySortSprites.append(cobweb)
 

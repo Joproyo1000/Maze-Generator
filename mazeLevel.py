@@ -1,12 +1,12 @@
 import sys
 import time
-from random import randint
 import pygame
-from math import floor
+
+from math import floor, pi, cos, sin
+from random import randint, choice, uniform
 
 from tile import Tile
-from random import choice
-from cameras import YSortCameraGroup
+from camera import YSortCameraGroup
 from player import Player
 from enemy import Enemy
 from objects import Torch, Chest, Map
@@ -132,10 +132,11 @@ class Maze(pygame.sprite.Group):
         for _ in range(self.settings.currentLevel * 2 + 1):
             # get center of the room
             center = self.get_random_tile_in_maze(1)
+            center = self.grid_cells[self.cols + 3]
 
             # initialize torch and chest objects
             Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
-            chest = Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites])
+            chest = Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites], self.visible_sprites)
             self.chests.append(chest)
 
             # remove all tiles in a 3*3 square to form a room
@@ -206,7 +207,7 @@ class Maze(pygame.sprite.Group):
         """
         return x + y * self.cols
 
-    def check_tile(self, x: int, y: int) -> pygame.sprite.Sprite:
+    def check_tile(self, x: int, y: int) -> Tile:
         """
         Converts tile from x, y position to a 1D position on the tile grid
         :param x: x position on the 2D grid
@@ -276,22 +277,26 @@ class Maze(pygame.sprite.Group):
 
         return neighbors
 
-    def get_random_tile_in_maze(self, distanceFromPlayer):
+    def get_random_tile_in_maze(self, distanceFromCenter: int, center=(0, 0)):
         """
-        :param distanceFromPlayer: 1 is close, 2 is middle, 3 is far
+        :param distanceFromCenter: either 1:close, 2:medium, 3:far
+        :param center: center position in pixels
         :return: a random pos tile is not a wall in the grid and that is at least further away than the given distance
         """
-        if distanceFromPlayer < 1 or distanceFromPlayer > 3:
-            raise ValueError(f'distanceFromPlayer cannot be {distanceFromPlayer}. It must be either 1, 2 or 3')
+        if distanceFromCenter < 1 or distanceFromCenter > 3:
+            raise ValueError(f'distanceFromPlayer cannot be {distanceFromCenter}. It must be either 1, 2 or 3')
 
-        xRange = self.cols // 2 - 1
-        yRange = self.rows // 2 - 1
-        if randint(0, 1):
-            return self.check_tile(randint(int(xRange * distanceFromPlayer / 4 - 1), xRange) * 2 + 1,
-                                   randint(0, yRange) * 2 + 1)
-        else:
-            return self.check_tile(randint(0, xRange) * 2 + 1,
-                                   randint(int(yRange * distanceFromPlayer / 4 - 1), yRange) * 2 + 1)
+        while True:
+            xRange = self.cols // 2 - 1
+            yRange = self.rows // 2 - 1
+            if randint(0, 1):
+                tile = self.check_tile(randint(int(xRange * distanceFromCenter / 4 - 1), xRange) * 2 + 1,
+                                       randint(0, yRange) * 2 + 1)
+            else:
+                tile = self.check_tile(randint(0, xRange) * 2 + 1,
+                                       randint(int(yRange * distanceFromCenter / 4 - 1), yRange) * 2 + 1)
+            if distance(tile.rect.center, center) < 5000:
+                return tile
 
     def remove_walls(self, next_tile: object):
         """
@@ -379,60 +384,90 @@ class Maze(pygame.sprite.Group):
         :param i: index of the current enemy being updated
         Enemy behavior method, handles different enemies behavior
         """
-        if self.mazeGenerated:
-            enemy = self.enemies.sprites()[i]
+        enemy = self.enemies.sprites()[i]
 
-            if enemy.type == 'spider':
-                if randint(0, 20) == 0:
-                    enemy.spawnCobweb(self.visible_sprites)
+        if enemy.type == 'spider' and randint(0, 20) == 0:
+            enemy.spawnCobweb(self.visible_sprites)
 
-            # region pathfinding
-            # get the tile where the enemy and the player are
-            enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
-                                       enemy.rect.centery // self.settings.TILESIZE)
+        # region pathfinding
+        # get the tile where the enemy is
+        enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
+                                   enemy.rect.centery // self.settings.TILESIZE)
 
-            playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
-                                        self.player.rect.centery // self.settings.TILESIZE)
+        if enemyPos:
+            if enemy.AI:
+                # get player pos
+                playerPos = self.check_tile(self.player.rect.centerx // self.settings.TILESIZE,
+                                            self.player.rect.centery // self.settings.TILESIZE)
+                if playerPos:
+                    # get distance from enemy to player
+                    enemyDst = distance(enemyPos.rect.center, playerPos.rect.center)
 
-            # if both exists (failsafe) pathfind to player
-            if enemyPos and playerPos:
-                enemyDst = distance(enemyPos, playerPos)
-
-                # the wolf is blind, so he won't go towards the player unless it moves
-                if enemy.type == 'wolf' and self.player.direction.magnitude() == 0:
-                    randomPos = self.get_random_tile_in_maze(1)
-                    path = self.pathFinder.findPath(enemyPos, randomPos)
-                    enemy.followPath(path=path, replace=True)
-                # activate enemy pathfinding to player
-                elif enemy.AI:
-                    # optimization : update enemy more frequently if close to player
-                    pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1000)))
-                    if len(enemy.path) != 0:
-                        enemy.followPath()
-
-                    # if close enough to player, follow him
+                    # either go towards player are towards random location
                     if enemyDst < enemy.range:
-                        path = self.pathFinder.findPath(enemyPos, playerPos)
-                        enemy.followPath(path=path, replace=True)
-
-                    # else chose random location and pathfind there
+                        if enemy.type == 'wolf' and self.player.direction.magnitude() != 0:
+                            randomPos = self.get_random_tile_in_maze(1)
+                            path = self.pathFinder.findPath(enemyPos, randomPos)
+                            enemy.followPath(path=path, replace=True)
+                        else:
+                            pygame.time.set_timer(self.enemyEvents[i], int((enemyDst * 2 + 500)))
+                            path = self.pathFinder.findPath(enemyPos, playerPos)
+                            enemy.followPath(path=path, replace=True)
+                    elif len(enemy.path) != 0:
+                        enemy.followPath()
                     else:
-                        randomPos = self.get_random_tile_in_maze(3)
-
+                        randomPos = self.get_random_tile_in_maze(1)
                         path = self.pathFinder.findPath(enemyPos, randomPos)
                         enemy.followPath(path=path, replace=True)
-                # activate enemy pathfinding to random location
+
+                    return enemyDst
+            else:
+                if len(enemy.path) != 0:
+                    enemy.followPath()
                 else:
                     randomPos = self.get_random_tile_in_maze(1)
                     path = self.pathFinder.findPath(enemyPos, randomPos)
                     enemy.followPath(path=path, replace=True)
 
-                return enemyDst
-            # endregion
-
         return None
 
-    def rayCast(self, origin: Tile, direction: str, size: float) -> [Tile]:
+        #     # if both exists (failsafe) pathfind to player
+        #     if enemyPos:
+        #         # the wolf is blind, so he won't go towards the player unless it moves
+        #         if enemy.type == 'wolf' and self.player.direction.magnitude() == 0:
+        #             randomPos = self.get_random_tile_in_maze(1)
+        #             path = self.pathFinder.findPath(enemyPos, randomPos)
+        #             enemy.followPath(path=path, replace=True)
+        #         # activate enemy pathfinding to player
+        #         elif enemy.AI:
+        #             # optimization : update enemy more frequently if close to player
+        #             pygame.time.set_timer(self.enemyEvents[i], int((enemyDst + 1000)))
+        #             if len(enemy.path) != 0:
+        #                 enemy.followPath()
+        #
+        #             # if close enough to player, follow him
+        #             if enemyDst < enemy.range:
+        #                 path = self.pathFinder.findPath(enemyPos, playerPos)
+        #                 enemy.followPath(path=path, replace=True)
+        #
+        #             # else chose random location and pathfind there
+        #             else:
+        #                 randomPos = self.get_random_tile_in_maze(3)
+        #
+        #                 path = self.pathFinder.findPath(enemyPos, randomPos)
+        #                 enemy.followPath(path=path, replace=True)
+        #         # activate enemy pathfinding to random location
+        #         else:
+        #             randomPos = self.get_random_tile_in_maze(1)
+        #             path = self.pathFinder.findPath(enemyPos, randomPos)
+        #             enemy.followPath(path=path, replace=True)
+        #
+        #         return enemyDst
+        #     # endregion
+        #
+        # return None
+
+    def rayCast(self, origin: pygame.sprite.Sprite, direction: str, size: float) -> [Tile]:
         """
         :param origin: center of the ray
         :param direction: direction in which the ray should be cast
@@ -442,8 +477,8 @@ class Maze(pygame.sprite.Group):
         directions = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}
         res = []
 
-        target = origin
         origin = pygame.Vector2(origin.rect.x // self.settings.TILESIZE, origin.rect.y // self.settings.TILESIZE)
+        target = self.check_tile(int(origin.x), int(origin.y))
 
         ray = pygame.Vector2(directions[direction])
         while ray.magnitude() < size and not target.isWall:
@@ -453,9 +488,21 @@ class Maze(pygame.sprite.Group):
 
             ray.scale_to_length(ray.magnitude() + 1)
 
-        return res
+        if len(res) > 0:
+            return res[-1]
 
-    def check_interactables(self):
+    def playerUse(self):
+        if self.player.currentItemIndex != 0:
+
+            self.visible_sprites.notification(self.settings.WIDTH / 1.1, self.settings.HEIGHT / 1.1,
+                                              "You used " + self.player.inventory[self.player.currentItemIndex].text + ".", 'bottomright', 400)
+
+            # target = self.rayCast(self.player, self.player.status if '_idle' not in self.player.status else self.player.status[:-5:], 100)
+
+            self.player.use()
+
+
+    def check_interactable(self):
         for chest in self.chests:
             if self.player.hitbox.colliderect(chest.hitbox):
                 chest.open(self.player)
@@ -472,16 +519,22 @@ class Maze(pygame.sprite.Group):
         """
         Check if player hits enemy
         """
-        # if self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies)):
-        #     return True
+        indexes = self.player.hitbox.collidelistall(list(enemy.hitbox for enemy in self.enemies))
+        if len(indexes) > 0:
+            self.player.lives -= 1
+            if self.player.lives <= 0:
+                return True
+            else:
+                self.enemyEvents.pop(indexes[0])
+                self.visible_sprites.ySortSprites.remove(self.enemies.sprites()[indexes[0]])
+                self.enemies.sprites()[indexes[0]].kill()
+
         return False
 
     def check_game_state(self):
         """
         Update game state and interactables
         """
-        # self.check_interactables()
-
         if self.check_victory():
             self.settings.currentLevel += 1
             # check if player as reached exit of last level

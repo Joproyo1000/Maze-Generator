@@ -26,7 +26,7 @@ class Settings:
         self.TILESIZE = 120
 
         # randomness of the maze
-        self.TURNFACTOR = 10
+        self.TURNFACTOR = 5
 
         # difficulty of the maze 0=easy 1=medium 2=hard
         self.DIFFICULTY = 0
@@ -40,8 +40,8 @@ class Settings:
         self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
 
         # colors
-        self.WALLCOLOR = 'goldenrod4'  # color of the wall on the map
-        self.PATHCOLOR = 'gold4'  # color of the path on the map
+        self.WALLCOLOR = 'gold4'  # color of the wall on the map
+        self.PATHCOLOR = 'goldenrod4'  # color of the path on the map
         self.PLAYERCOLOR = 'blue'
         self.ENDCOLOR = 'gold'
         self.CHESTCOLOR = 'chocolate4'

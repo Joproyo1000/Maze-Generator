@@ -2,6 +2,8 @@ import time
 
 from sys import exit
 
+import pygame
+
 from mazeLevel import Maze
 from settings import Settings
 from shaders import Shader
@@ -36,9 +38,6 @@ class MazeGame:
         self.buttons = []
         if self.settings.shadersOn:
             self.shader = Shader(self.screen.get_size(), self.settings)
-
-        self.mapSurf = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(),
-                                         (self.screen.get_size()))
 
         pygame.display.set_caption('Maze Game')
         self.clock = pygame.time.Clock()
@@ -162,7 +161,7 @@ class MazeGame:
         currentTime = time.time()
 
         while True:
-            # calculate deltaTime to make the speed go at the same rate regardless of the FPS
+            # calculate deltaTime to make the speed go at the same rate regardless of FPS
             deltaTime = time.time() - currentTime
             currentTime = time.time()
 
@@ -175,12 +174,19 @@ class MazeGame:
                     pygame.quit()
                     exit()
 
+                # inventory
+                if event.type == pygame.MOUSEWHEEL:
+                    self.maze.player.currentItemIndex = (self.maze.player.currentItemIndex + event.y) % len(self.maze.player.inventory)
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self.maze.playerUse()
+
+                # menus
                 if event.type == pygame.KEYDOWN:
                     key = pygame.key.get_pressed()
-                    if key[pygame.K_ESCAPE]:
-                        self.pause_menu()
                     if key[pygame.K_m]:
                         self.map()
+                    if key[pygame.K_ESCAPE]:
+                        self.pause_menu()
 
                 # update all enemies
                 dstsToPlayer = []
@@ -189,13 +195,14 @@ class MazeGame:
                         d = self.maze.enemyBehavior(i)
                         if d is not None:
                             dstsToPlayer.append(d)
-                # keep track of the closest enemy to player
-                if len(dstsToPlayer) > 0:
-                    closestEnemy = sorted(dstsToPlayer)[0]
-                    self.settings.dstToClosestEnemy = closestEnemy
+            # keep track of the closest enemy to player
+            if len(dstsToPlayer) > 0:
+                closestEnemy = min(dstsToPlayer)
+                self.settings.dstToClosestEnemy = closestEnemy
 
             # run the level
             self.maze.run(deltaTime)
+            # print(self.clock.get_fps())
 
             if not self.settings.shadersOn:
                 pygame.display.update()
@@ -209,10 +216,12 @@ class MazeGame:
         """
         currentTime = time.time()
 
+        mapSurf = pygame.transform.scale(pygame.image.load('graphics/special/objects/bigMap.png').convert_alpha(),
+                                              (self.screen.get_size()))
         self.maze.run(0, getInput=False)
         mapImg = self.maze.bake_map()
-        self.mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
-        slideTransitionStart(self.screen, self.mapSurf, self.shader)
+        mapSurf.blit(mapImg, mapImg.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
+        slideTransitionStart(self.screen, mapSurf, self.shader)
 
         while True:
             # calculate deltaTime to make the speed go at the same rate regardless of the FPS
@@ -232,17 +241,17 @@ class MazeGame:
                     key = pygame.key.get_pressed()
                     if key[pygame.K_ESCAPE]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, self.mapSurf, self.shader)
+                        slideTransitionEnd(self.screen, mapSurf, self.shader)
                         self.game(doTransition=False)
                     if key[pygame.K_m]:
                         self.maze.run(0, getInput=False)
-                        slideTransitionEnd(self.screen, self.mapSurf, self.shader)
+                        slideTransitionEnd(self.screen, mapSurf, self.shader)
                         self.game(doTransition=False)
 
             # run the level
             mazeScreen = self.maze.run(deltaTime, getInput=False)
             self.screen.blit(mazeScreen, mazeScreen.get_rect())
-            self.screen.blit(self.mapSurf, (0, 0))
+            self.screen.blit(mapSurf, (0, 0))
 
             self.shader.render(self.screen)
             if not self.settings.shadersOn:

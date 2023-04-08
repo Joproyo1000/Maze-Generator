@@ -1,9 +1,12 @@
 import random
-
 import pygame.sprite
 
 import settings
+
 from Pygame_Lights import *
+from enemy import Enemy
+from tile import Tile
+from objects import Chest, Torch, CobWeb
 from shaders import Shader
 
 
@@ -34,6 +37,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         # perspectiveOffset is used to offset each tile by a percentage (1 being no offset) to create fake perspective
         self.perspectiveOffset = 1.3
 
+        # initialize notifications list
+        self.notifications = []
+        self.notificationsAlpha = []
+
+        # item display
+        self.itemDisplayRect = Rect(self.settings.WIDTH - 200 - self.settings.TILESIZE, 200, self.settings.TILESIZE, self.settings.TILESIZE)
+
+        # helper methods
         self.get_neighbors = get_neighbors
         self.check_tile = check_tile
 
@@ -41,7 +52,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.ySortSprites = []
 
         for sprite in self.sprites():
-            if str(type(sprite)) == "<class 'tile.Tile'>":
+            if isinstance(sprite, Tile):
                 if not sprite.isWall:
                     self.blit(sprite, customScreen=self.background)
                 else:
@@ -71,24 +82,40 @@ class YSortCameraGroup(pygame.sprite.Group):
 
                 self.torches.append([torch, pos])
 
+        self.lights_display = pygame.Surface(self.screen.get_size())
+        self.global_light = global_light(self.screen.get_size(), self.settings.LIGHTINTENSITY)
+
     def render_light(self):
         """
         Blits the light on the screen with shadows cast from the shadow_objects
         """
         # reset screen
-        lights_display = pygame.Surface((self.screen.get_size()))
+        self.lights_display.fill('black')
 
         # global light darkens the background
-        lights_display.blit(global_light(self.screen.get_size(), self.settings.LIGHTINTENSITY), (0, 0))
+        self.lights_display.blit(self.global_light, (0, 0))
 
         # show lights
-        self.light.main(self.shadow_objects, self.offset, lights_display, self.half_width, self.half_height)
+        self.light.main(self.shadow_objects, self.offset, self.lights_display, self.half_width, self.half_height)
 
         for torch, pos in self.torches:
-            torch.main([], (0, 0), lights_display, pos[0] - self.offset.x, pos[1] - self.offset.y)
+            torch.main([], (0, 0), self.lights_display, pos[0] - self.offset.x, pos[1] - self.offset.y)
 
         # show the light on the screen
-        self.screen.blit(lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
+        self.screen.blit(self.lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
+
+    def notification(self, x: int, y: int, text: str, corner: str, duration):
+        if corner == 'topleft':
+            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(topleft=(x, y))
+        if corner == 'topright':
+            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(topright=(x, y))
+        if corner == 'bottomleft':
+            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(bottomleft=(x, y))
+        if corner == 'bottomright':
+            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(bottomright=(x, y))
+
+        self.notifications.append((text, rect))
+        self.notificationsAlpha.append(duration)
 
     def blit(self, sprite: pygame.sprite.Sprite, customScreen=None, customImage=None):
         """
@@ -146,13 +173,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         # remove all objects from player image
         for object in objects:
             if object.rect.centery > player.rect.centery:
-                if str(type(object)) == "<class 'objects.Chest'>":
+                # offsets here are because of the images not being the same size
+                if isinstance(object, Chest):
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx + 9, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 7.5, object.rect.width, object.rect.height)
-                elif str(type(object)) == "<class 'objects.Torch'>":
+                elif isinstance(object, Torch):
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx - 15, (object.rect.centery - player.rect.centery) / self.perspectiveOffset - 32, object.rect.width, object.rect.height)
-                elif str(type(object)) == "<class 'objects.CobWeb'>":
+                elif isinstance(object, CobWeb):
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx + 11, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 9, object.rect.width, object.rect.height)
-                elif str(type(object)) == "<class 'enemy.Enemy'>":
+                elif isinstance(object, Enemy):
                     offsetRect = pygame.Rect(object.rect.centerx - player.rect.centerx, (object.rect.centery - player.rect.centery) / self.perspectiveOffset + 2, object.rect.width, object.rect.height)
 
                 cutPlayerSprite.blit(object.image, offsetRect)
@@ -173,11 +201,28 @@ class YSortCameraGroup(pygame.sprite.Group):
         # draw player after lighting so that it is not affected
         self.blit(player, customImage=cutPlayerSprite)
 
+        # draw every notification fading out
+        for notification, alpha in zip(self.notifications, self.notificationsAlpha):
+            text = self.settings.font.render(notification[0], True, 'antiquewhite3')
+            text.set_alpha(alpha)
+            self.screen.blit(text, notification[1])
+
+            if alpha <= 0:
+                self.notifications.remove(notification)
+                self.notificationsAlpha.remove(alpha)
+            else:
+                self.notificationsAlpha[self.notificationsAlpha.index(alpha)] -= 4
+
+        pygame.draw.rect(self.screen, 'antiquewhite3', self.itemDisplayRect, 10)
+        if player.currentItemIndex != 0:
+            self.screen.blit(player.inventory[player.currentItemIndex].image, player.inventory[player.currentItemIndex].rect)
+
         # fade in transition
         self.screen.blit(blackGradient, blackGradient.get_rect())
 
         # apply heart beat effect if activated
         scaledScreen = self.screen
+
         if self.settings.showHeartBeatEffect:
             if self.settings.dstToClosestEnemy <= 400:
                 hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
@@ -193,36 +238,3 @@ class YSortCameraGroup(pygame.sprite.Group):
             pygame.display.get_surface().blit(self.screen, self.screen.get_rect())
 
         return scaledScreen
-
-    def draw_map(self, pos: (int, int), map, player: pygame.sprite.Sprite, enemies, size):
-        display = pygame.display.get_surface()
-        # get the rect of the map with the offset and show it
-        rect = map[1].x + pos[0], map[1].y + pos[0]
-        display.blit(map[0], rect)
-
-        # get player image and scale it to fit the map, then show it
-        player_image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
-        player_image.fill(player.color)
-        player_image = pygame.transform.scale(player_image, (self.settings.TILESIZE / size, self.settings.TILESIZE / size))
-
-        player_rect = player_image.get_rect(center=(player.rect.centerx / size + pos[0], player.rect.centery / size + pos[1]))
-
-        display.blit(player_image, player_rect)
-
-        # show every enemy on the minimap
-        for enemy in enemies:
-            # get enemy image and scale it to fit the map, then show it
-            enemy_image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
-            enemy_image.fill(enemy.color)
-            enemy_image = pygame.transform.scale(enemy_image, (self.settings.TILESIZE / size, self.settings.TILESIZE / size))
-
-            enemy_rect = player_image.get_rect(center=(enemy.rect.centerx / size + pos[0], enemy.rect.centery / size + pos[1]))
-
-            display.blit(enemy_image, enemy_rect)
-
-    def debug_draw(self):
-        for sprite in self.sprites():
-            img = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
-            img.fill(sprite.color)
-            rect = img.get_rect(topleft=(sprite.rect.topleft[0], sprite.rect.topleft[1]))
-            self.screen.blit(img, rect)

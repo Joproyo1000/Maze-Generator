@@ -1,7 +1,7 @@
 import math
 from os import walk
 import pygame
-import tile
+from tile import Tile
 
 
 def import_folder(path, size):
@@ -17,13 +17,18 @@ def import_folder(path, size):
     return surface_list
 
 
-def distance(a: tile, b: tile):
-    if isinstance(a, bool):
-        raise TypeError(f'A should be of type Tile and not {a}')
-    if isinstance(b, bool):
-        raise TypeError(f'B should be of type Tile and not {b}')
+def distance(a: tuple, b: tuple):
+    """
+    :param a: first tile
+    :param b: second tile
+    :return: euclidian distance between a and b
+    """
+    if not isinstance(a, tuple):
+        raise TypeError(f'A should be of type tuple and not {type(a)}')
+    if not isinstance(b, tuple):
+        raise TypeError(f'B should be of type tuple and not {type(b)}')
 
-    return math.sqrt(sum((a.pos[i] - b.pos[i]) ** 2 for i in range(2)))
+    return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(2)))
 
 
 def fadeTransitionStart(screen: pygame.Surface, shader=None):
