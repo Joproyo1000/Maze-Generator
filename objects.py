@@ -162,6 +162,7 @@ class Map(Useable):
     def __init__(self, pos):
         super().__init__()
         self.text = "a piece of map"
+        self.pos = pos
 
 
 class Freeze(Useable):

@@ -47,6 +47,12 @@ class Settings:
         self.K_MAP = pygame.K_m
 
         # colors
+        self.MENUCOLOR = pygame.Color(46, 60, 87)
+        self.TEXTCOLOR = 'gray'
+        self.HOVERINGCOLOR = 'darkgray'
+        self.SLIDEREXTCOLOR = 'gray28'
+        self.SLIDERINTCOLOR = 'black'
+
         self.WALLCOLOR = 'gold4'  # color of the wall on the map
         self.PATHCOLOR = 'goldenrod4'  # color of the path on the map
         self.PLAYERCOLOR = 'blue'
@@ -71,7 +77,7 @@ class Settings:
         self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
         self.VOLUME = 0  # default volume
 
-        self.shadersOn = True  # activate shader
+        self.shadersOn = False  # activate shader
 
         # keep track of distance to the closest enemy
         self.dstToClosestEnemy = 1000000

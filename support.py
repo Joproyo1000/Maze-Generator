@@ -1,4 +1,5 @@
 import math
+import sys
 from os import walk
 import pygame
 
@@ -186,8 +187,7 @@ class Button:
 
     def checkForInput(self):
         position = pygame.mouse.get_pos()
-        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
-                                                                                          self.rect.bottom):
+        if self.rect.left < position[0] < self.rect.right and self.rect.top < position[1] < self.rect.bottom:
             return True
         return False
 
@@ -248,8 +248,7 @@ class CheckButton:
 
     def checkForInput(self):
         position = pygame.mouse.get_pos()
-        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
-                                                                                          self.rect.bottom):
+        if self.rect.left < position[0] < self.rect.right and self.rect.top < position[1] < self.rect.bottom:
             self.value = not self.value
             return self.value
 
@@ -291,20 +290,48 @@ class InputButton:
         self.is_active = False
         self.key = key_input
 
-    def update(self, screen):
+        self.exitInputButton = Button(None, (pygame.display.get_surface().get_width()/2, pygame.display.get_surface().get_height()/1.1),
+                                      'EXIT', font, self.base_color, self.hovering_color)
+
+    def update(self, screen: pygame.Surface):
+        """
+        Updates the button's color and position based on its stored value
+        :param screen: screen to display the button
+        """
+        self.text_rect.centerx = self.x_pos - (len(self.key_input) * 20) / 2
         screen.blit(self.text, self.text_rect)
 
         self.changeColor()
 
-    def checkForInput(self):
+    def isHovered(self):
         position = pygame.mouse.get_pos()
-        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
-            self.text = self.font.render("Waiting for input...", True, self.base_color)
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,self.rect.bottom):
+            return True
+        return False
+
+    def checkForInput(self):
+        """
+        If the button is pressed it takes the next key the user presses and stores it
+        """
+        # check if button is clicked
+        position = pygame.mouse.get_pos()
+        if self.rect.left < position[0] < self.rect.right and self.rect.top < position[1] < self.rect.bottom:
             key = None
+            # wait for input
             while key is None:
                 for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
                     if event.type == pygame.KEYDOWN:
-                        key = pygame.key.name(event.key)
+                        if event.key == pygame.K_ESCAPE:
+                            key = self.key_input
+                        else:
+                            key = pygame.key.name(event.key)
+                    if event.type == pygame.MOUSEBUTTONDOWN and self.exitInputButton.checkForInput():
+                        key = self.key_input
+
+            # store input key as its pygame attribute if it is a valid key
             try:
                 self.key = getattr(pygame, "K_" + key.lower())
                 self.key_input = key.upper()
