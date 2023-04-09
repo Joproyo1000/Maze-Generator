@@ -19,8 +19,8 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # get the display surface and initialize background surface
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
-        self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.currentLevel],
-                                          self.settings.MAZEHEIGHTS[self.settings.currentLevel]))
+        self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
+                                          self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]))
         self.backgroundRect = self.background.get_rect()
 
         # initialize OpenGL shader
@@ -106,13 +106,13 @@ class YSortCameraGroup(pygame.sprite.Group):
 
     def notification(self, x: int, y: int, text: str, corner: str, duration):
         if corner == 'topleft':
-            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(topleft=(x, y))
+            rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(topleft=(x, y))
         if corner == 'topright':
-            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(topright=(x, y))
+            rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(topright=(x, y))
         if corner == 'bottomleft':
-            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(bottomleft=(x, y))
+            rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(bottomleft=(x, y))
         if corner == 'bottomright':
-            rect = self.settings.font.render(text, True, 'antiquewhite3').get_rect(bottomright=(x, y))
+            rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(bottomright=(x, y))
 
         self.notifications.append((text, rect))
         self.notificationsAlpha.append(duration)
@@ -203,7 +203,7 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # draw every notification fading out
         for notification, alpha in zip(self.notifications, self.notificationsAlpha):
-            text = self.settings.font.render(notification[0], True, 'antiquewhite3')
+            text = self.settings.FONT.render(notification[0], True, 'antiquewhite3')
             text.set_alpha(alpha)
             self.screen.blit(text, notification[1])
 
@@ -223,7 +223,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         # apply heart beat effect if activated
         scaledScreen = self.screen
 
-        if self.settings.showHeartBeatEffect:
+        if self.settings.SHOWHEARTBEATEFFECT:
             if self.settings.dstToClosestEnemy <= 400:
                 hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
 

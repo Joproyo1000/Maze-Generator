@@ -33,8 +33,8 @@ class Maze(pygame.sprite.Group):
         self.blackGradient.fill('black')
 
         # calculate number of columns and rows
-        self.cols = int(self.settings.MAZEWIDTHS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
-        self.rows = int(self.settings.MAZEHEIGHTS[self.settings.currentLevel] // self.settings.TILESIZE / 2) * 2 + 1
+        self.cols = int(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] // self.settings.TILESIZE / 2) * 2 + 1
+        self.rows = int(self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] // self.settings.TILESIZE / 2) * 2 + 1
 
         # create two groups, one for sprites that need to be drawn on th screen, the other for the ones with collisions
         self.visible_sprites = YSortCameraGroup(self.settings, self.get_neighbors, self.check_tile)
@@ -129,14 +129,19 @@ class Maze(pygame.sprite.Group):
         Initialize all rooms with a chest in the middle and a torch on top
         """
         # repeat for every room
-        for _ in range(self.settings.currentLevel * 2 + 1):
+        for _ in range(self.settings.CURRENTLEVEL * 2 + 1):
             # get center of the room
             center = self.get_random_tile_in_maze(1)
             center = self.grid_cells[self.cols + 3]
 
             # initialize torch and chest objects
-            Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
+            if center.rect.top == self.settings.TILESIZE:
+                Torch((center.rect.centerx, center.rect.bottom), 'right', self.settings, [self.visible_sprites])
+            else:
+                Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
             chest = Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites], self.visible_sprites)
+            self.chests.append(chest)
+            chest = Chest(center.rect.bottomright, self.settings, [self.visible_sprites, self.obstacle_sprites], self.visible_sprites)
             self.chests.append(chest)
 
             # remove all tiles in a 3*3 square to form a room
@@ -149,9 +154,9 @@ class Maze(pygame.sprite.Group):
         """
         Initialize all enemies (wolves, spiders and slimes) and spawns them in maze according to the difficulty
         """
-        numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
-        numberOfSpiders = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SPIDERPROPORTION + self.settings.DIFFICULTY))
-        numberOfSlimes = floor(self.settings.MAZEWIDTHS[self.settings.currentLevel] / 2000 * (self.settings.SLIMEPROPORTION + self.settings.DIFFICULTY))
+        numberOfWolfs = floor(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] / 1000 * (self.settings.WOLFPROPORTION + self.settings.DIFFICULTY))
+        numberOfSpiders = floor(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] / 1000 * (self.settings.SPIDERPROPORTION + self.settings.DIFFICULTY))
+        numberOfSlimes = floor(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] / 1000 * (self.settings.SLIMEPROPORTION + self.settings.DIFFICULTY))
 
         self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes)
 
@@ -371,8 +376,8 @@ class Maze(pygame.sprite.Group):
         # mask the baked map to show only areas where player as found map
         mask = pygame.Surface(self.screen.get_size()).convert_alpha()
         mask.fill('black')
-        for map in [object for object in self.player.inventory if isinstance(object, Map)]:
-            pygame.draw.circle(mask, (0, 0, 0, 0), (map.pos[0] * baked_map.get_width(), map.pos[1] * baked_map.get_height()), 400 - 50 * self.settings.currentLevel * self.settings.DIFFICULTY)
+        for map in self.player.maps:
+            pygame.draw.circle(mask, (0, 0, 0, 0), (map.pos[0] * baked_map.get_width(), map.pos[1] * baked_map.get_height()), 400 - 50 * self.settings.CURRENTLEVEL * self.settings.DIFFICULTY)
 
         baked_map.blit(mask, mask.get_rect())
         baked_map.set_colorkey('black')
@@ -536,9 +541,9 @@ class Maze(pygame.sprite.Group):
         Update game state and interactables
         """
         if self.check_victory():
-            self.settings.currentLevel += 1
+            self.settings.CURRENTLEVEL += 1
             # check if player as reached exit of last level
-            if self.settings.currentLevel >= self.settings.numLevels:
+            if self.settings.CURRENTLEVEL >= self.settings.NUMLEVELS:
                 print('YOU WON !')
                 pygame.quit()
                 sys.exit()

@@ -25,7 +25,7 @@ void main() {
   }
   else {
     // amount of chromatic aberration
-    float chromatic_aberration = 0.02;
+    float chromatic_aberration = 0.015;
 
     // offset red and blue channels to ceate a chromatic aberration effect
     float r = texture(tex, uvs2 - vec2(chromatic_aberration * off_center)).x;

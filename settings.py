@@ -11,16 +11,16 @@ class Settings:
         self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
 
         # set size of maze for each level
-        self.numLevels = 3
-        self.MAZEWIDTHS, self.MAZEHEIGHTS = [0] * self.numLevels, [0] * self.numLevels
-        for i in range(self.numLevels):
+        self.NUMLEVELS = 3
+        self.MAZEWIDTHS, self.MAZEHEIGHTS = [0] * self.NUMLEVELS, [0] * self.NUMLEVELS
+        for i in range(self.NUMLEVELS):
             self.MAZEWIDTHS[i], self.MAZEHEIGHTS[i] = (i+1) * 3200, (i+1) * 2000
 
-        self.currentLevel = 0
+        self.CURRENTLEVEL = 0
 
         # set the resolution for the screen and the maze
         self.RESOLUTION = self.WIDTH, self.HEIGHT
-        self.MAZERESOLUTION = self.MAZEWIDTHS[self.currentLevel], self.MAZEHEIGHTS[self.currentLevel]
+        self.MAZERESOLUTION = self.MAZEWIDTHS[self.CURRENTLEVEL], self.MAZEHEIGHTS[self.CURRENTLEVEL]
 
         # set the tilesize in the maze (larger ones means smaller maze)
         self.TILESIZE = 120
@@ -32,12 +32,19 @@ class Settings:
         self.DIFFICULTY = 0
 
         # proportion of enemies for a 1000*1000 maze
-        self.WOLFPROPORTION = 0.5
-        self.SPIDERPROPORTION = 1.5
-        self.SLIMEPROPORTION = 3
+        self.WOLFPROPORTION = 0.3
+        self.SPIDERPROPORTION = 1
+        self.SLIMEPROPORTION = 2
 
         # initialize font
-        self.font = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT//10)
+        self.FONT = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT // 10)
+
+        # controls
+        self.K_UP = pygame.K_z
+        self.K_DOWN = pygame.K_s
+        self.K_LEFT = pygame.K_q
+        self.K_RIGHT = pygame.K_d
+        self.K_MAP = pygame.K_m
 
         # colors
         self.WALLCOLOR = 'gold4'  # color of the wall on the map
@@ -51,19 +58,20 @@ class Settings:
         self.LIGHTRADIUS = 250 * self.TILESIZE//60  # size of the light
         self.LIGHTINTENSITY = 10  # intensity of the light
 
+        # toggle heart beat effect in shaders
+        self.SHOWHEARTBEATEFFECT = True
+
         # shaders
-        self.shadersOn = True  # activate shader
-        self.gamma = 20  # default gamma value
+        self.GAMMA = 20  # default gamma value
 
         # set FPS
         self.GAMEFPS = 60
 
         # initialize music
-        self.music = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.volume = 0  # default volume
+        self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
+        self.VOLUME = 0  # default volume
 
-        # toggle heart beat effect in shaders
-        self.showHeartBeatEffect = False
+        self.shadersOn = True  # activate shader
 
         # keep track of distance to the closest enemy
         self.dstToClosestEnemy = 1000000

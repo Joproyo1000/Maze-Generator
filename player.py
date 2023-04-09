@@ -39,6 +39,7 @@ class Player(pygame.sprite.Sprite):
         self.getInput = True
 
         # initialize inventory
+        self.maps = []
         self.inventory = [None]
         self.currentItemIndex = 0
 
@@ -75,19 +76,19 @@ class Player(pygame.sprite.Sprite):
         Updates direction based on input
         """
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_z]:
+        if keys[self.settings.K_UP]:
             self.direction.y = -1
             self.status = 'up'
-        elif keys[pygame.K_s]:
+        elif keys[self.settings.K_DOWN]:
             self.status = 'down'
             self.direction.y = 1
         else:
             self.direction.y = 0
 
-        if keys[pygame.K_q]:
+        if keys[self.settings.K_LEFT]:
             self.status = 'left'
             self.direction.x = -1
-        elif keys[pygame.K_d]:
+        elif keys[self.settings.K_RIGHT]:
             self.status = 'right'
             self.direction.x = 1
         else:

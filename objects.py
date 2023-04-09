@@ -93,11 +93,10 @@ class Chest(pygame.sprite.Sprite):
 
         # chose random item to put in the chest 0=freeze, 1=map, 2=heal
         items = {0: Freeze(visible_sprites.itemDisplayRect.center),
-                 1: Map((self.rect.centerx / self.settings.MAZEWIDTHS[self.settings.currentLevel],
-                        self.rect.centery / self.settings.MAZEHEIGHTS[self.settings.currentLevel])),
+                 1: Map((self.rect.centerx / self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
+                        self.rect.centery / self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL])),
                  2: Heal(visible_sprites.itemDisplayRect.center)}
-        # self.item = items[randint(0, 3)]
-        self.item = items[2]
+        self.item = items[randint(0, 2)]
 
         self.visible_sprites = visible_sprites
 
@@ -122,7 +121,10 @@ class Chest(pygame.sprite.Sprite):
             animation = self.animations['opened']
 
             self.image = animation[0]
-            player.inventory.append(self.item)
+            if isinstance(self.item, Map):
+                player.maps.append(self.item)
+            else:
+                player.inventory.append(self.item)
 
             self.visible_sprites.notification(self.settings.WIDTH / 1.1, self.settings.HEIGHT / 1.1,
                                               "You found " + self.item.text + "!", 'bottomright', 300)
@@ -170,7 +172,7 @@ class Freeze(Useable):
         self.rect = self.image.get_rect(center=pos)
         self.text = "a freeze item"
 
-    def use(self):
+    def use(self, player):
         # TODO freeze if facing enemy
         self.kill()
 

@@ -1,10 +1,16 @@
 import math
 from os import walk
 import pygame
-from tile import Tile
+
+import shaders
 
 
-def import_folder(path, size):
+def import_folder(path: str, size: float) -> [pygame.Surface]:
+    """
+    :param path: path to the folder
+    :param size: size of the images imported
+    :return: a list of surfaces containg all images in the folder
+    """
     surface_list = []
 
     for _, __, img_files in walk(path):
@@ -17,10 +23,10 @@ def import_folder(path, size):
     return surface_list
 
 
-def distance(a: tuple, b: tuple):
+def distance(a: tuple, b: tuple) -> float:
     """
-    :param a: first tile
-    :param b: second tile
+    :param a: first position
+    :param b: second position
     :return: euclidian distance between a and b
     """
     if not isinstance(a, tuple):
@@ -31,79 +37,134 @@ def distance(a: tuple, b: tuple):
     return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(2)))
 
 
-def fadeTransitionStart(screen: pygame.Surface, shader=None):
+def fadeTransitionStart(screen: pygame.Surface, shader: shaders.Shader=None):
+    """
+    Fades the screen to black slowly
+    :param screen: screen to do the transition
+    :param shader: shader to do the transition
+    """
+    # create black surface
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
+    # slowly increase alpha to create the transition effect
     for a in range(150):
         blackGradient.set_alpha(a)
         screen.blit(blackGradient, (0, 0))
+        # if there is a shader use it else just update the display
         if shader is None:
             pygame.display.update()
         else:
             shader.render(screen)
+        # wait 5 ms between each iteration
         pygame.time.delay(5)
 
 
-def fadeTransitionEnd(screen: pygame.Surface, shader=None):
+def fadeTransitionEnd(screen: pygame.Surface, shader: shaders.Shader=None):
+    """
+    Fades from black to the original screen slowly
+    :param screen: screen to do the transition
+    :param shader: shader to do the transition
+    """
+    # copy the screen and show it every frame before the black surface,
+    # this is to prevent the screen to be 'erased' at the beginning of the transition
     background = screen.copy()
+    # create black surface
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
+    # slowly decrease alpha to create the transition effect
     for a in range(180, -1, -3):
         blackGradient.set_alpha(a)
         screen.blit(background, (0, 0))
         screen.blit(blackGradient, (0, 0))
-
+        # if there is a shader use it else just update the display
         if shader is None:
             pygame.display.update()
         else:
             shader.render(screen)
+        # wait 5 ms between each iteration
         pygame.time.delay(5)
 
 
-def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface, shader=None):
+def slideTransitionStart(screen: pygame.Surface, surface: pygame.Surface, shader: shaders.Shader=None):
+    """
+    Does a sliding transition for the surface onto the screen from the bottom
+    :param screen: screen to do the transition
+    :param surface: surface to translate from bottom to center
+    :param shader: shader to do the transition
+    """
+    # copy the screen and show it every frame before the black surface,
+    # this is to prevent the screen to be 'erased' at the beginning of the transition
     background = screen.copy()
     rect = screen.get_rect(topleft=screen.get_rect().bottomleft)
 
     screen.blit(surface, rect)
-    j = screen.get_height() // 6
+    h = screen.get_height() // 6
+
+    # translate the surface with an ease out effect from bottom to top
     while rect.y > 0:
         screen.blit(background, (0, 0))
         screen.blit(surface, rect)
 
+        # if there is a shader use it else just update the display
         if shader is None:
             pygame.display.update()
         else:
             shader.render(screen)
 
-        rect.y -= j
-        j -= j // 6
+        # slowly decrease the amount of vertical change to the surface for the ease out
+        rect.y -= h
+        h -= h // 6
 
+        # wait 5 ms between each iteration
         pygame.time.delay(5)
 
 
-def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface, shader=None):
+def slideTransitionEnd(screen: pygame.Surface, surface: pygame.Surface, shader: shaders.Shader=None):
+    """
+    Does a sliding transition for the surface to disappear at the bottom of the screen
+    :param screen: screen to do the transition
+    :param surface: surface to translate from center to below the bottom
+    :param shader: shader to do the transition
+    """
+    # copy the screen and show it every frame before the black surface,
+    # this is to prevent the screen to be 'erased' at the beginning of the transition
     background = screen.copy()
     rect = screen.get_rect()
 
     screen.blit(surface, rect)
     j = screen.get_height() // 6
+
+    # translate the surface with an ease in effect from top to bottom
     while rect.y < screen.get_height():
         screen.blit(background, (0, 0))
         screen.blit(surface, rect)
 
+        # if there is a shader use it else just update the display
         if shader is None:
             pygame.display.update()
         else:
             shader.render(screen)
 
+        # slowly increase the amount of vertical change to the surface for the ease in
         rect.y += j
         j += j // 6
 
+        # wait 5 ms between each iteration
         pygame.time.delay(5)
 
 
 class Button:
-    def __init__(self, image, pos, text_input, font, base_color, hovering_color):
+    def __init__(self, image: pygame.image, pos: (int, int), text_input: str, font: pygame.font,
+                 base_color: str, hovering_color: str):
+        """
+        The button is a button that can do actions when pressed
+        :param image: image to be displayed being the button, if set to None the text will be displayed instead
+        :param pos: center of the button
+        :param text_input: text to be shown
+        :param font: font to be used for the text
+        :param base_color: color of the text
+        :param hovering_color: color of the text when hovering the slider with the mouse
+        """
         self.image = image
         self.x_pos = pos[0]
         self.y_pos = pos[1]
@@ -140,22 +201,27 @@ class Button:
 
 
 class CheckButton:
-    def __init__(self, image, pos, text_input, font, base_color, hovering_color):
+    def __init__(self, image: pygame.image, pos: (int, int), text_input: str, start_value: bool, font: pygame.font,
+                 base_color: str, hovering_color: str):
+        """
+        The Check button is like an ON/OFF button its value is either True or False and can be toggled by clicking it
+        :param image: image to be displayed being the button, if set to None the text will be displayed instead
+        :param pos: center of the button
+        :param text_input: text to be shown
+        :param start_value: initial value of the button
+        :param font: font to be used for the text
+        :param base_color: color of the text
+        :param hovering_color: color of the text when hovering the slider with the mouse
+        """
         self.image = image
-
         self.x_pos = pos[0]
         self.y_pos = pos[1]
-
         self.font = font
-
         self.base_color, self.hovering_color = base_color, hovering_color
-
         self.text_input = text_input
         self.text = self.font.render(self.text_input, True, self.base_color)
-
         if self.image is None:
             self.image = self.text
-
         self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
         self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
 
@@ -163,7 +229,7 @@ class CheckButton:
         self.box.center = (self.x_pos + self.text_rect.width / 1.8, self.y_pos)
         self.cross_rect = self.box.inflate(-6, -6)
 
-        self.value = False
+        self.value = start_value
 
     def update(self, screen):
         if self.image is not None:
@@ -196,9 +262,85 @@ class CheckButton:
             self.text = self.font.render(self.text_input, True, self.base_color)
 
 
+class InputButton:
+    def __init__(self, image: pygame.image, pos: (int, int), text_input: str, key_input: int, font: pygame.font,
+                 base_color: str, hovering_color: str):
+        """
+        The Input button is a button that stores a key when pressed
+        :param image: image to be displayed being the button, if set to None the text will be displayed instead
+        :param pos: center of the button
+        :param text_input: text to be shown
+        :param key_input: initial value
+        :param font: font to be used for the text
+        :param base_color: color of the text
+        :param hovering_color: color of the text when hovering the slider with the mouse
+        """
+        self.image = image
+        self.x_pos = pos[0]
+        self.y_pos = pos[1]
+        self.font = font
+        self.base_color, self.hovering_color = base_color, hovering_color
+        self.text_input = str(text_input)
+        self.key_input = pygame.key.name(key_input).upper()
+        self.text = self.font.render(self.text_input + self.key_input, True, self.base_color)
+        if self.image is None:
+            self.image = self.text
+        self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+        self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
+        self.is_hovered = False
+        self.is_active = False
+        self.key = key_input
+
+    def update(self, screen):
+        screen.blit(self.text, self.text_rect)
+
+        self.changeColor()
+
+    def checkForInput(self):
+        position = pygame.mouse.get_pos()
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            self.text = self.font.render("Waiting for input...", True, self.base_color)
+            key = None
+            while key is None:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        key = pygame.key.name(event.key)
+            try:
+                self.key = getattr(pygame, "K_" + key.lower())
+                self.key_input = key.upper()
+            except:
+                try:
+                    self.key = getattr(pygame, "K_" + key.upper())
+                    self.key_input = key.upper()
+                except:
+                    raise(ValueError(f'Invalid Key Selection : "{key}"'))
+
+    def changeColor(self):
+        position = pygame.mouse.get_pos()
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+            self.text = self.font.render(self.text_input + self.key_input, True, self.hovering_color)
+        else:
+            self.text = self.font.render(self.text_input + self.key_input, True, self.base_color)
+
+
 class Slider:
-    def __init__(self, pos, text_input, range, font, base_color, exterior_color, interior_color, hovering_color,
-                 ball_color, size, startVal, custom=None):
+    def __init__(self, pos: (int, int), text_input: str, range: (int, int), font: pygame.font.Font,
+                 base_color: str, exterior_color: str, interior_color: str, hovering_color: str, ball_color: str,
+                 size: int, startVal: float, custom: dict=None):
+        """
+        :param pos: center of the slider
+        :param text_input: text to be displayed next to the value
+        :param range: range of value
+        :param font: font to be used for the text
+        :param base_color: color of the text
+        :param exterior_color: color of the exterior part of the slider
+        :param interior_color: color of the interior part of the slider
+        :param hovering_color: color of the text when hovering the slider with the mouse
+        :param ball_color: color of the ball
+        :param size: size of the slider
+        :param startVal: starting value of the slider
+        :param custom: custom text to value dictionary, maps the ouput value to a text in the dict
+        """
         self.base_color, self.exterior_color, self.interior_color, self.hovering_color, self.ball_color = base_color, exterior_color, interior_color, hovering_color, ball_color
 
         # main rectangle of the slider (the biggest one)
@@ -230,7 +372,7 @@ class Slider:
 
         # value of the slider
         self.value = startVal
-        self.slider_ball.x = self.ballPosFromValue()
+        self.slider_ball.centerx = self.ballPosFromValue()
 
         # custom text/value dictionnary
         self.custom = custom
@@ -241,10 +383,14 @@ class Slider:
         """
         mPos = pygame.mouse.get_pos()
         if self.rect.collidepoint(mPos) and pygame.mouse.get_pressed()[0]:
-            if self.slider_small_rect.left - 0.1 < mPos[0] < self.slider_small_rect.right + 0.1:
+            if self.slider_small_rect.left < mPos[0] < self.slider_small_rect.right:
                 self.slider_ball.centerx = mPos[0]
 
-    def update(self, screen):
+    def update(self, screen: pygame.Surface):
+        """
+        :param screen: current display
+        Updates the ball position, text displayed and value
+        """
         # update ball
         self.checkForInput()
 
@@ -253,40 +399,55 @@ class Slider:
         screen.blit(self.slider_small, self.slider_small_rect)  # interior rect
         pygame.draw.circle(screen, self.ball_color, self.slider_ball.center, self.slider_ball.width / 1.5)  # ball
         if self.custom is None:
-            self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True, self.base_color)  # text
-            self.text_rect.centerx = self.x_pos - (len(": " + str(round(self.value))) * 20) / 2
+            self.text_rect.centerx = self.x_pos - (len(str(round(self.value))) * 20) / 2
         else:
-            self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True,
-                                         self.base_color)  # text
             self.text_rect.centerx = self.x_pos - (len(": " + self.custom[round(self.value)]) * 20) / 2
+        self.changeColor()  # update color
         screen.blit(self.text, self.text_rect)  # show text
 
         self.value = self.valueFromBallPos()  # update value
 
-    def changeColor(self, position):
+    def changeColor(self):
         """
         Makes the color of the text change if the mouse is over it
         :param position: position of the thing you want to test is over the text
         """
-        if position[0] in range(self.text_rect.left, self.text_rect.right) and position[1] in range(self.text_rect.top,
-                                                                                                    self.text_rect.bottom):
-            self.text = self.font.render(self.text_input, True, self.hovering_color)
+        position = pygame.mouse.get_pos()
+        if self.rect.left < position[0] < self.rect.right and self.rect.top < position[1] < self.rect.bottom:
+            if self.custom is None:
+                self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True,
+                                             self.hovering_color)
+            else:
+                self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True,
+                                         self.hovering_color)
         else:
-            self.text = self.font.render(self.text_input, True, self.base_color)
+            if self.custom is None:
+                self.text = self.font.render(self.text_input + ": " + str(round(self.value)), True,
+                                             self.base_color)
+            else:
+                self.text = self.font.render(self.text_input + ": " + self.custom[round(self.value)], True,
+                                             self.base_color)
 
     def valueFromBallPos(self):
-        # value from pos = ((distance between right of the small slider and ball / - width of the slider) + 1) * 100
-        #                   * (range of values / 100) + minimum value
-        value = ((self.slider_small_rect.right - self.slider_ball.centerx) / (
-                self.slider_small_rect.left - self.slider_small_rect.right) + 1) * 100
-        value = value * ((self.range[1] - self.range[0]) / 100) + self.range[0]
+        """
+        :return: the value from the ball position mapped to the value range
+        """
+        # ball position on the slider converted to percentage
+        value = ((self.slider_ball.centerx - self.slider_small_rect.left) /
+                 (self.slider_small_rect.right - self.slider_small_rect.left))
+
+        # map percentage on the value range
+        value = value * (self.range[1] - self.range[0]) + self.range[0]
 
         return value
 
     def ballPosFromValue(self):
-        # value converted to percentage = (value - minimum value) / (value range / 100)
-        value = (self.value - self.range[0]) / ((self.range[1] - self.range[0]) / 100)
-        # pos from value = width of the slider * value / 100 + left of the small slider
-        pos = self.slider_small_rect.width * value / 100 + self.slider_small_rect.left
+        """
+        :return: ball position on the slider from the value
+        """
+        # value converted to percentage = (value - minimum value) / value range
+        value = (self.value - self.range[0]) / (self.range[1] - self.range[0])
+        # then mapped onto the slider's width
+        pos = self.slider_small_rect.width * value + self.slider_small_rect.left
 
         return pos
