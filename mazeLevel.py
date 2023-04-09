@@ -132,7 +132,6 @@ class Maze(pygame.sprite.Group):
         for _ in range(self.settings.CURRENTLEVEL * 2 + 1):
             # get center of the room
             center = self.get_random_tile_in_maze(1)
-            center = self.grid_cells[self.cols + 3]
 
             # initialize torch and chest objects
             if center.rect.top == self.settings.TILESIZE:
@@ -140,8 +139,6 @@ class Maze(pygame.sprite.Group):
             else:
                 Torch((center.rect.centerx, center.rect.top), 'right', self.settings, [self.visible_sprites])
             chest = Chest(center.rect.center, self.settings, [self.visible_sprites, self.obstacle_sprites], self.visible_sprites)
-            self.chests.append(chest)
-            chest = Chest(center.rect.bottomright, self.settings, [self.visible_sprites, self.obstacle_sprites], self.visible_sprites)
             self.chests.append(chest)
 
             # remove all tiles in a 3*3 square to form a room

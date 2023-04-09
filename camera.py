@@ -24,7 +24,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.backgroundRect = self.background.get_rect()
 
         # initialize OpenGL shader
-        if self.settings.shadersOn:
+        if self.settings.SHADERON:
             self.shader = Shader(self.settings.RESOLUTION, self.settings)
 
         # precalculate half the width and half the height of the screen
@@ -107,11 +107,11 @@ class YSortCameraGroup(pygame.sprite.Group):
     def notification(self, x: int, y: int, text: str, corner: str, duration):
         if corner == 'topleft':
             rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(topleft=(x, y))
-        if corner == 'topright':
+        elif corner == 'topright':
             rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(topright=(x, y))
-        if corner == 'bottomleft':
+        elif corner == 'bottomleft':
             rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(bottomleft=(x, y))
-        if corner == 'bottomright':
+        elif corner == 'bottomright':
             rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(bottomright=(x, y))
 
         self.notifications.append((text, rect))
@@ -189,13 +189,12 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in self.get_neighbors(self.check_tile(player.rect.centerx // self.settings.TILESIZE,
                                                          player.rect.centery // self.settings.TILESIZE)):
             if sprite.isWall and sprite.rect.centery > player.rect.centery:
-                pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0),
-                                 pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9,
-                                            (sprite.rect.centery - player.rect.centery - 13) / self.perspectiveOffset,
-                                             self.settings.TILESIZE, self.settings.TILESIZE))
+                offsetRect = pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 7, sprite.rect.width, sprite.rect.height)
+
+                cutPlayerSprite.blit(sprite.image, offsetRect)
 
         # lighting
-        if self.settings.shadersOn:
+        if self.settings.SHADERON:
             self.render_light()
 
         # draw player after lighting so that it is not affected
@@ -232,7 +231,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                                                  random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5))
 
         # and finally render screen
-        if self.settings.shadersOn and getInput:
+        if self.settings.SHADERON and getInput:
             self.shader.render(scaledScreen)
         else:
             pygame.display.get_surface().blit(self.screen, self.screen.get_rect())

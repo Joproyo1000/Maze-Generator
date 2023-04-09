@@ -7,6 +7,9 @@ class Settings:
         # get screen
         self.screen = pygame.display.get_surface()
 
+        # activate shader
+        self.SHADERON = False
+
         # set size of screen
         self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
 
@@ -47,17 +50,17 @@ class Settings:
         self.K_MAP = pygame.K_m
 
         # colors
-        self.MENUCOLOR = pygame.Color(46, 60, 87)
+        self.MENUBACKGROUNDCOLOR = pygame.Color(46, 60, 87)
         self.TEXTCOLOR = 'gray'
         self.HOVERINGCOLOR = 'darkgray'
         self.SLIDEREXTCOLOR = 'gray28'
         self.SLIDERINTCOLOR = 'black'
 
-        self.WALLCOLOR = 'gold4'  # color of the wall on the map
-        self.PATHCOLOR = 'goldenrod4'  # color of the path on the map
-        self.PLAYERCOLOR = 'blue'
-        self.ENDCOLOR = 'gold'
-        self.CHESTCOLOR = 'chocolate4'
+        self.WALLCOLOR = 'gold4' if self.SHADERON else pygame.Color(163, 128, 83)  # color of the wall on the map
+        self.PATHCOLOR = 'goldenrod4' if self.SHADERON else 'burlywood'  # color of the path on the map
+        self.PLAYERCOLOR = 'blue'  # color of the player on the map
+        self.ENDCOLOR = 'gold'  # color of the end on the map
+        self.CHESTCOLOR = 'chocolate4' if self.SHADERON else pygame.Color(117, 79, 46)  # color of chests on the map
 
         # lighting
         self.LIGHTCOLOR = (255, 255, 200)  # color of the light
@@ -76,8 +79,6 @@ class Settings:
         # initialize music
         self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
         self.VOLUME = 0  # default volume
-
-        self.shadersOn = False  # activate shader
 
         # keep track of distance to the closest enemy
         self.dstToClosestEnemy = 1000000
