@@ -31,6 +31,9 @@ class MazeGame:
         else:
             self.screen = pygame.display.set_mode(self.settings.RESOLUTION)
 
+        self.background = pygame.image.load('graphics/startscreen.png').convert()
+        self.background = pygame.transform.scale(self.background, (self.screen.get_size()))
+
         # initialize maze
         self.maze = Maze(self.settings)
 
@@ -48,11 +51,11 @@ class MazeGame:
         """
 
         self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'START GAME',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'PARAMETERS',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUIT GAME',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR)]
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
 
@@ -98,23 +101,23 @@ class MazeGame:
         sliderSize = self.settings.HEIGHT//230
 
         self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), 'DIFFICULTY',
-                               (0, 2), self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR,
+                               (0, 2), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, 0, custom={0: 'EASY', 1: 'MEDIUM', 2: 'HARD'}),
                         CheckButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3.0), 'HEART BEAT EFFECT',
-                                    self.settings.SHOWHEARTBEATEFFECT, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.SHOWHEARTBEATEFFECT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'GAMMA',
-                               (5, 20), self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR,
+                               (5, 20), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, self.settings.GAMMA),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'VOLUME',
-                               (0, 100), self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR,
+                               (0, 100), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, self.settings.VOLUME),
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'FPS',
-                               (30, 120), self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR,
+                               (30, 120), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, 60),
                         Button(None, (self.settings.WIDTH // 1.4, self.settings.HEIGHT // 1.2), 'CONTROLS ->',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'EXIT',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR)]
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
 
@@ -161,19 +164,19 @@ class MazeGame:
         """
 
         self.buttons = [InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 4.5), 'UP : ',
-                                    self.settings.K_UP, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.K_UP, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3), 'DOWN : ',
-                                    self.settings.K_DOWN, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.K_DOWN, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'LEFT : ',
-                                    self.settings.K_LEFT, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.K_LEFT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'RIGHT : ',
-                                    self.settings.K_RIGHT, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.K_RIGHT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'MAP : ',
-                                    self.settings.K_MAP, self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                                    self.settings.K_MAP, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 3.5, self.settings.HEIGHT // 1.2), '<- PARAMETERS',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR),
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'EXIT',
-                               self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR)]
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
 
@@ -190,7 +193,7 @@ class MazeGame:
                         if isinstance(button, InputButton):
                             if button.isHovered():
                                 self.screen.fill(self.settings.MENUBACKGROUNDCOLOR)
-                                waitText = self.settings.FONT.render('Waiting for input...', True, self.settings.TEXTCOLOR)
+                                waitText = self.settings.FONT.render('Waiting for input...', True, self.settings.HOVERINGCOLOR)
                                 self.screen.blit(waitText, waitText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
                                 button.exitInputButton.update(self.screen)
                                 if self.settings.SHADERON:
@@ -244,7 +247,7 @@ class MazeGame:
                 # inventory
                 if event.type == pygame.MOUSEWHEEL:
                     self.maze.player.currentItemIndex = (self.maze.player.currentItemIndex + event.y) % len(self.maze.player.inventory)
-                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.maze.playerUse()
 
                 # menus
@@ -269,7 +272,12 @@ class MazeGame:
 
             # run the level
             self.maze.run(deltaTime)
-            # print(self.clock.get_fps())
+
+            for e in self.maze.enemies.sprites():
+                if e.type == 'rabbit':
+                    # print(e.path)
+                    debug(e.status)
+                    debug(e.direction, y=40)
 
             if not self.settings.SHADERON:
                 pygame.display.update()
@@ -334,11 +342,11 @@ class MazeGame:
         """
 
         self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.9),
-                               'CONTINUE', self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.HOVERINGCOLOR),
+                               'CONTINUE', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.3),
-                               'SETTINGS', self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.HOVERINGCOLOR),
+                               'SETTINGS', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7),
-                               'EXIT TO MAIN MENU', self.settings.FONT, self.settings.HOVERINGCOLOR, self.settings.HOVERINGCOLOR)]
+                               'EXIT TO MAIN MENU', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR)]
 
         self.drawScreen()
 
@@ -398,6 +406,7 @@ class MazeGame:
         Draws background, buttons and additional debug info for menus
         """
         self.screen.fill(pygame.Color(46, 60, 87))
+        self.screen.blit(self.background, self.background.get_rect())
         # self.screen.fill('white')
 
         # debug FPS count

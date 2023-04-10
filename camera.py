@@ -189,9 +189,10 @@ class YSortCameraGroup(pygame.sprite.Group):
         for sprite in self.get_neighbors(self.check_tile(player.rect.centerx // self.settings.TILESIZE,
                                                          player.rect.centery // self.settings.TILESIZE)):
             if sprite.isWall and sprite.rect.centery > player.rect.centery:
-                offsetRect = pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 7, sprite.rect.width, sprite.rect.height)
-
-                cutPlayerSprite.blit(sprite.image, offsetRect)
+                pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0), Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 8, sprite.rect.width, sprite.rect.height))
+                # offsetRect = pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 6, sprite.rect.width, sprite.rect.height)
+                #
+                # cutPlayerSprite.blit(sprite.image, offsetRect)
 
         # lighting
         if self.settings.SHADERON:

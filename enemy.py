@@ -1,7 +1,6 @@
 import pygame
 import settings
 
-from math import floor
 from support import import_folder
 from objects import CobWeb
 
@@ -33,6 +32,8 @@ class Enemy(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.15
 
+        self.transforming = False
+
         self.color = 'darkred'
 
         self.rect = self.image.get_bounding_rect()
@@ -44,6 +45,7 @@ class Enemy(pygame.sprite.Sprite):
         self.normalSpeed = speed + self.settings.DIFFICULTY/10
         self.slowedSpeed = self.normalSpeed / 2
         self.speed = self.normalSpeed
+        self.freezeTimer = 0
 
         # pathfinding
         self.path = []
@@ -85,12 +87,26 @@ class Enemy(pygame.sprite.Sprite):
                 full_path = character_path + animation
                 self.animations[animation] = import_folder(full_path, 1.6)
 
+        if self.type == 'rabbit':
+            character_path = 'graphics/enemies/rabbit/'
+            self.animations = {'left': [], 'right': [],
+                               'left_idle': [], 'right_idle': [],
+                               'left_transform': [], 'right_transform': []}
+
+            for animation in self.animations:
+                full_path = character_path + animation
+                self.animations[animation] = import_folder(full_path, 1.6)
+
         self.image = self.animations['left_idle'][0]
 
     def set_status(self):
         """
         Set the current status of the enemy for animation
         """
+        idle = False
+        if '_idle' in self.status:
+            idle = True
+
         if self.type == 'slime':
             if self.direction.y < 0:
                 self.status = 'up'
@@ -112,8 +128,14 @@ class Enemy(pygame.sprite.Sprite):
 
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
-            if '_idle' not in self.status:
-                self.status = self.status + '_idle'
+            if '_idle' not in self.status and '_transform' not in self.status:
+                self.status += '_idle'
+
+        # transform status
+        if self.type == 'rabbit' and abs(self.direction.x) > 0 and abs(self.direction.y) > 0:
+            if ('_transform' not in self.status and idle) or self.transforming:
+                self.status += '_transform'
+                self.transforming = True
 
     def followPath(self, path=True, replace=False):
         if replace and path:
@@ -123,22 +145,36 @@ class Enemy(pygame.sprite.Sprite):
 
             self.direction = pygame.math.Vector2(target.rect.centerx - self.rect.centerx,
                                                  target.rect.centery - self.rect.centery)
-
             if self.direction.length() < self.settings.TILESIZE/2:
                 self.path.pop(0)
+            if len(self.path) == 0:
+                self.direction *= 0
 
     def move(self, speed: float, dt: float):
+        """
+        Moves the enemy after applying collisions
+        :param speed: speed of the enemy when moving
+        :param dt: delta time in ms, used to make to enemy move at the same speed regardless of the FPS
+        """
+        # normalize the direction so that the speed is always the same
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
-            self.hitbox.x += self.direction.x * speed * dt * 250
-            self.collision('horizontal')
-            self.hitbox.y += self.direction.y * speed * dt * 250
-            self.collision('vertical')
+        # if enemy is frozen, reduce the speed
+        if self.freezeTimer > 0:
+            speed /= 2
+            self.freezeTimer -= 1
 
-            self.rect.center = self.hitbox.center
+        # we check collision on one axis at a time to avoid bugs
+        self.hitbox.x += self.direction.x * speed * dt * 250
+        self.collision('horizontal')
+        self.hitbox.y += self.direction.y * speed * dt * 250
+        self.collision('vertical')
 
-    def collision(self, direction):
+        # update final position
+        self.rect.center = self.hitbox.center
+
+    def collision(self, direction: str):
         """
         :param direction: either 'horizontal' or 'vertical'. Checks collision with the walls on either directions
         If collision occurs, stop the enemy
@@ -174,11 +210,21 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.speed = self.normalSpeed
 
-    def spawnCobweb(self, visible_sprites):
+    def spawnCobweb(self, visible_sprites: pygame.sprite.Group):
+        """
+        Spawns a cobweb where the enemy is
+        :param visible_sprites: visible sprites group to spawn the cobweb in
+        """
         cobweb = CobWeb(self.rect.center, [visible_sprites], self.obstacle_sprites)
         visible_sprites.ySortSprites.append(cobweb)
 
         return cobweb
+
+    def freeze(self, duration: float):
+        """
+        Freeze the enemy for some duration
+        """
+        self.freezeTimer = duration
 
     def animate(self, dt):
         """
@@ -186,13 +232,30 @@ class Enemy(pygame.sprite.Sprite):
         """
         animation = self.animations[self.status]
 
-        # loop over the frame index
-        self.frame_index += self.animation_speed * dt * 50
-        if self.frame_index >= len(animation) - self.animation_speed:
-            self.frame_index = 0
+        # if enemy is frozen slow down the speed of its animation
+        if self.freezeTimer > 0:
+            self.animation_speed = 0.10
+        else:
+            self.animation_speed = 0.15
+
+        if '_transform' in self.status:
+            # loop over the frame index
+            self.frame_index += self.animation_speed * dt * 50
+            if self.frame_index >= len(animation) - self.animation_speed:
+                self.frame_index = 0
+                self.transforming = False
+        else:
+            # loop over the frame index
+            self.frame_index += self.animation_speed * dt * 50
+            if self.frame_index >= len(animation) - self.animation_speed:
+                self.frame_index = 0
 
         # set the image
-        self.image = animation[int(self.frame_index)]
+        self.image = animation[int(self.frame_index)].copy()
+        # if enemy is frozen, tint the image to blue
+        if self.freezeTimer > 0:
+            self.image.fill((173, 216, 255), special_flags=pygame.BLEND_RGB_MULT)
+
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
     def update(self, dt):

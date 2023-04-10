@@ -174,7 +174,6 @@ class Freeze(Useable):
         self.text = "a freeze item"
 
     def use(self, player):
-        # TODO freeze if facing enemy
         self.kill()
 
 

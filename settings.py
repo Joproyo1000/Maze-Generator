@@ -35,9 +35,10 @@ class Settings:
         self.DIFFICULTY = 0
 
         # proportion of enemies for a 1000*1000 maze
-        self.WOLFPROPORTION = 0.3
-        self.SPIDERPROPORTION = 1
-        self.SLIMEPROPORTION = 2
+        self.WOLFPROPORTION = 0.125
+        self.SPIDERPROPORTION = 0.375
+        self.SLIMEPROPORTION = 0.5
+        self.RABBITPROPORTION = 0.2
 
         # initialize font
         self.FONT = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT // 10)
@@ -51,8 +52,8 @@ class Settings:
 
         # colors
         self.MENUBACKGROUNDCOLOR = pygame.Color(46, 60, 87)
-        self.TEXTCOLOR = 'gray'
-        self.HOVERINGCOLOR = 'darkgray'
+        self.TEXTCOLOR = 'darkgray'
+        self.HOVERINGCOLOR = 'gray'
         self.SLIDEREXTCOLOR = 'gray28'
         self.SLIDERINTCOLOR = 'black'
 

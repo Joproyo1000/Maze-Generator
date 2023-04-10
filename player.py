@@ -1,5 +1,6 @@
 import pygame
 
+import enemy
 import objects
 import settings
 from support import import_folder
@@ -8,6 +9,13 @@ from support import import_folder
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos: (int, int), type: str, settings: settings.Settings, groups: [pygame.sprite.Group], obstacle_sprites: [pygame.sprite.Sprite]):
         super().__init__(groups)
+        """
+        :param pos: starting position of the player 
+        :param type: type of the player, either 'boy' or 'girl'
+        :param settings: settings of the maze
+        :param groups: groups in which the player are
+        :param obstacle_sprites: obstacles that the player should collide with
+        """
         # get the display surface
         self.screen = pygame.display.get_surface()
 
@@ -23,6 +31,7 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.15
 
+        # number of lives the player has
         self.lives = 1
 
         # set color on the minimap
@@ -36,15 +45,17 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2()
         self.speed = 1
 
+        # if set to False, the player will no longer move
         self.getInput = True
 
         # initialize inventory
         self.maps = []
         self.inventory = [None]
+        self.inventory.append(objects.Freeze(groups[0].itemDisplayRect.center))
         self.currentItemIndex = 0
 
+        # get obstacles for collision
         self.obstacle_sprites = obstacle_sprites
-        self.obstacle = pygame.sprite.Group()
 
     def import_player_assets(self, type: str):
         """
@@ -53,46 +64,51 @@ class Player(pygame.sprite.Sprite):
         """
         if type == 'boy':
             character_path = 'graphics/player/boy/'
+            # create a dictionary with every state of the player and its corresponding animations
             self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
                                'up_idle': [], 'left_idle': [], 'down_idle': [], 'right_idle': []}
 
+            # then import every frame
             for animation in self.animations:
                 full_path = character_path + animation
                 self.animations[animation] = import_folder(full_path, 1.6)
 
         if type == 'girl':
             character_path = 'graphics/player/girl/'
+            # create a dictionary with every state of the player and its corresponding animations
+
             self.animations = {'up': [], 'left': [], 'down': [], 'right': [],
                                'up_idle': [], 'left_idle': [], 'down_idle': [], 'right_idle': []}
-
+            # then import every frame
             for animation in self.animations:
                 full_path = character_path + animation
                 self.animations[animation] = import_folder(full_path, 1.6)
 
+        # set the first image of the player
         self.image = pygame.image.load('graphics/player/boy/down_idle/boy_sprite_front_idle1.png')
 
     def input(self):
         """
-        Updates direction based on input
+        Updates direction and status based on input
         """
         keys = pygame.key.get_pressed()
-        if keys[self.settings.K_UP]:
+        if keys[self.settings.K_UP]:  # up
             self.direction.y = -1
             self.status = 'up'
-        elif keys[self.settings.K_DOWN]:
+        elif keys[self.settings.K_DOWN]:  # down
             self.status = 'down'
             self.direction.y = 1
         else:
-            self.direction.y = 0
+            self.direction.y = 0  # idle
 
-        if keys[self.settings.K_LEFT]:
+        if keys[self.settings.K_LEFT]:  # left
             self.status = 'left'
             self.direction.x = -1
-        elif keys[self.settings.K_RIGHT]:
+        elif keys[self.settings.K_RIGHT]:  # right
             self.status = 'right'
             self.direction.x = 1
         else:
-            self.direction.x = 0
+            self.direction.x = 0  # idle
 
     def set_status(self):
         """
@@ -105,17 +121,21 @@ class Player(pygame.sprite.Sprite):
 
     def move(self, speed: float, dt: float):
         """
-        :param speed: speed of the player when moving
         Moves the player after applying collisions
+        :param speed: speed of the player when moving
+        :param dt: delta time in ms, used to make to player move at the same speed regardless of the FPS
         """
+        # normalize the direction so that the speed is always the same
         if self.direction.magnitude() != 0:
             self.direction = self.direction.normalize()
 
+        # we check collision on one axis at a time to avoid bugs
         self.hitbox.x += self.direction.x * speed * dt * 250
-        self.collision('horizontal')
+        # self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed * dt * 250
-        self.collision('vertical')
+        # self.collision('vertical')
 
+        # update final position
         self.rect.center = self.hitbox.center
 
     def collision(self, direction: str):
@@ -126,31 +146,35 @@ class Player(pygame.sprite.Sprite):
         # keep track of if player is in cobweb
         inCobweb = False
 
-        # if direction == 'horizontal':
-        #     for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-        #         if sprite.hitbox.colliderect(self.hitbox):
-        #             # if player is inside cobweb reduce speed
-        #             if isinstance(sprite, objects.CobWeb):
-        #                 self.speed = 0.5
-        #                 inCobweb = True
-        #             else:
-        #                 if self.direction.x > 0:  # moving right
-        #                     self.hitbox.right = sprite.hitbox.left
-        #                 if self.direction.x < 0:  # moving left
-        #                     self.hitbox.left = sprite.hitbox.right
+        if direction == 'horizontal':
+            # check horizontal collision for every neighboring obstacles
+            for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
+                if sprite.hitbox.colliderect(self.hitbox):
+                    # if player is inside cobweb reduce speed
+                    if isinstance(sprite, objects.CobWeb):
+                        self.speed = 0.5
+                        inCobweb = True
+                    else:
+                        if self.direction.x > 0:  # moving right
+                            self.hitbox.right = sprite.hitbox.left
+                        if self.direction.x < 0:  # moving left
+                            self.hitbox.left = sprite.hitbox.right
 
         if direction == 'vertical':
+            # check vertical collision for every neighboring obstacles
             for sprite in self.obstacle_sprites.get_neighbors(self.rect.center):
-                # if sprite.hitbox.colliderect(self.hitbox):
-                #     # if player is inside cobweb reduce speed
-                #     if isinstance(sprite, objects.CobWeb):
-                #         self.speed = 0.5
-                #         inCobweb = True
-                #     else:
-                #         if self.direction.y > 0:  # moving down
-                #             self.hitbox.bottom = sprite.hitbox.top
-                #         if self.direction.y < 0:  # moving up
-                #             self.hitbox.top = sprite.hitbox.bottom
+                if sprite.hitbox.colliderect(self.hitbox):
+                    # if player is inside cobweb reduce speed
+                    if isinstance(sprite, objects.CobWeb):
+                        self.speed = 0.5
+                        inCobweb = True
+                    else:
+                        if self.direction.y > 0:  # moving down
+                            self.hitbox.bottom = sprite.hitbox.top
+                        if self.direction.y < 0:  # moving up
+                            self.hitbox.top = sprite.hitbox.bottom
+
+                # check if a chest is close and open it
                 if isinstance(sprite, objects.Chest):
                     sprite.open(self)
 
@@ -158,10 +182,21 @@ class Player(pygame.sprite.Sprite):
         if not inCobweb:
             self.speed = 1
 
-    def use(self):
+    def use(self, target: enemy.Enemy):
+        """
+        Uses the current item that is being hold by the player
+        :param target: target to use the current item if it can
+        """
+        # use the item
         self.inventory[self.currentItemIndex].use(self)
-        self.inventory.pop(self.currentItemIndex)
+        # then destroy it
+        item = self.inventory.pop(self.currentItemIndex)
+        # update the current index
         self.currentItemIndex = self.currentItemIndex % len(self.inventory)
+
+        # if the item is a freeze item, freeze the target
+        if isinstance(item, objects.Freeze) and target is not None:
+            target.freeze(500)
 
     def animate(self, dt):
         """
@@ -182,10 +217,10 @@ class Player(pygame.sprite.Sprite):
         """
         Main update method
         """
-        if self.getInput:
-            self.input()  # get inputs
-        else:
-            self.direction *= 0
+        self.input()  # get inputs
         self.set_status()  # set status
         self.animate(dt)  # animate based on status
-        self.move(self.speed, dt)  # move based on inputs
+
+        # if getInput is false, don't move the player
+        if self.getInput:
+            self.move(self.speed, dt)  # move based on inputs
