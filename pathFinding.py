@@ -1,9 +1,16 @@
 import heapq
 import pygame
+
+import tile
 from tile import Tile
 
 
-def distance(a, b):
+def distance(a: Tile, b: Tile):
+    """
+    :param a: first tile
+    :param b: second tile
+    :return: fake euclidian distance between two tiles a and b
+    """
     dstX = abs(a.rect.x - b.rect.x)
     dstY = abs(a.rect.y - b.rect.y)
 
@@ -15,6 +22,10 @@ def distance(a, b):
 
 class PathFinder:
     def __init__(self, level):
+        """
+        A* pathfinding algorithm class
+        :param level: current maze level that is used
+        """
         # get grid and fCost of each tile
         self.screen = pygame.display.get_surface()
 
@@ -26,6 +37,11 @@ class PathFinder:
         heapq.heapify(self.open)
 
     def findPath(self, start, end):
+        """
+        Finds the shortest path between start and end using the A* algorithm
+        :param start: starting tile
+        :param end: ending tile
+        """
         self.open.clear()
         self.closed.clear()
         for tile in self.grid:
@@ -56,6 +72,11 @@ class PathFinder:
                         heapq.heappush(self.open, (neighbor.fCost(), neighbor))
 
     def getPath(self, start, end):
+        """
+        :param start: starting tile
+        :param end: ending tile
+        :return: the list of tiles in the path
+        """
         path = []
         current = end
         while current != start:

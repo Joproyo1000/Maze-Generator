@@ -1,4 +1,6 @@
 import pygame
+
+import player
 import settings
 import spatial_hashmap
 
@@ -8,14 +10,18 @@ from random import randint
 
 
 class Torch(pygame.sprite.Sprite):
-    def __init__(self, pos: (int, int), side: str, settings: settings.Settings, groups: [pygame.sprite.Group]):
+    def __init__(self, pos: (int, int), settings: settings.Settings, groups: [pygame.sprite.Group]):
         super().__init__(groups)
+        """
+        Torch object which lights up a portion of the maze
+        :param pos: position of the torch
+        :param settings: copy of the settings
+        :param groups: groups in which the torch are
+        """
         # get the display surface
         self.screen = pygame.display.get_surface()
 
         self.settings = settings
-
-        self.side = side
 
         # graphics setup
         self.import_object_assets()
@@ -34,19 +40,19 @@ class Torch(pygame.sprite.Sprite):
         """
         Loads the corresponding animation frames onto the object
         """
-        if self.side == 'right':
-            object_path = 'graphics/special/torch/'
-            self.animations = {'right': []}
+        object_path = 'graphics/special/torch/'
+        self.animations = {'right': []}
 
-            for animation in self.animations:
-                full_path = object_path + animation
-                self.animations[animation] = import_folder(full_path, 5)
+        for animation in self.animations:
+            full_path = object_path + animation
+            self.animations[animation] = import_folder(full_path, 5)
 
         self.image = self.animations['right'][0]
 
-    def animate(self, dt):
+    def animate(self, dt: float):
         """
         Animates the torch based on the current status
+        :param dt: delta time in ms
         """
         animation = self.animations['right']
 
@@ -59,9 +65,10 @@ class Torch(pygame.sprite.Sprite):
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.rect.center)
 
-    def update(self, dt):
+    def update(self, dt: float):
         """
         Main update method
+        :param dt: delta time in ms
         """
         self.animate(dt)  # animate based on status
 
@@ -69,6 +76,13 @@ class Torch(pygame.sprite.Sprite):
 class Chest(pygame.sprite.Sprite):
     def __init__(self, pos: (int, int), settings: settings.Settings, groups: [pygame.sprite.Group], visible_sprites):
         super().__init__(groups)
+        """
+        Chest object containing one object
+        :param pos: position of the chest
+        :param settings: copy of the settings
+        :param groups: groups in which the chest are
+        :param visible_sprites: copy of the visible sprites
+        """
         # get the display surface
         self.screen = pygame.display.get_surface()
 
@@ -142,8 +156,14 @@ class Chest(pygame.sprite.Sprite):
 
 
 class CobWeb(pygame.sprite.Sprite):
-    def __init__(self, pos, groups: [pygame.sprite.Group], obstacle_sprites: spatial_hashmap):
+    def __init__(self, pos: (int, int), groups: [pygame.sprite.Group], obstacle_sprites: spatial_hashmap):
         super().__init__(groups)
+        """
+        Cobweb object, slows down entities walking into it
+        :param pos: position of the chest
+        :param groups: groups in which the cobweb are
+        :param obstacle_sprites: copy of the obstacle sprites
+        """
         self.image = pygame.image.load('graphics/special/cobweb.png').convert_alpha()
         self.image = pygame.transform.scale_by(self.image, 3)
         self.rect = self.image.get_rect(topleft=pos)
@@ -154,38 +174,49 @@ class CobWeb(pygame.sprite.Sprite):
 
 
 class Useable(pygame.sprite.Sprite):
+    """
+    Base class for useable objects
+    """
     def use(self, *args, **kwargs):
         self.kill()
 
 
 class Map(Useable):
-    def __init__(self, pos):
+    def __init__(self, pos: (int, int)):
         super().__init__()
+        """
+        Map object, reveals a portion of the map
+        :param pos: position at which it was found
+        """
         self.text = "a piece of map"
         self.pos = pos
 
 
 class Freeze(Useable):
-    def __init__(self, pos):
+    def __init__(self, pos: (int, int)):
+        """
+        Freeze object, slows down the enemy it touches for 5s
+        :param pos: position at which it was found
+        """
         super().__init__()
         self.image = pygame.image.load('graphics/special/objects/freeze.png').convert_alpha()
         self.image = pygame.transform.scale_by(self.image, 4)
         self.rect = self.image.get_rect(center=pos)
         self.text = "a freeze item"
 
-    def use(self, player):
-        self.kill()
-
 
 class Heal(Useable):
-    def __init__(self, pos):
+    def __init__(self, pos: (int, int)):
+        """
+        Heal object, adds one life to the player
+        :param pos: position at which it was found
+        """
         super().__init__()
         self.image = pygame.image.load('graphics/special/objects/heal.png').convert_alpha()
         self.image = pygame.transform.scale_by(self.image, 4)
         self.rect = self.image.get_rect(center=pos)
         self.text = "an extra life"
 
-    def use(self, player):
-        # TODO freeze if facing enemy
+    def use(self, player: player.Player):
         player.lives += 1
         self.kill()

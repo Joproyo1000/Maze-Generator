@@ -11,7 +11,13 @@ from shaders import Shader
 
 
 class YSortCameraGroup(pygame.sprite.Group):
-    def __init__(self, settings: settings.Settings, get_neighbors, check_tile):
+    def __init__(self, settings: settings.Settings, get_neighbors: classmethod, check_tile: classmethod):
+        """
+        Camera group used to show sprites on the screen sorted by their y position
+        :param settings: copy of the settings
+        :param get_neighbors: get_neighbors function of the maze class
+        :param check_tile: check_tile function of the maze class
+        """
         super().__init__()
 
         # copy settings to self to access them in the whole class
@@ -49,6 +55,9 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.check_tile = check_tile
 
     def init_background(self):
+        """
+        Bakes background onto a surface for optimization
+        """
         self.ySortSprites = []
 
         for sprite in self.sprites():
@@ -105,6 +114,14 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.screen.blit(self.lights_display, (0, 0), special_flags=BLEND_RGBA_MULT)
 
     def notification(self, x: int, y: int, text: str, corner: str, duration):
+        """
+        Sets a 'notification' to appear on the screen for a certain duration
+        :param x: x position of the text
+        :param y: y position of the text
+        :param text: text to be displayed
+        :param corner: which corner to be used for the position
+        :param duration: duration of the notification
+        """
         if corner == 'topleft':
             rect = self.settings.FONT.render(text, True, 'antiquewhite3').get_rect(topleft=(x, y))
         elif corner == 'topright':
@@ -190,9 +207,6 @@ class YSortCameraGroup(pygame.sprite.Group):
                                                          player.rect.centery // self.settings.TILESIZE)):
             if sprite.isWall and sprite.rect.centery > player.rect.centery:
                 pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0), Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 8, sprite.rect.width, sprite.rect.height))
-                # offsetRect = pygame.Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 6, sprite.rect.width, sprite.rect.height)
-                #
-                # cutPlayerSprite.blit(sprite.image, offsetRect)
 
         # lighting
         if self.settings.SHADERON:
@@ -212,6 +226,11 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.notificationsAlpha.remove(alpha)
             else:
                 self.notificationsAlpha[self.notificationsAlpha.index(alpha)] -= 4
+
+        # draw number of lives
+        livesText = self.settings.FONT.render('VIES : ' + str(player.lives), True, self.settings.TEXTCOLOR)
+        livesTextRect = livesText.get_rect(topleft=(100, 100))
+        self.screen.blit(livesText, livesTextRect)
 
         pygame.draw.rect(self.screen, 'antiquewhite3', self.itemDisplayRect, 10)
         if player.currentItemIndex != 0:

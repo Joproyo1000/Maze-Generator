@@ -1,5 +1,6 @@
 import pygame
 import settings
+import tile
 
 from support import import_folder
 from objects import CobWeb
@@ -32,6 +33,7 @@ class Enemy(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animation_speed = 0.15
 
+        # transformation states (only for rabbit)
         self.transforming = False
 
         self.color = 'darkred'
@@ -135,9 +137,16 @@ class Enemy(pygame.sprite.Sprite):
         if self.type == 'rabbit' and abs(self.direction.x) > 0 and abs(self.direction.y) > 0:
             if ('_transform' not in self.status and idle) or self.transforming:
                 self.status += '_transform'
-                self.transforming = True
+                if not self.transforming:
+                    self.transforming = True
+                    self.frame_index = 0
 
-    def followPath(self, path=True, replace=False):
+    def followPath(self, path: [tile.Tile]=True, replace: bool=False):
+        """
+        Allows enemy to follow a certain path
+        :param path: path to take which is a list of tiles
+        :param replace: does it replace the current path or not
+        """
         if replace and path:
             self.path = path
         if len(self.path) != 0:
@@ -226,9 +235,10 @@ class Enemy(pygame.sprite.Sprite):
         """
         self.freezeTimer = duration
 
-    def animate(self, dt):
+    def animate(self, dt: float):
         """
         Animates the ennemy based on the current status
+        :param dt: delta time in ms
         """
         animation = self.animations[self.status]
 
@@ -244,6 +254,7 @@ class Enemy(pygame.sprite.Sprite):
             if self.frame_index >= len(animation) - self.animation_speed:
                 self.frame_index = 0
                 self.transforming = False
+
         else:
             # loop over the frame index
             self.frame_index += self.animation_speed * dt * 50
@@ -258,7 +269,11 @@ class Enemy(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
-    def update(self, dt):
+    def update(self, dt: float):
+        """
+        Updates the enemy based on its status and speed
+        :param dt: delta time in ms
+        """
         self.set_status()  # set status
         self.animate(dt)  # animate based on status
         self.move(self.speed, dt)  # move based on path

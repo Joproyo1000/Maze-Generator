@@ -6,6 +6,11 @@ import moderngl
 
 class Shader:
     def __init__(self, resolution, settings):
+        """
+        ModernGL shader class
+        :param resolution: size of the screen
+        :param settings: copy of the settings
+        """
         # initialize display
         self.display = pygame.Surface(resolution)
         self.t = 0
@@ -60,6 +65,10 @@ class Shader:
         frame_tex.release()
 
     def surf_to_texture(self, surf):
+        """
+        :param surf: surface to transform
+        :return: the surface transformed into an openGL texture
+        """
         tex = self.ctx.texture(surf.get_size(), 4)
         tex.filter = (moderngl.NEAREST, moderngl.NEAREST)
         tex.swizzle = 'BGRA'

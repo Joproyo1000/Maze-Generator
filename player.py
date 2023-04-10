@@ -51,7 +51,6 @@ class Player(pygame.sprite.Sprite):
         # initialize inventory
         self.maps = []
         self.inventory = [None]
-        self.inventory.append(objects.Freeze(groups[0].itemDisplayRect.center))
         self.currentItemIndex = 0
 
         # get obstacles for collision
@@ -182,7 +181,7 @@ class Player(pygame.sprite.Sprite):
         if not inCobweb:
             self.speed = 1
 
-    def use(self, target: enemy.Enemy):
+    def use(self, target: pygame.sprite.Sprite):
         """
         Uses the current item that is being hold by the player
         :param target: target to use the current item if it can
@@ -201,6 +200,7 @@ class Player(pygame.sprite.Sprite):
     def animate(self, dt):
         """
         Animates the player based on the current status
+        :param dt: delta time in ms
         """
         animation = self.animations[self.status]
 
@@ -216,6 +216,7 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt):
         """
         Main update method
+        :param dt: delta time in ms
         """
         self.input()  # get inputs
         self.set_status()  # set status

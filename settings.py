@@ -4,6 +4,9 @@ from screeninfo import get_monitors
 
 class Settings:
     def __init__(self):
+        """
+        Settings of the maze
+        """
         # get screen
         self.screen = pygame.display.get_surface()
 
@@ -42,6 +45,8 @@ class Settings:
 
         # initialize font
         self.FONT = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT // 10)
+        self.BIGCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', 130)
+        self.SMALLCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', 100)
 
         # controls
         self.K_UP = pygame.K_z
@@ -72,14 +77,17 @@ class Settings:
         self.SHOWHEARTBEATEFFECT = True
 
         # shaders
-        self.GAMMA = 20  # default gamma value
+        self.GAMMA = 10  # default gamma value
 
         # set FPS
         self.GAMEFPS = 60
 
         # initialize music
         self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.VOLUME = 0  # default volume
+        self.VOLUME = 100  # default volume
+
+        # type of the player, either boy or girl
+        self.type = 'girl'
 
         # keep track of distance to the closest enemy
         self.dstToClosestEnemy = 1000000
