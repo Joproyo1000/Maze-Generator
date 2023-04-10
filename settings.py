@@ -11,7 +11,7 @@ class Settings:
         self.screen = pygame.display.get_surface()
 
         # activate shader
-        self.SHADERON = False
+        self.SHADERON = True
 
         # set size of screen
         self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
