@@ -84,7 +84,7 @@ class Settings:
 
         # initialize music
         self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.VOLUME = 0  # default volume
+        self.VOLUME = 1  # default volume
 
         # type of the player, either boy or girl
         self.TYPE = 'girl'

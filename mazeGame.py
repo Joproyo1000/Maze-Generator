@@ -125,6 +125,13 @@ class MazeGame:
                                (30, 120), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, 60),
 
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/FR.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 4.9, self.settings.HEIGHT // 1.4),
+                               '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/EN.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 3.8, self.settings.HEIGHT // 1.4),
+                               '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/DE.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 3.1, self.settings.HEIGHT // 1.4),
+                               '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+
                         Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['CONTROLS'] + ' ->',
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
 
@@ -145,6 +152,13 @@ class MazeGame:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
+                            if i == 5:
+                                self.settings.LANGUAGE = 'FR'
+                            if i == 6:
+                                self.settings.LANGUAGE = 'EN'
+                            if i == 7:
+                                self.settings.LANGUAGE = 'DE'
+
                             if i == len(self.buttons)-1:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings.DIFFICULTY = int(self.buttons[0].value)

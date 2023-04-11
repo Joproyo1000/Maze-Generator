@@ -23,11 +23,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         # copy settings to self to access them in the whole class
         self.settings = settings
 
-        # get the display surface and initialize background surface
+        # get the display surface
         self.screen = pygame.surface.Surface((self.settings.WIDTH, self.settings.HEIGHT))
-        self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
-                                          self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]))
-        self.backgroundRect = self.background.get_rect()
 
         # initialize OpenGL shader
         if self.settings.SHADERON:
@@ -42,6 +39,13 @@ class YSortCameraGroup(pygame.sprite.Group):
 
         # perspectiveOffset is used to offset each tile by a percentage (1 being no offset) to create fake perspective
         self.perspectiveOffset = 1.3
+
+        # initialize background surface
+        self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
+                                          self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]))
+        self.backgroundRect = self.background.get_rect()
+        # we move the background lower so that it is aligned with the walls in perspective
+        self.backgroundRect.y += self.settings.TILESIZE / 27 * 14
 
         # initialize notifications list
         self.notifications = []

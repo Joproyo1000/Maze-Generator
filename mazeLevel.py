@@ -177,11 +177,6 @@ class Maze(pygame.sprite.Group):
         numberOfSlimes = floor(self.settings.SLIMEPROPORTION * self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] * self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] / 1000000) + self.settings.DIFFICULTY
         numberOfRabbits = floor(self.settings.RABBITPROPORTION * self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] * self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] / 1000000) + self.settings.DIFFICULTY
 
-        numberOfWolfs = 0
-        numberOfSpiders = 0
-        numberOfSlimes = 0
-        numberOfRabbits = 1
-
         self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes + numberOfRabbits)
 
         # initializes all enemies
@@ -238,24 +233,15 @@ class Maze(pygame.sprite.Group):
             self.enemyEvents[n] = pygame.USEREVENT + (n + 1)
             pygame.time.set_timer(self.enemyEvents[n], 1000 + i * 200)
 
-            # rabbit = Enemy(self.get_random_tile_in_maze(2, center=(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL]/2,
-            #                                                        self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]/2)).rect.center,
-            #                'rabbit',
-            #                1.2,
-            #                400,
-            #                True,
-            #                self.settings,
-            #                [self.visible_sprites],
-            #                self.obstacle_sprites)
-            rabbit = Enemy(
-                self.grid_tiles[self.cols + 5].rect.center,
-                'rabbit',
-                1.2,
-                400,
-                True,
-                self.settings,
-                [self.visible_sprites],
-                self.obstacle_sprites)
+            rabbit = Enemy(self.get_random_tile_in_maze(2, center=(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL]/2,
+                                                                   self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]/2)).rect.center,
+                           'rabbit',
+                           1.2,
+                           400,
+                           True,
+                           self.settings,
+                           [self.visible_sprites],
+                           self.obstacle_sprites)
             self.enemies.add(rabbit)
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
