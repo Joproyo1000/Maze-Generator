@@ -29,7 +29,7 @@ class PathFinder:
         # get grid and fCost of each tile
         self.screen = pygame.display.get_surface()
 
-        self.grid = [tile for tile in level.grid_cells if not tile.isWall]
+        self.grid = [tile for tile in level.grid_tiles if not tile.isWall]
 
         self.get_neighbors = level.get_neighbors
         self.open = []

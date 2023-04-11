@@ -47,17 +47,19 @@ class Maze(pygame.sprite.Group):
         self.enemies = pygame.sprite.Group()
 
         # initialize the grid of cells
-        self.grid_cells = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites]) for row in range(self.rows) for col in range(self.cols)]
+        self.grid_tiles = [Tile(self.settings, (col * self.settings.TILESIZE, row * self.settings.TILESIZE), True, [self.visible_sprites]) for row in range(self.rows) for col in range(self.cols)]
 
         # first tile to start the maze from
-        self.start_tile = self.grid_cells[self.cols + 1]
+        self.start_tile = self.grid_tiles[self.cols + 1]
         self.current_tile = self.start_tile
-        self.goal = self.grid_cells[self.cols * self.rows - self.cols - 2]
+        self.goal = self.grid_tiles[self.cols * self.rows - self.cols - 2]
 
         # region variables
         # True if maze is done generating
         self.mazeGenerated = False
-        self.status = ''
+
+        # gives the status of the maze
+        self.status = 'running'
 
         # set FPS for the game
         self.FPS = self.settings.GAMEFPS
@@ -75,7 +77,7 @@ class Maze(pygame.sprite.Group):
         self.init_rooms()
 
         # initialize the player and put it on the first tile
-        self.player = Player(self.start_tile.rect.center, self.settings.type, self.settings, [self.visible_sprites], self.obstacle_sprites)
+        self.player = Player(self.start_tile.rect.center, self.settings.TYPE, self.settings, [self.visible_sprites], self.obstacle_sprites)
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
@@ -107,7 +109,7 @@ class Maze(pygame.sprite.Group):
         # keep track of furthest tile
         dst = 0
         furthestDst = 0
-        while self.stack or self.grid_cells[self.cols + 1].isWall:
+        while self.stack or self.grid_tiles[self.cols + 1].isWall:
             # runs while maze not finished
             self.current_tile.isWall = False
 
@@ -136,7 +138,7 @@ class Maze(pygame.sprite.Group):
         # set the end goal to the furthest tile from the start
         self.goal = furthestTile
 
-        for tile in self.grid_cells:
+        for tile in self.grid_tiles:
             if tile.isWall:
                 self.obstacle_sprites.add(tile)
 
@@ -174,6 +176,11 @@ class Maze(pygame.sprite.Group):
         numberOfSpiders = floor(self.settings.SPIDERPROPORTION * self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] * self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] / 1000000) + self.settings.DIFFICULTY
         numberOfSlimes = floor(self.settings.SLIMEPROPORTION * self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] * self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] / 1000000) + self.settings.DIFFICULTY
         numberOfRabbits = floor(self.settings.RABBITPROPORTION * self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL] * self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL] / 1000000) + self.settings.DIFFICULTY
+
+        numberOfWolfs = 0
+        numberOfSpiders = 0
+        numberOfSlimes = 0
+        numberOfRabbits = 1
 
         self.enemyEvents = [0] * (numberOfWolfs + numberOfSpiders + numberOfSlimes + numberOfRabbits)
 
@@ -231,15 +238,24 @@ class Maze(pygame.sprite.Group):
             self.enemyEvents[n] = pygame.USEREVENT + (n + 1)
             pygame.time.set_timer(self.enemyEvents[n], 1000 + i * 200)
 
-            rabbit = Enemy(self.get_random_tile_in_maze(2, center=(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL]/2,
-                                                                   self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]/2)).rect.center,
-                           'rabbit',
-                           1.2,
-                           400,
-                           True,
-                           self.settings,
-                           [self.visible_sprites],
-                           self.obstacle_sprites)
+            # rabbit = Enemy(self.get_random_tile_in_maze(2, center=(self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL]/2,
+            #                                                        self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]/2)).rect.center,
+            #                'rabbit',
+            #                1.2,
+            #                400,
+            #                True,
+            #                self.settings,
+            #                [self.visible_sprites],
+            #                self.obstacle_sprites)
+            rabbit = Enemy(
+                self.grid_tiles[self.cols + 5].rect.center,
+                'rabbit',
+                1.2,
+                400,
+                True,
+                self.settings,
+                [self.visible_sprites],
+                self.obstacle_sprites)
             self.enemies.add(rabbit)
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
@@ -262,7 +278,7 @@ class Maze(pygame.sprite.Group):
             return False
 
         # else return the tile in the grid corresponding to the coordinates
-        return self.grid_cells[self.get_tile_pos_in_grid(x, y)]
+        return self.grid_tiles[self.get_tile_pos_in_grid(x, y)]
 
     def random_neighbor(self, x: int, y: int) -> pygame.sprite.Sprite:
         """
@@ -352,29 +368,29 @@ class Maze(pygame.sprite.Group):
 
         # moving left
         if dx == 2:
-            leftTile = self.grid_cells[current_pos - 1]
+            leftTile = self.grid_tiles[current_pos - 1]
             leftTile.isWall = False
 
         # moving right
         elif dx == -2:
-            rightTile = self.grid_cells[current_pos + 1]
+            rightTile = self.grid_tiles[current_pos + 1]
             rightTile.isWall = False
 
         # moving up
         if dy == 2:
-            upTile = self.grid_cells[current_pos - self.cols]
+            upTile = self.grid_tiles[current_pos - self.cols]
             upTile.isWall = False
 
         # moving down
         elif dy == -2:
-            downTile = self.grid_cells[current_pos + self.cols]
+            downTile = self.grid_tiles[current_pos + self.cols]
             downTile.isWall = False
 
     def update_tile_colors(self):
         """
         updates the color of the tile based on it being a wall or not
         """
-        for tile in self.grid_cells:
+        for tile in self.grid_tiles:
             tile.update_color()
 
     def bake_map(self) -> pygame.Surface:
@@ -386,7 +402,7 @@ class Maze(pygame.sprite.Group):
 
         image = pygame.Surface((self.settings.TILESIZE, self.settings.TILESIZE))
         # draw every tile and chest onto it
-        for tile in self.grid_cells:
+        for tile in self.grid_tiles:
             image.fill(tile.color)
             baked_map.blit(image, tile.rect)
         for chest in self.chests:
@@ -436,7 +452,7 @@ class Maze(pygame.sprite.Group):
                                    enemy.rect.centery // self.settings.TILESIZE)
 
         # if the enemy is too far away from the player we don't update it for performance
-        if distance(playerPos.rect.center, enemyPos.rect.center) < 5000:
+        if self.settings.TILESIZE < distance(playerPos.rect.center, enemyPos.rect.center) < 5000:
             # if the enemy is a spider, there is a small chance that it spawns a cobweb
             if enemy.type == 'spider' and randint(0, 20) == 0:
                 enemy.spawnCobweb(self.visible_sprites)
@@ -451,7 +467,7 @@ class Maze(pygame.sprite.Group):
             
             """
 
-            if enemyPos:
+            if enemyPos :
                 # if enemy AI is activated, pathfind to player if it can see it else go to random location
                 if enemy.AI:
                     if playerPos:
@@ -507,6 +523,16 @@ class Maze(pygame.sprite.Group):
                         enemy.followPath(path=path, replace=True)
             #endregion
 
+        # if enemy is too close to the player, the pathfinding won't work, so we create path manually
+        else:
+            playerDir = pygame.Vector2(self.player.rect.centerx - enemy.rect.centerx,
+                                       self.player.rect.centery - enemy.rect.centery)
+            playerDir = playerDir.normalize()
+            newTile = self.check_tile(int(enemyPos.rect.x + playerDir.x * self.settings.TILESIZE) // self.settings.TILESIZE,
+                                      int(enemyPos.rect.y + playerDir.y * self.settings.TILESIZE) // self.settings.TILESIZE)
+            path = [newTile]
+            enemy.followPath(path=path, replace=True)
+
         return None
 
     def rayCast(self, origin: pygame.sprite.Sprite, direction: str, size: float, type: str) -> [Tile]:
@@ -551,7 +577,7 @@ class Maze(pygame.sprite.Group):
         if self.player.currentItemIndex != 0:
 
             self.visible_sprites.notification(self.settings.WIDTH / 1.1, self.settings.HEIGHT / 1.1,
-                                              "You used " + self.player.inventory[self.player.currentItemIndex].text + ".", 'bottomright', 400)
+                                              self.settings.TEXTS[self.settings.LANGUAGE]["YOU HAVE USED"] + self.player.inventory[self.player.currentItemIndex].text + ".", 'bottomright', 400)
 
             target = self.rayCast(self.player, direction=self.player.status[:-5:] if '_idle' in self.player.status else self.player.status, size=10, type='entity')
             self.player.use(target)
@@ -596,10 +622,10 @@ class Maze(pygame.sprite.Group):
 
                 self.status = 'finished'
 
-                dieTextUp = self.settings.BIGCREEPYFONT.render('VOUS AVEZ RETROUVE', True, 'darkgreen')
+                dieTextUp = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU HAVE REFOUND'], True, 'darkgreen')
                 dieTextUpRect = dieTextUp.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 3))
                 self.screen.blit(dieTextUp, dieTextUpRect)
-                dieTextDown = self.settings.BIGCREEPYFONT.render('VOTRE FRERE' if self.settings.type == 'girl' else 'VOTRE SOEUR', True, 'darkgreen')
+                dieTextDown = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOUR BROTHER'] if self.settings.TYPE == 'girl' else self.settings.TEXTS[self.settings.LANGUAGE]['YOUR SISTER'], True, 'darkgreen')
                 dieTextDownRect = dieTextDown.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 2.2))
                 self.screen.blit(dieTextDown, dieTextDownRect)
 
@@ -623,7 +649,7 @@ class Maze(pygame.sprite.Group):
 
             self.status = 'finished'
 
-            dieText = self.settings.BIGCREEPYFONT.render('YOU DIED', True, 'darkred')
+            dieText = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU DIED'], True, 'darkred')
             dieTextRect = dieText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2.2))
             self.screen.blit(dieText, dieTextRect)
 

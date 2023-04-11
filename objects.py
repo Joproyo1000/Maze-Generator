@@ -106,10 +106,10 @@ class Chest(pygame.sprite.Sprite):
         self.color = self.settings.CHESTCOLOR
 
         # chose random item to put in the chest 0=freeze, 1=map, 2=heal
-        items = {0: Freeze(visible_sprites.itemDisplayRect.center),
+        items = {0: Freeze(visible_sprites.itemDisplayRect.center, settings),
                  1: Map((self.rect.centerx / self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
-                        self.rect.centery / self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL])),
-                 2: Heal(visible_sprites.itemDisplayRect.center)}
+                        self.rect.centery / self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]), settings),
+                 2: Heal(visible_sprites.itemDisplayRect.center, settings)}
         self.item = items[randint(0, 2)]
 
         self.visible_sprites = visible_sprites
@@ -141,7 +141,7 @@ class Chest(pygame.sprite.Sprite):
                 player.inventory.append(self.item)
 
             self.visible_sprites.notification(self.settings.WIDTH / 1.1, self.settings.HEIGHT / 1.1,
-                                              "You found " + self.item.text + "!", 'bottomright', 300)
+                                              self.settings.TEXTS[self.settings.LANGUAGE]["YOU HAVE FOUND"] + " " + self.item.text + "!", 'bottomright', 300)
 
         self.state = 'opened'
 
@@ -182,18 +182,18 @@ class Useable(pygame.sprite.Sprite):
 
 
 class Map(Useable):
-    def __init__(self, pos: (int, int)):
+    def __init__(self, pos: (int, int), settings):
         super().__init__()
         """
         Map object, reveals a portion of the map
         :param pos: position at which it was found
         """
-        self.text = "a piece of map"
+        self.text = settings.TEXTS[settings.LANGUAGE]["A PIECE OF MAP"]
         self.pos = pos
 
 
 class Freeze(Useable):
-    def __init__(self, pos: (int, int)):
+    def __init__(self, pos: (int, int), settings):
         """
         Freeze object, slows down the enemy it touches for 5s
         :param pos: position at which it was found
@@ -202,11 +202,11 @@ class Freeze(Useable):
         self.image = pygame.image.load('graphics/special/objects/freeze.png').convert_alpha()
         self.image = pygame.transform.scale_by(self.image, 4)
         self.rect = self.image.get_rect(center=pos)
-        self.text = "a freeze item"
+        self.text = settings.TEXTS[settings.LANGUAGE]["A FREEZE ITEM"]
 
 
 class Heal(Useable):
-    def __init__(self, pos: (int, int)):
+    def __init__(self, pos: (int, int), settings):
         """
         Heal object, adds one life to the player
         :param pos: position at which it was found
@@ -215,7 +215,7 @@ class Heal(Useable):
         self.image = pygame.image.load('graphics/special/objects/heal.png').convert_alpha()
         self.image = pygame.transform.scale_by(self.image, 4)
         self.rect = self.image.get_rect(center=pos)
-        self.text = "an extra life"
+        self.text = settings.TEXTS[settings.LANGUAGE]["AN EXTRA LIFE"]
 
     def use(self, player: player.Player):
         player.lives += 1

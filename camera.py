@@ -228,7 +228,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                 self.notificationsAlpha[self.notificationsAlpha.index(alpha)] -= 4
 
         # draw number of lives
-        livesText = self.settings.FONT.render('VIES : ' + str(player.lives), True, self.settings.TEXTCOLOR)
+        livesText = self.settings.FONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['LIVES'] + ": " + str(player.lives), True, self.settings.TEXTCOLOR)
         livesTextRect = livesText.get_rect(topleft=(100, 100))
         self.screen.blit(livesText, livesTextRect)
 

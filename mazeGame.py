@@ -42,23 +42,23 @@ class MazeGame:
         if self.settings.SHADERON:
             self.shader = Shader(self.screen.get_size(), self.settings)
 
-        pygame.display.set_caption('Labyrinthe des Ombres')
+        pygame.display.set_caption(self.settings.TEXTS[self.settings.LANGUAGE]['The Maze Of Shadows'])
         self.clock = pygame.time.Clock()
 
     def main_menu(self):
         """
         Main menu, runs at start
         """
-        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), 'COMMENCER',
+        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), self.settings.TEXTS[self.settings.LANGUAGE]['START'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'PARAMETRES',
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUITTER LE JEU',
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT GAME'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
 
-        titleText = pygame.font.Font('font/Pixeltype.ttf', self.settings.HEIGHT // 8).render('LE LABYRINTHE DES OMBRES', True, self.settings.TEXTCOLOR)
+        titleText = pygame.font.Font('font/Pixeltype.ttf', self.settings.HEIGHT // 8).render(self.settings.TEXTS[self.settings.LANGUAGE]['The Maze Of Shadows'].upper(), True, self.settings.TEXTCOLOR)
         titleTextRect = titleText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/3.5))
         self.screen.blit(titleText, titleTextRect)
 
@@ -106,23 +106,29 @@ class MazeGame:
 
         sliderSize = self.settings.HEIGHT//230
 
-        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), 'DIFFICULTEE',
+        self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), self.settings.TEXTS[self.settings.LANGUAGE]['DIFFICULTY'],
                                (0, 2), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
-                               sliderSize, 0, custom={0: 'FACILE', 1: 'MOYEN', 2: 'DIFFICILE'}),
-                        CheckButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3.0), 'EFFET BATTEMENT DE COEUR',
+                               sliderSize, 0, custom={0: self.settings.TEXTS[self.settings.LANGUAGE]['EASY'], 1: self.settings.TEXTS[self.settings.LANGUAGE]['MEDIUM'], 2: self.settings.TEXTS[self.settings.LANGUAGE]['HARD']}),
+
+                        CheckButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3.0), self.settings.TEXTS[self.settings.LANGUAGE]['HEART BEAT EFFECT'],
                                     self.settings.SHOWHEARTBEATEFFECT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'GAMMA',
+
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), self.settings.TEXTS[self.settings.LANGUAGE]['GAMMA'],
                                (5, 20), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, self.settings.GAMMA),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'VOLUME',
+
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), self.settings.TEXTS[self.settings.LANGUAGE]['VOLUME'],
                                (0, 100), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, startVal=self.settings.VOLUME),
-                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'FPS',
+
+                        Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), self.settings.TEXTS[self.settings.LANGUAGE]['FPS'],
                                (30, 120), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, 60),
-                        Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.2), 'CONTROLES ->',
+
+                        Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['CONTROLS'] + ' ->',
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'QUITTER',
+
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
@@ -167,19 +173,19 @@ class MazeGame:
         Settings menu to change game controls
         """
 
-        self.buttons = [InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 4.5), 'HAUT : ',
+        self.buttons = [InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 4.5), self.settings.TEXTS[self.settings.LANGUAGE]['UP'] + ': ',
                                     self.settings.K_UP, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3), 'BAS : ',
+                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 3), self.settings.TEXTS[self.settings.LANGUAGE]['DOWN'] + ': ',
                                     self.settings.K_DOWN, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), 'GAUCHE : ',
+                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), self.settings.TEXTS[self.settings.LANGUAGE]['LEFT'] + ': ',
                                     self.settings.K_LEFT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), 'DROITE : ',
+                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), self.settings.TEXTS[self.settings.LANGUAGE]['RIGHT'] + ': ',
                                     self.settings.K_RIGHT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), 'CARTE : ',
+                        InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), self.settings.TEXTS[self.settings.LANGUAGE]['MAP'] + ': ',
                                     self.settings.K_MAP, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 4, self.settings.HEIGHT // 1.2), '<- PARAMETRES',
+                        Button(None, (self.settings.WIDTH // 4, self.settings.HEIGHT // 1.2), '<- ' + self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), 'QUITTER',
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
@@ -197,7 +203,7 @@ class MazeGame:
                         if isinstance(button, InputButton):
                             if button.isHovered():
                                 self.screen.fill(self.settings.MENUBACKGROUNDCOLOR)
-                                waitText = self.settings.FONT.render('Appuyez sur une touche...', True, self.settings.HOVERINGCOLOR)
+                                waitText = self.settings.FONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['Waiting for input...'], True, self.settings.HOVERINGCOLOR)
                                 self.screen.blit(waitText, waitText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2)))
                                 button.exitInputButton.update(self.screen)
                                 if self.settings.SHADERON:
@@ -256,10 +262,13 @@ class MazeGame:
                     if self.maze.status == 'finished':
                         if self.maze.retryButton.checkForInput():
                             self.maze.reset()
+                            self.maze.status = 'running'
                         if self.maze.restartButtion.checkForInput():
                             self.maze.reset()
+                            self.maze.status = 'running'
                         if self.maze.exitButton.checkForInput():
                             self.main_menu()
+                            self.maze.status = 'running'
 
                 # menus
                 if event.type == pygame.KEYDOWN:
@@ -349,12 +358,12 @@ class MazeGame:
         Pause menu, runs when escape is pressed
         """
 
-        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.9),
-                               'CONTINUER', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.3),
-                               'PARAMETRES', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7),
-                               'RETOURNER AU MENU PRINCIPAL', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR)]
+        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.3), self.settings.TEXTS[self.settings.LANGUAGE]['CONTINUE'],
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.8), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), self.settings.TEXTS[self.settings.LANGUAGE]['MAIN MENU'],
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR)]
 
         self.drawScreen()
 
@@ -410,11 +419,11 @@ class MazeGame:
         self.settings.K_MAP = self.buttons[4].key
 
     def chooseType(self):
-        boyButton = Button(None, (self.settings.WIDTH // 1.6, self.settings.HEIGHT // 2), 'GARCON',
+        boyButton = Button(None, (self.settings.WIDTH // 1.6, self.settings.HEIGHT // 2), self.settings.TEXTS[self.settings.LANGUAGE]['BOY'],
                                   self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
-        girlButton = Button(None, (self.settings.WIDTH // 2.4, self.settings.HEIGHT // 2), 'FILLE        /',
+        girlButton = Button(None, (self.settings.WIDTH // 2.4, self.settings.HEIGHT // 2), self.settings.TEXTS[self.settings.LANGUAGE]['GIRL'] + '        /',
                                    self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
-        cancelButton = Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'ANNULER',
+        cancelButton = Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), self.settings.TEXTS[self.settings.LANGUAGE]['CANCEL'],
                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
 
         self.screen.blit(self.background, self.background.get_rect())
@@ -446,7 +455,7 @@ class MazeGame:
             else:
                 pygame.display.update()
 
-        self.settings.type = type
+        self.settings.TYPE = type
 
         return True
 
