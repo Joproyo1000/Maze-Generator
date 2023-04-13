@@ -11,7 +11,7 @@ class Settings:
         self.screen = pygame.display.get_surface()
 
         # activate shader
-        self.SHADERON = False
+        self.SHADERON = True
 
         # set size of screen
         self.WIDTH, self.HEIGHT = get_monitors()[0].width, get_monitors()[0].height
@@ -77,14 +77,18 @@ class Settings:
         self.SHOWHEARTBEATEFFECT = True
 
         # shaders
-        self.GAMMA = 10  # default gamma value
+        self.GAMMA = 12  # default gamma value
 
         # set FPS
         self.GAMEFPS = 60
 
-        # initialize music
+        # initialize music and sound effects
+        self.MUSICCHANNEL = pygame.mixer.Channel(0)
         self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
-        self.VOLUME = 1  # default volume
+        self.SOUNDEFFECTCHANNEL = pygame.mixer.Channel(1)
+        self.FOOTSTEPSOUNDEFFECTS = list(pygame.mixer.Sound(f'sound/effects/walking/footstep{i}.mp3') for i in range(6))
+
+        self.VOLUME = 0.00  # default volume
 
         # type of the player, either boy or girl
         self.TYPE = 'girl'
@@ -162,41 +166,41 @@ class Settings:
                    'A PIECE OF MAP': 'A PIECE OF MAP',
                    'A FREEZE ITEM': 'A FREEZE ITEM',
                    'AN EXTRA LIFE': 'AN EXTRA LIFE'},
-            'DE': {'The Maze Of Shadows': 'Le Labyrinthe Des Ombres',
-                   'START': '',
-                   'PARAMETERS': '',
-                   'QUIT GAME': '',
-                   'QUIT': '',
-                   'DIFFICULTY': '',
-                   'EASY': '',
-                   'MEDIUM': '',
-                   'HARD': '',
-                   'HEART BEAT EFFECT': '',
-                   'GAMMA': '',
-                   'VOLUME': '',
-                   'FPS': '',
-                   'CONTROLS': '',
-                   'UP': '',
-                   'DOWN': '',
-                   'LEFT': '',
-                   'RIGHT': '',
-                   'MAP': '',
-                   'Waiting for input...': '',
-                   'CONTINUE': '',
-                   'MAIN MENU': '',
-                   'BOY': '',
-                   'GIRL': '',
-                   'CANCEL': '',
-                   'YOU FOUND': '',
-                   'YOU USED': '',
-                   'YOU REFOUND': '',
-                   'YOUR BROTHER': '',
-                   'YOUR SISTER': '',
-                   'YOU DIED': '',
-                   'LIVES': '',
-                   'A PIECE OF MAP': '',
-                   'A FREEZE ITEM': '',
-                   'AN EXTRA LIFE': ''}
+            'DE': {'The Maze Of Shadows': 'Das Schattenlabyrinth',
+                   'START': 'BEGINN',
+                   'PARAMETERS': 'EINSTELLUNGEN',
+                   'QUIT GAME': 'SPIEL VERLASSEN',
+                   'QUIT': 'VERLASSEN',
+                   'DIFFICULTY': 'SCHWIERIGKEITENGRAD',
+                   'EASY': 'EINFACH',
+                   'MEDIUM': 'MITTEL',
+                   'HARD': 'SCHWER',
+                   'HEART BEAT EFFECT': 'HERZSCHLAG-EFFEKT',
+                   'GAMMA': 'GAMMA',
+                   'VOLUME': 'LAUTSTARKE',
+                   'FPS': 'FPS',
+                   'CONTROLS': 'KONTROLLEN',
+                   'UP': 'OBEN',
+                   'DOWN': 'UNTEN',
+                   'LEFT': 'LINKS',
+                   'RIGHT': 'RECHTS',
+                   'MAP': 'KARTE',
+                   'Waiting for input...': 'Warten auf Eingabe...',
+                   'CONTINUE': 'FORTSETZEN',
+                   'MAIN MENU': 'HAUPTMENU',
+                   'BOY': 'JUNGE',
+                   'GIRL': 'MADCHEN',
+                   'CANCEL': 'STORNIEREN',
+                   'YOU FOUND': 'SIE HABEN GEFUNDEN',
+                   'YOU USED': 'SIE HABEN BENUTZT',
+                   'YOU REFOUND': 'SIE HABEN WIEDERGEFUNDEN',
+                   'YOUR BROTHER': 'IHREN BRUDER',
+                   'YOUR SISTER': 'IHRE SCHWESTER',
+                   'YOU DIED': 'SIE SIND GETOTET',
+                   'LIVES': 'LEBEN',
+                   'A PIECE OF MAP': 'EIN KARTESTUCK',
+                   'A FREEZE ITEM': 'EIN SPERRVERMERK',
+                   'AN EXTRA LIFE': 'EIN EXTRA-LEBEN'}
         }
 
         # keep track of distance to the closest enemy

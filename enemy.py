@@ -35,6 +35,7 @@ class Enemy(pygame.sprite.Sprite):
 
         # transformation states (only for rabbit)
         self.transforming = False
+        self.transformed = False
 
         self.color = 'darkred'
 
@@ -131,7 +132,8 @@ class Enemy(pygame.sprite.Sprite):
         # idle status
         if self.direction.x == 0 and self.direction.y == 0:
             if '_idle' not in self.status and '_transform' not in self.status:
-                self.status += '_idle'
+                if not self.transformed:
+                    self.status += '_idle'
 
         # transform status
         if self.type == 'rabbit' and abs(self.direction.x) > 0 and abs(self.direction.y) > 0:
@@ -254,6 +256,7 @@ class Enemy(pygame.sprite.Sprite):
             if self.frame_index >= len(animation) - self.animation_speed:
                 self.frame_index = 0
                 self.transforming = False
+                self.transformed = True
 
         else:
             # loop over the frame index

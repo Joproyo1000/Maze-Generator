@@ -38,7 +38,7 @@ def distance(a: tuple, b: tuple) -> float:
     return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(2)))
 
 
-def fadeTransitionStart(screen: pygame.Surface, shader: shaders.Shader=None):
+def fadeTransitionStart(screen: pygame.Surface, shader: shaders.Shader=None, duration: int=150):
     """
     Fades the screen to black slowly
     :param screen: screen to do the transition
@@ -48,7 +48,7 @@ def fadeTransitionStart(screen: pygame.Surface, shader: shaders.Shader=None):
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
     # slowly increase alpha to create the transition effect
-    for a in range(150):
+    for a in range(duration):
         blackGradient.set_alpha(a)
         screen.blit(blackGradient, (0, 0))
         # if there is a shader use it else just update the display
@@ -60,7 +60,7 @@ def fadeTransitionStart(screen: pygame.Surface, shader: shaders.Shader=None):
         pygame.time.delay(5)
 
 
-def fadeTransitionEnd(screen: pygame.Surface, shader: shaders.Shader=None):
+def fadeTransitionEnd(screen: pygame.Surface, shader: shaders.Shader=None, duration: int=180):
     """
     Fades from black to the original screen slowly
     :param screen: screen to do the transition
@@ -73,7 +73,7 @@ def fadeTransitionEnd(screen: pygame.Surface, shader: shaders.Shader=None):
     blackGradient = pygame.Surface((screen.get_width(), screen.get_height()))
     blackGradient.fill('black')
     # slowly decrease alpha to create the transition effect
-    for a in range(180, -1, -3):
+    for a in range(duration, -1, -3):
         blackGradient.set_alpha(a)
         screen.blit(background, (0, 0))
         screen.blit(blackGradient, (0, 0))
@@ -413,13 +413,13 @@ class Slider:
             if self.slider_small_rect.left < mPos[0] < self.slider_small_rect.right:
                 self.slider_ball.centerx = mPos[0]
 
-    def update(self, screen: pygame.Surface):
+    def update(self, screen: pygame.Surface, getInput=True):
         """
         :param screen: current display
         Updates the ball position, text displayed and value
         """
-        # update ball
-        self.checkForInput()
+        if getInput:
+            self.checkForInput()
 
         # show slider
         pygame.draw.rect(screen, self.exterior_color, self.rect, border_radius=50)  # exterior rect

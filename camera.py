@@ -247,8 +247,8 @@ class YSortCameraGroup(pygame.sprite.Group):
         scaledScreen = self.screen
 
         if self.settings.SHOWHEARTBEATEFFECT:
-            if self.settings.dstToClosestEnemy <= 400:
-                hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 500)/100)
+            if self.settings.dstToClosestEnemy <= 300:
+                hearBeatEffectFactor = int((-self.settings.dstToClosestEnemy + 400)/100)
 
                 scaledScreen = pygame.transform.scale(self.screen, (self.settings.WIDTH + hearBeatEffectFactor*10, self.settings.HEIGHT + hearBeatEffectFactor*10))
                 scaledScreen.blit(scaledScreen, (random.randint(-hearBeatEffectFactor, hearBeatEffectFactor) - hearBeatEffectFactor*5,

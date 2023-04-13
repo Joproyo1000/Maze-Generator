@@ -1,8 +1,10 @@
+import random
 import pygame
 
-import enemy
 import objects
 import settings
+
+from random import randint
 from support import import_folder
 
 
@@ -130,9 +132,9 @@ class Player(pygame.sprite.Sprite):
 
         # we check collision on one axis at a time to avoid bugs
         self.hitbox.x += self.direction.x * speed * dt * 250
-        self.collision('horizontal')
+        # self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed * dt * 250
-        self.collision('vertical')
+        # self.collision('vertical')
 
         # update final position
         self.rect.center = self.hitbox.center
@@ -213,6 +215,11 @@ class Player(pygame.sprite.Sprite):
         self.image = animation[int(self.frame_index)]
         self.rect = self.image.get_rect(center = self.hitbox.center)
 
+    def play_sounds(self):
+        if '_idle' not in self.status:
+            if not self.settings.SOUNDEFFECTCHANNEL.get_busy():
+                self.settings.SOUNDEFFECTCHANNEL.play(self.settings.FOOTSTEPSOUNDEFFECTS[randint(0, len(self.settings.FOOTSTEPSOUNDEFFECTS) - 1)], loops=1)
+
     def update(self, dt):
         """
         Main update method
@@ -224,4 +231,5 @@ class Player(pygame.sprite.Sprite):
 
         # if getInput is false, don't move the player
         if self.getInput:
+            self.play_sounds()
             self.move(self.speed, dt)  # move based on inputs

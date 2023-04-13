@@ -4,7 +4,7 @@ import pygame
 from math import floor
 from random import randint, choice
 
-from support import fadeTransitionStart, Button
+from support import fadeTransitionEnd, Button
 from tile import Tile
 from camera import YSortCameraGroup
 from player import Player
@@ -16,7 +16,7 @@ from support import distance
 
 
 class Maze(pygame.sprite.Group):
-    def __init__(self, settings):
+    def __init__(self, settings, player=None):
         super().__init__()
         """
         Generates a new maze with the settings provided
@@ -77,7 +77,12 @@ class Maze(pygame.sprite.Group):
         self.init_rooms()
 
         # initialize the player and put it on the first tile
-        self.player = Player(self.start_tile.rect.center, self.settings.TYPE, self.settings, [self.visible_sprites], self.obstacle_sprites)
+        if player is None:
+            self.player = Player(self.start_tile.rect.center, self.settings.TYPE, self.settings, [self.visible_sprites], self.obstacle_sprites)
+        else:
+            self.player = player
+            self.player.rect.center = self.start_tile.rect.center
+            self.player.status = 'down_idle'
 
         self.update_tile_colors()
         self.obstacle_sprites.generate_hashmap()
@@ -242,6 +247,7 @@ class Maze(pygame.sprite.Group):
                            self.settings,
                            [self.visible_sprites],
                            self.obstacle_sprites)
+
             self.enemies.add(rabbit)
 
     def get_tile_pos_in_grid(self, x: int, y: int) -> int:
@@ -420,8 +426,8 @@ class Maze(pygame.sprite.Group):
         for map in self.player.maps:
             pygame.draw.circle(mask, (0, 0, 0, 0), (map.pos[0] * baked_map.get_width(), map.pos[1] * baked_map.get_height()), 400 - 50 * self.settings.CURRENTLEVEL * self.settings.DIFFICULTY)
 
-        baked_map.blit(mask, mask.get_rect())
-        baked_map.set_colorkey('black')
+        # baked_map.blit(mask, mask.get_rect())
+        # baked_map.set_colorkey('black')
 
         return baked_map
 
@@ -436,30 +442,28 @@ class Maze(pygame.sprite.Group):
         # get the tile where the enemy is
         enemyPos = self.check_tile(enemy.rect.centerx // self.settings.TILESIZE,
                                    enemy.rect.centery // self.settings.TILESIZE)
+        if enemyPos:
+            # if the enemy is too far away from the player we don't update it for performance
+            if self.settings.TILESIZE < distance(playerPos.rect.center, enemyPos.rect.center) < 5000:
+                # if the enemy is a spider, there is a small chance that it spawns a cobweb
+                if enemy.type == 'spider' and randint(0, 20) == 0:
+                    enemy.spawnCobweb(self.visible_sprites)
 
-        # if the enemy is too far away from the player we don't update it for performance
-        if self.settings.TILESIZE < distance(playerPos.rect.center, enemyPos.rect.center) < 5000:
-            # if the enemy is a spider, there is a small chance that it spawns a cobweb
-            if enemy.type == 'spider' and randint(0, 20) == 0:
-                enemy.spawnCobweb(self.visible_sprites)
+                # region pathfinding
+                """ 
+                the pathfinding works this way:
+                                                      ⟋ Yes ➜ go to player
+                         ⟋ Yes ➜ does enemy see player                             ⟋ Yes ➜ follow the current path
+                enemy AI ?                            ⟍ No ➜ is there already a path
+                         ⟍ No ➜ go to random location                              ⟍ No ➜ create new path to random location
+                
+                """
 
-            # region pathfinding
-            """ 
-            the pathfinding works this way:
-                                                  ⟋ Yes ➜ go to player
-                     ⟋ Yes ➜ does enemy see player                             ⟋ Yes ➜ follow the current path
-            enemy AI ?                            ⟍ No ➜ is there already a path
-                     ⟍ No ➜ go to random location                              ⟍ No ➜ create new path to random location
-            
-            """
-
-            if enemyPos :
-                # if enemy AI is activated, pathfind to player if it can see it else go to random location
-                if enemy.AI:
-                    if playerPos:
+                if enemyPos:
+                    # if enemy AI is activated, pathfind to player if it can see it else go to random location
+                    if enemy.AI:
                         # get distance from enemy to player
                         enemyDst = distance(enemyPos.rect.center, playerPos.rect.center)
-
                         # if the enemy can see the player it goes to him
                         if enemyDst < enemy.range:
                             # if the enemy is a wolf and the player isn't moving, then the wold doesn't see him
@@ -472,18 +476,34 @@ class Maze(pygame.sprite.Group):
 
                             # if the enemy is a rabbit, and he sees the player, then he starts moving to him
                             elif enemy.type == 'rabbit':
-                                pygame.time.set_timer(self.enemyEvents[i], 500)
+                                playerDir = pygame.Vector2(self.player.rect.centerx - enemy.rect.centerx,
+                                                           self.player.rect.centery - enemy.rect.centery)
+                                playerDir = playerDir.normalize()
+                                newTile = self.grid_tiles[self.get_tile_pos_in_grid(int(enemyPos.rect.centerx + playerDir.x * self.settings.TILESIZE) // self.settings.TILESIZE,
+                                                                                    int(enemyPos.rect.centery + playerDir.y * self.settings.TILESIZE) // self.settings.TILESIZE)]
+
+                                pygame.time.set_timer(self.enemyEvents[i], 100)
 
                                 # set the path of the enemy
                                 path = self.pathFinder.findPath(enemyPos, playerPos)
-                                enemy.followPath(path=path, replace=True)
+                                if path is not None:
+                                    path.append(newTile)
+                                    enemy.followPath(path=path, replace=True)
 
                             else:
+                                playerDir = pygame.Vector2(self.player.rect.centerx - enemy.rect.centerx,
+                                                           self.player.rect.centery - enemy.rect.centery)
+                                playerDir = playerDir.normalize()
+                                newTile = self.grid_tiles[self.get_tile_pos_in_grid(int(enemyPos.rect.centerx + playerDir.x * self.settings.TILESIZE) // self.settings.TILESIZE,
+                                                                                    int(enemyPos.rect.centery + playerDir.y * self.settings.TILESIZE) // self.settings.TILESIZE)]
+
                                 pygame.time.set_timer(self.enemyEvents[i], int((enemyDst * 2 + 500)))
 
                                 # set the path of the enemy
                                 path = self.pathFinder.findPath(enemyPos, playerPos)
-                                enemy.followPath(path=path, replace=True)
+                                if path is not None:
+                                    path.append(newTile)
+                                    enemy.followPath(path=path, replace=True)
 
                         # else create a new path to a random location
                         elif enemy.type != 'rabbit':
@@ -496,30 +516,27 @@ class Maze(pygame.sprite.Group):
                         else:
                             path = [enemyPos]
                             enemy.followPath(path=path, replace=True)
-
-                        return enemyDst
-                else:
-                    # if the enemy already has a path follow it
-                    if len(enemy.path) != 0:
-                        enemy.followPath()
-                    # else create a new one to a random location
                     else:
-                        randomPos = self.get_random_tile_in_maze(1, center=enemy.rect.center)
-                        path = self.pathFinder.findPath(enemyPos, randomPos)
-                        enemy.followPath(path=path, replace=True)
-            #endregion
+                        # if the enemy already has a path follow it
+                        if len(enemy.path) != 0:
+                            enemy.followPath()
+                        # else create a new one to a random location
+                        else:
+                            randomPos = self.get_random_tile_in_maze(1, center=enemy.rect.center)
+                            path = self.pathFinder.findPath(enemyPos, randomPos)
+                            enemy.followPath(path=path, replace=True)
 
-        # if enemy is too close to the player, the pathfinding won't work, so we create path manually
-        else:
-            playerDir = pygame.Vector2(self.player.rect.centerx - enemy.rect.centerx,
-                                       self.player.rect.centery - enemy.rect.centery)
-            playerDir = playerDir.normalize()
-            newTile = self.check_tile(int(enemyPos.rect.x + playerDir.x * self.settings.TILESIZE) // self.settings.TILESIZE,
-                                      int(enemyPos.rect.y + playerDir.y * self.settings.TILESIZE) // self.settings.TILESIZE)
-            path = [newTile]
-            enemy.followPath(path=path, replace=True)
+                #endregion
 
-        return None
+            # if enemy is too close to the player, the pathfinding won't work, so we create path manually
+            else:
+                playerDir = pygame.Vector2(self.player.rect.centerx - enemy.rect.centerx,
+                                           self.player.rect.centery - enemy.rect.centery)
+                playerDir = playerDir.normalize()
+                newTile = self.grid_tiles[self.get_tile_pos_in_grid(int(enemyPos.rect.centerx + playerDir.x * self.settings.TILESIZE) // self.settings.TILESIZE,
+                                                                     int(enemyPos.rect.centery + playerDir.y * self.settings.TILESIZE) // self.settings.TILESIZE)]
+                path = [newTile]
+                enemy.followPath(path=path, replace=True)
 
     def rayCast(self, origin: pygame.sprite.Sprite, direction: str, size: float, type: str) -> [Tile]:
         """
@@ -563,7 +580,7 @@ class Maze(pygame.sprite.Group):
         if self.player.currentItemIndex != 0:
 
             self.visible_sprites.notification(self.settings.WIDTH / 1.1, self.settings.HEIGHT / 1.1,
-                                              self.settings.TEXTS[self.settings.LANGUAGE]["YOU HAVE USED"] + self.player.inventory[self.player.currentItemIndex].text + ".", 'bottomright', 400)
+                                              self.settings.TEXTS[self.settings.LANGUAGE]["YOU HAVE USED"] + " " + self.player.inventory[self.player.currentItemIndex].text + ".", 'bottomright', 400)
 
             target = self.rayCast(self.player, direction=self.player.status[:-5:] if '_idle' in self.player.status else self.player.status, size=10, type='entity')
             self.player.use(target)
@@ -592,10 +609,20 @@ class Maze(pygame.sprite.Group):
 
         return False
 
-    def check_game_state(self):
+    def update_game_state(self):
         """
         Update game state
         """
+        # update enemies
+        # array to get distance of every enemy to the player
+        dstsToPlayer = []
+        for enemy in self.enemies.sprites():
+            dstsToPlayer.append(distance(self.player.rect.center, enemy.rect.center))
+            enemy.followPath()
+
+        if len(dstsToPlayer) > 0:
+            self.settings.dstToClosestEnemy = min(dstsToPlayer)
+
         # if player reaches exit, go to next level
         if self.check_victory():
             self.settings.CURRENTLEVEL += 1
@@ -604,7 +631,7 @@ class Maze(pygame.sprite.Group):
                 self.visible_sprites.update(0)
 
                 if self.status != 'finished':
-                    fadeTransitionStart(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None)
+                    fadeTransitionEnd(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None)
 
                 self.status = 'finished'
 
@@ -630,11 +657,6 @@ class Maze(pygame.sprite.Group):
         if self.check_death():
             self.visible_sprites.update(0)
 
-            if self.status != 'finished':
-                fadeTransitionStart(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None)
-
-            self.status = 'finished'
-
             dieText = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU DIED'], True, 'darkred')
             dieTextRect = dieText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2.2))
             self.screen.blit(dieText, dieTextRect)
@@ -642,7 +664,12 @@ class Maze(pygame.sprite.Group):
             self.retryButton.update(self.screen)
             self.exitButton.update(self.screen)
 
+            if self.status != 'finished':
+                fadeTransitionEnd(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None, duration=500)
+                self.status = 'finished'
+
             if self.settings.SHADERON:
+                self.settings.dstToClosestEnemy = 50
                 self.visible_sprites.shader.render(self.screen)
             else:
                 pygame.display.update()
@@ -653,7 +680,11 @@ class Maze(pygame.sprite.Group):
         """
         Resets maze with same settings
         """
-        self.__init__(self.settings)
+        if self.status == 'finished':
+
+            self.__init__(self.settings, player=self.player)
+        else:
+            self.__init__(self.settings)
 
     def run(self, deltaTime, getInput=True):
         """
@@ -668,14 +699,11 @@ class Maze(pygame.sprite.Group):
                     self.transition -= 2
                     self.blackGradient.set_alpha(self.transition)
 
-                for enemy in self.enemies.sprites():
-                    enemy.followPath()
-
                 self.player.getInput = getInput
                 self.visible_sprites.update(deltaTime)
 
-                self.check_game_state()
+                self.update_game_state()
 
                 return self.visible_sprites.custom_draw(self.player, self.blackGradient, getInput)
             else:
-                return self.check_game_state()
+                return self.update_game_state()

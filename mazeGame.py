@@ -2,8 +2,6 @@ import time
 
 from sys import exit
 
-import pygame
-
 from mazeLevel import Maze
 from settings import Settings
 from shaders import Shader
@@ -22,8 +20,9 @@ class MazeGame:
         pygame.mixer.init()
 
         # start music playback
-        self.settings.MUSIC.play(loops=-1)
-        self.settings.MUSIC.set_volume(self.settings.VOLUME)
+        self.settings.MUSICCHANNEL.play(self.settings.MUSIC, loops=-1)
+        self.settings.MUSICCHANNEL.set_volume(self.settings.VOLUME)
+        self.settings.SOUNDEFFECTCHANNEL.set_volume(self.settings.VOLUME / 8)
 
         # changes screen mode to adapt if shaders are activated or not
         if self.settings.SHADERON:
@@ -79,8 +78,6 @@ class MazeGame:
                                     fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                     self.maze.reset()
                                     self.game()
-                                else:
-                                    continue
                             if i == 1:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings_menu(self.main_menu)
@@ -103,7 +100,6 @@ class MazeGame:
         """
         Settings menu to change game settings
         """
-
         sliderSize = self.settings.HEIGHT//230
 
         self.buttons = [Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 4), self.settings.TEXTS[self.settings.LANGUAGE]['DIFFICULTY'],
@@ -114,34 +110,35 @@ class MazeGame:
                                     self.settings.SHOWHEARTBEATEFFECT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
 
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 2.2), self.settings.TEXTS[self.settings.LANGUAGE]['GAMMA'],
-                               (5, 20), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
+                               (5, 30), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, self.settings.GAMMA),
 
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), self.settings.TEXTS[self.settings.LANGUAGE]['VOLUME'],
                                (0, 100), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
-                               sliderSize, startVal=self.settings.VOLUME),
+                               sliderSize, self.settings.VOLUME*100),
 
                         Slider((self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), self.settings.TEXTS[self.settings.LANGUAGE]['FPS'],
                                (30, 120), self.settings.FONT, self.settings.TEXTCOLOR, self.settings.SLIDEREXTCOLOR, self.settings.SLIDERINTCOLOR, self.settings.HOVERINGCOLOR, self.settings.TEXTCOLOR,
                                sliderSize, 60),
 
-                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/FR.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 4.9, self.settings.HEIGHT // 1.4),
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/FR.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 6, self.settings.HEIGHT // 1.3),
                                '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/EN.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 3.8, self.settings.HEIGHT // 1.4),
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/EN.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 4.42, self.settings.HEIGHT // 1.3),
                                '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/DE.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 3.1, self.settings.HEIGHT // 1.4),
+                        Button(pygame.transform.scale(pygame.image.load('graphics/flags/DE.png').convert_alpha(), (100, 100)), (self.settings.WIDTH // 3.5, self.settings.HEIGHT // 1.3),
                                '', self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
 
-                        Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['CONTROLS'] + ' ->',
+                        Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.25), self.settings.TEXTS[self.settings.LANGUAGE]['CONTROLS'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
 
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.25), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
-        self.drawScreen()
+        self.drawScreen(getInput=False)
 
         if dotransition:
             fadeTransitionEnd(self.screen, self.shader if self.settings.SHADERON else None)
+
         while True:
             # used for taking inputs
             for event in pygame.event.get():
@@ -152,25 +149,34 @@ class MazeGame:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     for i, button in enumerate(self.buttons):
                         if button.checkForInput():
+                            # language change
                             if i == 5:
                                 self.settings.LANGUAGE = 'FR'
+                                self.settings_menu(start, dotransition=False)
                             if i == 6:
                                 self.settings.LANGUAGE = 'EN'
+                                self.settings_menu(start, dotransition=False)
                             if i == 7:
                                 self.settings.LANGUAGE = 'DE'
+                                self.settings_menu(start, dotransition=False)
 
+                            # quit settings
                             if i == len(self.buttons)-1:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings.DIFFICULTY = int(self.buttons[0].value)
                                 self.maze.FPS = self.buttons[4].value
                                 start()
+                            # go to controls
                             if i == len(self.buttons)-2:
+                                self.settings.DIFFICULTY = int(self.buttons[0].value)
+                                self.maze.FPS = self.buttons[4].value
                                 self.controls_menu(start)
 
             self.settings.SHOWHEARTBEATEFFECT = self.buttons[1].value
             self.settings.GAMMA = self.buttons[2].value
-            self.settings.VOLUME = self.buttons[3].value
-            self.settings.MUSIC.set_volume(self.settings.VOLUME / 100)
+            self.settings.VOLUME = self.buttons[3].value / 100
+            self.settings.MUSICCHANNEL.set_volume(self.settings.VOLUME)
+            self.settings.SOUNDEFFECTCHANNEL.set_volume(self.settings.VOLUME / 8)
 
             self.drawScreen()
 
@@ -197,9 +203,9 @@ class MazeGame:
                                     self.settings.K_RIGHT, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         InputButton(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.4), self.settings.TEXTS[self.settings.LANGUAGE]['MAP'] + ': ',
                                     self.settings.K_MAP, self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 4, self.settings.HEIGHT // 1.2), '<- ' + self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                        Button(None, (self.settings.WIDTH // 4, self.settings.HEIGHT // 1.25), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.2), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.25), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
 
         self.drawScreen()
@@ -281,6 +287,7 @@ class MazeGame:
                             self.maze.reset()
                             self.maze.status = 'running'
                         if self.maze.exitButton.checkForInput():
+                            self.settings.dstToClosestEnemy = 1000000
                             self.main_menu()
                             self.maze.status = 'running'
 
@@ -292,23 +299,19 @@ class MazeGame:
                     if key[pygame.K_ESCAPE]:
                         self.pause_menu()
 
-                # update all enemies
-                dstsToPlayer = []
-                # get player pos
-                playerPos = self.maze.check_tile(self.maze.player.rect.centerx // self.settings.TILESIZE,
-                                                 self.maze.player.rect.centery // self.settings.TILESIZE)
-                for i, enemyEvent in enumerate(self.maze.enemyEvents):
-                    if event.type == enemyEvent:
-                        d = self.maze.enemyBehavior(i, playerPos)
-                        if d is not None:
-                            dstsToPlayer.append(d)
-                # keep track of the closest enemy to player
-                if len(dstsToPlayer) > 0:
-                    closestEnemy = min(dstsToPlayer)
-                    self.settings.dstToClosestEnemy = closestEnemy
+                # if maze level isn't finished, update all enemies
+                if self.maze.status != 'finished':
+                    # get player pos
+                    playerPos = self.maze.check_tile(self.maze.player.rect.centerx // self.settings.TILESIZE,
+                                                     self.maze.player.rect.centery // self.settings.TILESIZE)
+                    for i, enemyEvent in enumerate(self.maze.enemyEvents):
+                        if event.type == enemyEvent and playerPos:
+                            self.maze.enemyBehavior(i, playerPos)
 
             # run the level
             self.maze.run(deltaTime)
+
+            debug(self.maze.enemies.sprites()[0].direction)
 
             if not self.settings.SHADERON:
                 pygame.display.update()
@@ -458,7 +461,7 @@ class MazeGame:
                     if girlButton.checkForInput():
                         type = 'girl'
                     if cancelButton.checkForInput():
-                        return False
+                        self.main_menu()
 
             boyButton.update(self.screen)
             girlButton.update(self.screen)
@@ -473,17 +476,20 @@ class MazeGame:
 
         return True
 
-    def drawScreen(self):
+    def drawScreen(self, getInput=True):
         """
         Draws background, buttons and additional debug info for menus
         """
         self.screen.blit(self.background, self.background.get_rect())
 
         # debug FPS count
-        debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10), x=20)
+        # debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10), x=20)
 
         for button in self.buttons:
-            button.update(self.screen)
+            if isinstance(button, Slider):
+                button.update(self.screen, getInput)
+            else:
+                button.update(self.screen)
 
 
 if __name__ == '__main__':
