@@ -45,8 +45,9 @@ class Settings:
 
         # initialize font
         self.FONT = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT // 10)
-        self.BIGCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', 130)
-        self.SMALLCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', 100)
+        self.SMALLFONT = pygame.font.Font('font/Pixeltype.ttf', self.HEIGHT // 17)
+        self.BIGCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', self.HEIGHT // 10)
+        self.SMALLCREEPYFONT = pygame.font.Font('font/HelpMe.ttf', self.HEIGHT // 13)
 
         # controls
         self.K_UP = pygame.K_z
@@ -130,7 +131,29 @@ class Settings:
                    'LIVES': 'VIES',
                    'A PIECE OF MAP': 'UN BOUT DE CARTE',
                    'A FREEZE ITEM': 'UN GEL',
-                   'AN EXTRA LIFE': 'UNE VIE EN PLUS'},
+                   'AN EXTRA LIFE': 'UNE VIE EN PLUS',
+                   'HELP': 'AIDE',
+                   'ENEMIES': 'ENNEMIS',
+                   'WOLF DESCRIPTION': "LOUP AVEUGLE : COURT VITE MAIS NE VOUS VOIT PAS SI",
+                   'WOLF DESCRIPTION 2': "VOUS NE BOUGEZ PAS",
+                   'SPIDER DESCRIPTION': "ARAIGNEE-SOURIS : VITESSTE NORMALE MAIS PEUT PLACER",
+                   'SPIDER DESCRIPTION 2': "DES TOILES D'ARAIGNEE SUR VOTRE CHEMIN",
+                   'SLIME DESCRIPTION': "BLOB : EST LENT ET BETE, IL NE VOUS POURSUIVERA PAS",
+                   'SLIME DESCRIPTION 2': "MAIS IL Y EN A BEAUCOUP",
+                   'RABBIT DESCRIPTION': "LAPIN : IL A L'AIR MIGNON N'EST-CE PAS ?",
+                   'ITEM USE DESCRIPTION': "UTILISEZ LE CLIC-GAUCHE POUR UTILISER",
+                   'ITEM USE DESCRIPTION 2': "L'OBJET SELECTIONNE",
+                   'ITEM CHANGE DESCRIPTION': "UTILISEZ LA MOLETTE DE LA SOURIS",
+                   'ITEM CHANGE DESCRIPTION 2': "POUR CHANGER D'OBJET",
+                   'ITEM DISPLAY DESCRIPTION': "VOUS POUVEZ VOIR L'OBJET SELECTIONNE ICI",
+                   'ITEMS': "OBJETS",
+                   'MAP DESCRIPTION': "CARTE : UN BOUT DE CARTE, IL VOUS PERMET DE REVELER",
+                   'MAP DESCRIPTION 2': "UNE PARTIE DE LA CARTE",
+                   'FREEZE DESCRIPTION': "GEL : CE GEL VOUS PERMET DE RALENTIR L'ENNEMI",
+                   'FREEZE DESCRIPTION 2': "QUE VOUS TOUCHEZ PENDENT 5s",
+                   'HEAL DESCRIPTION': "SOIN : CE KIT DE SOIN VOUS PERMET D'AVOIR",
+                   'HEAL DESCRIPTION 2': "UNE VIE EN PLUS"},
+
             'EN': {'The Maze Of Shadows': 'The Maze Of Shadows',
                    'START': 'START',
                    'PARAMETERS': 'PARAMETERS',
@@ -165,7 +188,29 @@ class Settings:
                    'LIVES': 'LIVES',
                    'A PIECE OF MAP': 'A PIECE OF MAP',
                    'A FREEZE ITEM': 'A FREEZE ITEM',
-                   'AN EXTRA LIFE': 'AN EXTRA LIFE'},
+                   'AN EXTRA LIFE': 'AN EXTRA LIFE',
+                   'HELP': 'HELP',
+                   'ENEMIES': 'ENEMIES',
+                   'WOLF DESCRIPTION': "",
+                   'WOLF DESCRIPTION 2': "",
+                   'SPIDER DESCRIPTION': "",
+                   'SPIDER DESCRIPTION 2': "",
+                   'SLIME DESCRIPTION': "",
+                   'SLIME DESCRIPTION 2': "",
+                   'RABBIT DESCRIPTION': "",
+                   'ITEM USE DESCRIPTION': "",
+                   'ITEM USE DESCRIPTION 2': "",
+                   'ITEM CHANGE DESCRIPTION': "",
+                   'ITEM CHANGE DESCRIPTION 2': "",
+                   'ITEM DISPLAY DESCRIPTION': "",
+                   'ITEMS': "ITEMS",
+                   'MAP DESCRIPTION': "",
+                   'MAP DESCRIPTION 2': "",
+                   'FREEZE DESCRIPTION': "",
+                   'FREEZE DESCRIPTION 2': "",
+                   'HEAL DESCRIPTION': "",
+                   'HEAL DESCRIPTION 2': ""},
+
             'DE': {'The Maze Of Shadows': 'Das Schattenlabyrinth',
                    'START': 'BEGINN',
                    'PARAMETERS': 'EINSTELLUNGEN',
@@ -200,7 +245,28 @@ class Settings:
                    'LIVES': 'LEBEN',
                    'A PIECE OF MAP': 'EIN KARTESTUCK',
                    'A FREEZE ITEM': 'EIN SPERRVERMERK',
-                   'AN EXTRA LIFE': 'EIN EXTRA-LEBEN'}
+                   'AN EXTRA LIFE': 'EIN EXTRA-LEBEN',
+                   'HELP': '',
+                   'ENEMIES': '',
+                   'WOLF DESCRIPTION': "",
+                   'WOLF DESCRIPTION 2': "",
+                   'SPIDER DESCRIPTION': "",
+                   'SPIDER DESCRIPTION 2': "",
+                   'SLIME DESCRIPTION': "",
+                   'SLIME DESCRIPTION 2': "",
+                   'RABBIT DESCRIPTION': "",
+                   'ITEM USE DESCRIPTION': "",
+                   'ITEM USE DESCRIPTION 2': "",
+                   'ITEM CHANGE DESCRIPTION': "",
+                   'ITEM CHANGE DESCRIPTION 2': "",
+                   'ITEM DISPLAY DESCRIPTION': "",
+                   'ITEMS': "ITEMS",
+                   'MAP DESCRIPTION': "",
+                   'MAP DESCRIPTION 2': "",
+                   'FREEZE DESCRIPTION': "",
+                   'FREEZE DESCRIPTION 2': "",
+                   'HEAL DESCRIPTION': "",
+                   'HEAL DESCRIPTION 2': ""}
         }
 
         # keep track of distance to the closest enemy

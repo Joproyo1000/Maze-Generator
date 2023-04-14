@@ -2,6 +2,8 @@ import time
 
 from sys import exit
 
+import pygame
+
 from mazeLevel import Maze
 from settings import Settings
 from shaders import Shader
@@ -48,9 +50,11 @@ class MazeGame:
         """
         Main menu, runs at start
         """
-        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.1), self.settings.TEXTS[self.settings.LANGUAGE]['START'],
+        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.3), self.settings.TEXTS[self.settings.LANGUAGE]['START'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.7), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.87), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                               self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.57), self.settings.TEXTS[self.settings.LANGUAGE]['HELP'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT GAME'],
                                self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
@@ -82,6 +86,9 @@ class MazeGame:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings_menu(self.main_menu)
                             if i == 2:
+                                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                                self.help_menu(self.main_menu)
+                            if i == 3:
                                 pygame.quit()
                                 exit()
 
@@ -249,6 +256,145 @@ class MazeGame:
             # set FPS
             self.clock.tick(self.maze.FPS)
 
+    def help_menu(self, start: classmethod):
+        """
+        Help menu gives information about enemies, controls and items
+        """
+
+        self.buttons = [Button(None, (self.settings.WIDTH // 3.9, self.settings.HEIGHT // 1.3), '<---',
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                        Button(None, (self.settings.WIDTH // 1.3, self.settings.HEIGHT // 1.3), '--->',
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.25), self.settings.TEXTS[self.settings.LANGUAGE]['QUIT'],
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
+
+        currentPage = 1
+        pages = [
+            # page 1
+            [pygame.transform.scale_by(pygame.image.load('graphics/mouseHelp.png').convert_alpha(), 5),
+             pygame.transform.scale_by(pygame.image.load('graphics/objectHelp.png').convert_alpha(), 5),
+             self.settings.FONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['CONTROLS'], True, 'gray'),
+
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEM DISPLAY DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEM CHANGE DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEM CHANGE DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEM USE DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEM USE DESCRIPTION 2'], True, 'gray')
+             ],
+            # page 2
+            [pygame.transform.scale_by(pygame.image.load('graphics/enemies/wolf/right_idle/blind_wolf_right_idle1.png').convert_alpha(), 2),
+             pygame.transform.scale_by(pygame.image.load('graphics/enemies/spider/right_idle/spider_mouse_right_idle1.png').convert_alpha(), 3),
+             pygame.transform.scale_by(pygame.image.load('graphics/enemies/slime/right_idle/slime_right_idle1.png').convert_alpha(), 3),
+             pygame.transform.scale_by(pygame.image.load('graphics/enemies/rabbit/right_idle/cute_bunny_right_idle1.png').convert_alpha(), 3),
+
+             self.settings.FONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ENEMIES'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['WOLF DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['WOLF DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['SPIDER DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['SPIDER DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['SLIME DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['SLIME DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['RABBIT DESCRIPTION'], True, 'gray')],
+            # page 3
+            [pygame.transform.scale_by(pygame.image.load('graphics/special/objects/map.png').convert_alpha(), 3),
+             pygame.transform.scale_by(pygame.image.load('graphics/special/objects/freeze.png').convert_alpha(), 3),
+             pygame.transform.scale_by(pygame.image.load('graphics/special/objects/heal.png').convert_alpha(), 3),
+
+             self.settings.FONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['ITEMS'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['MAP DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['MAP DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['FREEZE DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['FREEZE DESCRIPTION 2'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['HEAL DESCRIPTION'], True, 'gray'),
+             self.settings.SMALLFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['HEAL DESCRIPTION 2'], True, 'gray')]
+        ]
+
+        pagesRect = [
+            # page 1:
+            [pages[0][0].get_rect(center=(self.settings.WIDTH // 1.8, self.settings.HEIGHT // 1.7)),  # mouse image
+             pages[0][0].get_rect(topright=(self.settings.WIDTH // 1.3, self.settings.HEIGHT // 4)),  # item selection image
+
+             pages[0][2].get_rect(center=(self.settings.WIDTH // 2, self.settings.HEIGHT // 5)),  # title
+
+             pages[0][3].get_rect(topright=(self.settings.WIDTH // 1.5, self.settings.HEIGHT // 3.22)),  # item selection description
+
+             pages[0][4].get_rect(topright=(self.settings.WIDTH // 1.7, self.settings.HEIGHT // 2.4)),  # item change description
+             pages[0][5].get_rect(topright=(self.settings.WIDTH // 1.7, self.settings.HEIGHT // 2.18)),
+
+             pages[0][6].get_rect(topright=(self.settings.WIDTH // 1.7, self.settings.HEIGHT // 1.92)),  # item use description
+             pages[0][7].get_rect(topright=(self.settings.WIDTH // 1.7, self.settings.HEIGHT // 1.78))
+             ],
+            # page 2:
+            [pages[1][0].get_rect(center=(self.settings.WIDTH // 4.8, self.settings.HEIGHT // 3.6)),  # wolf image
+             pages[1][1].get_rect(center=(self.settings.WIDTH // 4.8, self.settings.HEIGHT // 2.7)),  # spider image
+             pages[1][2].get_rect(center=(self.settings.WIDTH // 4.8, self.settings.HEIGHT // 2.07)),  # slime image
+             pages[1][3].get_rect(center=(self.settings.WIDTH // 4.8, self.settings.HEIGHT // 1.6)),  # rabbit image
+             # texts
+             pages[1][4].get_rect(center=(self.settings.WIDTH // 2, self.settings.HEIGHT // 5)),  # title
+
+             pages[1][5].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 3.98)),  # wolf description
+             pages[1][6].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 3.41)),
+
+             pages[1][7].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 2.55)),  # spider description
+             pages[1][8].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 2.31)),
+
+             pages[1][9].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 1.95)),  # slime description
+             pages[1][10].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 1.82)),
+
+             pages[1][11].get_rect(topleft=(self.settings.WIDTH // 3.83, self.settings.HEIGHT // 1.53))  # rabbit description
+             ],
+            # page 3
+            [pages[2][0].get_rect(center=(self.settings.WIDTH // 4.2, self.settings.HEIGHT // 3.15)),  # map image
+             pages[2][1].get_rect(center=(self.settings.WIDTH // 4.2, self.settings.HEIGHT // 2.2)),  # freeze image
+             pages[2][2].get_rect(center=(self.settings.WIDTH // 4.2, self.settings.HEIGHT // 1.7)),  # heal image
+
+             pages[2][3].get_rect(center=(self.settings.WIDTH // 2, self.settings.HEIGHT // 5)),  # title
+
+             pages[2][4].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 3.38)),  # map description
+             pages[2][5].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 2.9)),
+
+             pages[2][6].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 2.31)),  # freeze description
+             pages[2][7].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 2.1)),
+
+             pages[2][8].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 1.8)),  # heal description
+             pages[2][9].get_rect(topleft=(self.settings.WIDTH // 3.6, self.settings.HEIGHT // 1.67))
+             ]
+        ]
+
+        self.drawScreen()
+
+        while True:
+            # used for taking inputs
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for i, button in enumerate(self.buttons):
+                        # check every button for input
+                        if button.checkForInput():
+                            if i == 0:
+                                currentPage += 1
+                            if i == 1:
+                                currentPage -= 1
+                            if i == len(self.buttons) - 1:
+                                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                                start()
+
+            self.drawScreen()
+
+            for image, rect in zip(pages[currentPage % len(pages)], pagesRect[currentPage % len(pages)]):
+                self.screen.blit(image, rect)
+
+            if not self.settings.SHADERON:
+                pygame.display.update()
+            else:
+                self.shader.render(self.screen)
+
+            # set FPS
+            self.clock.tick(self.maze.FPS)
+
     def game(self, doTransition: bool=True):
         """
         Main game loop
@@ -375,9 +521,11 @@ class MazeGame:
         Pause menu, runs when escape is pressed
         """
 
-        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.3), self.settings.TEXTS[self.settings.LANGUAGE]['CONTINUE'],
+        self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.7), self.settings.TEXTS[self.settings.LANGUAGE]['CONTINUE'],
                                       self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
-                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.8), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.87), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
+                                      self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
+                        Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.57), self.settings.TEXTS[self.settings.LANGUAGE]['HELP'],
                                       self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), self.settings.TEXTS[self.settings.LANGUAGE]['MAIN MENU'],
                                       self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR)]
@@ -412,6 +560,9 @@ class MazeGame:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings_menu(self.pause_menu)
                             elif i == 2:
+                                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                                self.help_menu(self.pause_menu)
+                            elif i == 3:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.main_menu()
 
@@ -482,9 +633,6 @@ class MazeGame:
         """
         self.screen.blit(self.background, self.background.get_rect())
 
-        # debug FPS count
-        # debug("FPS : " + str(round(self.clock.get_fps() * 10) / 10), x=20)
-
         for button in self.buttons:
             if isinstance(button, Slider):
                 button.update(self.screen, getInput)
@@ -494,4 +642,4 @@ class MazeGame:
 
 if __name__ == '__main__':
     mazeGen = MazeGame()
-    mazeGen.main_menu()
+    mazeGen.help_menu(mazeGen.main_menu)
