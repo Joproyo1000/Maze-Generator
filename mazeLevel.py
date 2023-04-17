@@ -4,6 +4,7 @@ import pygame
 from math import floor
 from random import randint, choice
 
+from settings import Settings
 from support import fadeTransitionEnd, Button
 from tile import Tile
 from camera import YSortCameraGroup
@@ -15,8 +16,8 @@ from pathFinding import PathFinder
 from support import distance
 
 
-class Maze(pygame.sprite.Group):
-    def __init__(self, settings, player=None):
+class Maze:
+    def __init__(self, settings: Settings, player=None):
         super().__init__()
         """
         Generates a new maze with the settings provided
@@ -98,14 +99,6 @@ class Maze(pygame.sprite.Group):
 
         # initialize pathfinder
         self.pathFinder = PathFinder(self)
-
-        # buttons
-        self.retryButton = Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.6), 'REESAYER',
-                                         self.settings.SMALLCREEPYFONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
-        self.restartButtion = Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.6), 'RECOMMENCER',
-                                            self.settings.SMALLCREEPYFONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
-        self.exitButton = Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUITTER',
-                                        self.settings.SMALLCREEPYFONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)
 
     def init_maze(self):
         """
@@ -426,8 +419,8 @@ class Maze(pygame.sprite.Group):
         for map in self.player.maps:
             pygame.draw.circle(mask, (0, 0, 0, 0), (map.pos[0] * baked_map.get_width(), map.pos[1] * baked_map.get_height()), 400 - 50 * self.settings.CURRENTLEVEL * self.settings.DIFFICULTY)
 
-        # baked_map.blit(mask, mask.get_rect())
-        # baked_map.set_colorkey('black')
+        baked_map.blit(mask, mask.get_rect())
+        baked_map.set_colorkey('black')
 
         return baked_map
 
@@ -625,54 +618,28 @@ class Maze(pygame.sprite.Group):
 
         # if player reaches exit, go to next level
         if self.check_victory():
-            self.settings.CURRENTLEVEL += 1
             # check if player as reached max level he has won WOUHOU !!
-            if self.settings.CURRENTLEVEL >= self.settings.NUMLEVELS:
+            if self.settings.CURRENTLEVEL + 1 >= self.settings.NUMLEVELS:
                 self.visible_sprites.update(0)
 
-                if self.status != 'finished':
+                if self.status != 'success':
                     fadeTransitionEnd(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None)
+                    self.status = 'success'
 
-                self.status = 'finished'
-
-                dieTextUp = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU HAVE REFOUND'], True, 'darkgreen')
-                dieTextUpRect = dieTextUp.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 3))
-                self.screen.blit(dieTextUp, dieTextUpRect)
-                dieTextDown = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOUR BROTHER'] if self.settings.TYPE == 'girl' else self.settings.TEXTS[self.settings.LANGUAGE]['YOUR SISTER'], True, 'darkgreen')
-                dieTextDownRect = dieTextDown.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 2.2))
-                self.screen.blit(dieTextDown, dieTextDownRect)
-
-                self.restartButtion.update(self.screen)
-                self.exitButton.update(self.screen)
-
-                if self.settings.SHADERON:
-                    self.visible_sprites.shader.render(self.screen)
-                else:
-                    pygame.display.update()
+                self.settings.dstToClosestEnemy = 1000000
 
             else:
+                self.settings.CURRENTLEVEL += 1
                 self.reset()
 
         # if player hits enemy, he dies and the level restarts, unless he has extra lives
         if self.check_death():
             self.visible_sprites.update(0)
 
-            dieText = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU DIED'], True, 'darkred')
-            dieTextRect = dieText.get_rect(center=(self.settings.WIDTH/2, self.settings.HEIGHT/2.2))
-            self.screen.blit(dieText, dieTextRect)
+            if self.status != 'fail':
+                self.status = 'fail'
 
-            self.retryButton.update(self.screen)
-            self.exitButton.update(self.screen)
-
-            if self.status != 'finished':
-                fadeTransitionEnd(self.screen, self.visible_sprites.shader if self.settings.SHADERON else None, duration=500)
-                self.status = 'finished'
-
-            if self.settings.SHADERON:
-                self.settings.dstToClosestEnemy = 50
-                self.visible_sprites.shader.render(self.screen)
-            else:
-                pygame.display.update()
+            self.settings.dstToClosestEnemy = 100
 
         return self.screen
 
@@ -680,20 +647,19 @@ class Maze(pygame.sprite.Group):
         """
         Resets maze with same settings
         """
-        if self.status == 'finished':
-
+        if self.status != 'running':
             self.__init__(self.settings, player=self.player)
         else:
             self.__init__(self.settings)
 
-    def run(self, deltaTime, getInput=True):
+    def run(self, deltaTime: float, getInput=True):
         """
+        Updates all sprites in maze and takes care of the game state
         :param deltaTime: time interval between two frames
         :param getInput: activate or no player input
-        Updates all sprites in maze and takes care of the game state
         """
         if self.mazeGenerated:
-            if self.status != 'finished':
+            if self.status == 'running':
                 # fade in transition
                 if self.transition >= 0:
                     self.transition -= 2
@@ -707,3 +673,176 @@ class Maze(pygame.sprite.Group):
                 return self.visible_sprites.custom_draw(self.player, self.blackGradient, getInput)
             else:
                 return self.update_game_state()
+
+
+class Corridor:
+    def __init__(self, direction: str, length: int,  lightColor: (int, int, int), settings: Settings):
+        """
+        Corridors are like their name suggest, a corridor with a light at the end.
+        Acts kind of like a transition
+        :param direction: direction in which the corridor goes
+        :param length: length of the corridor in tiles
+        :param lightColor: color of the light at the end
+        :param settings: copy of the settings
+        """
+        # initialize direction vector
+        directions = {'up': (0, 1), 'down': (0, 1), 'left': (1, 0), 'right': (1, 0)}
+        self.direction = pygame.Vector2(directions[direction])
+
+        # get the settings
+        self.settings = settings
+
+        # get the screen
+        self.screen = pygame.display.get_surface()
+
+        # get length
+        self.length = length
+
+        # calculate number of columns and rows
+        self.cols = 3 if direction == 'up' or direction == 'down' else self.length
+        self.rows = 3 if direction == 'left' or direction == 'right' else self.length
+
+        # initialize grid of tiles
+        self.grid_tiles = []
+
+        # initialize the different groups
+        self.visible_sprites = YSortCameraGroup(settings, self.get_neighbors, self.check_tile)
+        self.obstacle_sprites = HashMap(self.settings.TILESIZE, self.cols)
+
+        # generate corridor
+        for _ in range(self.length):
+            # side wall 1
+            self.grid_tiles.append(Tile(settings, (self.direction.x - self.direction.normalize().x,
+                                                   self.direction.y - self.direction.normalize().y), True, [self.visible_sprites, self.obstacle_sprites]))
+            # path
+            self.grid_tiles.append(Tile(settings, (self.direction.x + self.settings.TILESIZE * self.direction.normalize().y - self.direction.normalize().x,
+                                                   self.direction.y + self.settings.TILESIZE * self.direction.normalize().x - self.direction.normalize().y), False, [self.visible_sprites]))
+            # side wall 2
+            self.grid_tiles.append(Tile(settings, (self.direction.x + 2 * self.settings.TILESIZE * self.direction.normalize().y - self.direction.normalize().x,
+                                                   self.direction.y + 2 * self.settings.TILESIZE * self.direction.normalize().x - self.direction.normalize().y), True, [self.visible_sprites, self.obstacle_sprites]))
+
+            self.direction.scale_to_length(self.direction.length() + self.settings.TILESIZE)
+
+        # sort corridor tiles by left to right and top to bottom
+        if direction == 'left' or direction == 'right':
+            self.grid_tiles = sorted(self.grid_tiles, key=lambda tile: tile.rect.centery)
+
+        # create goal and opposite wall for each direction
+        if direction == 'up':
+            self.visible_sprites.remove(self.grid_tiles[self.cols * self.rows - 2])
+            self.grid_tiles[self.cols * self.rows - 2] = Tile(settings, (self.settings.TILESIZE, (self.rows - 1) * self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites])
+            self.goal = self.grid_tiles[self.cols - 2]
+        elif direction == 'down':
+            self.visible_sprites.remove(self.grid_tiles[1])
+            self.grid_tiles[1] = Tile(settings, (self.settings.TILESIZE, 0), True, [self.visible_sprites, self.obstacle_sprites])
+            self.goal = self.grid_tiles[self.cols * self.rows - 2]
+        elif direction == 'left':
+            self.visible_sprites.remove(self.grid_tiles[2 * self.cols - 1])
+            self.grid_tiles[2 * self.cols - 1] = Tile(settings, (self.cols * self.settings.TILESIZE, self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites])
+            self.goal = self.grid_tiles[self.cols]
+        elif direction == 'right':
+            self.visible_sprites.remove(self.grid_tiles[self.cols])
+            self.grid_tiles[self.cols] = Tile(settings, (0, self.settings.TILESIZE), True, [self.visible_sprites, self.obstacle_sprites])
+            self.goal = self.grid_tiles[2 * self.cols - 1]
+
+        # initialize all graphics
+        self.update_tile_colors()  # tiles
+        self.goal.image = self.goal.goal  # goal image
+        self.visible_sprites.init_light()  # light
+        self.visible_sprites.init_background()  # background
+
+        # initialize obstacles hashmap
+        self.obstacle_sprites.generate_hashmap()
+
+        # initialize player
+        self.player = Player((self.grid_tiles[self.cols + 1].rect.centerx if direction != 'left' else self.grid_tiles[2 * self.cols - 2].rect.centerx,
+                              self.grid_tiles[self.cols + 1].rect.centery if direction != 'up' else self.grid_tiles[self.cols * self.rows - self.cols - 1].rect.centery), self.settings.TYPE, self.settings, [self.visible_sprites], self.obstacle_sprites)
+
+        # set light color and intensity
+        self.lightColor = lightColor
+        self.lightIntensity = 0
+
+        # value to control fade in transition
+        self.transition = 300
+
+        # surface for the fade in transition
+        self.blackGradient = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
+        self.blackGradient.fill('black')
+
+    def get_tile_pos_in_grid(self, x: int, y: int) -> int:
+        """
+        :param x: x position in the grid
+        :param y: y position in the grid
+        :return: the 1D position of the cell in the grid list
+        """
+        return x + y * self.cols
+
+    def check_tile(self, x: int, y: int) -> Tile:
+        """
+        Converts tile from x, y position to a 1D position on the tile grid
+        :param x: x position on the 2D grid
+        :param y: y position on the 2D grid
+        :return: corresponding tile on the 1D grid
+        """
+        # if tile is outside maze return false
+        if x < 0 or x > self.cols - 1 or y < 0 or y > self.rows - 1:
+            return False
+
+        # else return the tile in the grid corresponding to the coordinates
+        return self.grid_tiles[self.get_tile_pos_in_grid(x, y)]
+
+    def get_neighbors(self, tile):
+        """
+        :param tile: target tile
+        :return: all existing neighbors of the target tile
+        """
+        neighbors = []
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if x == 0 and y == 0:
+                    continue
+
+                if not isinstance(tile, bool):
+                    checkX = tile.rect.x // self.settings.TILESIZE + x
+                    checkY = tile.rect.y // self.settings.TILESIZE + y
+
+                    neighbor = self.check_tile(checkX, checkY)
+                    if neighbor:
+                        neighbors.append(neighbor)
+
+        return neighbors
+
+    def update_tile_colors(self):
+        """
+        updates the color of the tile based on it being a wall or not
+        """
+        for tile in self.grid_tiles:
+            tile.update_color()
+
+    def check_end(self):
+        """
+        Check if player as reached the end
+        :return: True if yes otherwise False
+        """
+        if self.player.rect.colliderect(self.goal.rect):
+            return True
+        return False
+
+    def run(self, deltaTime, getInput=True):
+        """
+        Updates all sprites in corridor and updates light intensity
+        :param deltaTime: time interval between two frames
+        :param getInput: activate or no player input
+        """
+        # fade in transition
+        if self.transition >= 0:
+            self.transition -= 2
+            self.blackGradient.set_alpha(self.transition)
+
+        self.visible_sprites.shader.program['lightColor'] = self.lightColor
+        self.visible_sprites.shader.program['lightIntensity'] = 1 / (distance(self.player.rect.center, self.goal.rect.center)) + 0.001
+
+        self.player.getInput = getInput
+        self.visible_sprites.update(deltaTime)
+
+        self.visible_sprites.custom_draw(self.player, self.blackGradient, getInput)

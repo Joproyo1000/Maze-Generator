@@ -4,6 +4,9 @@ precision mediump float;
 uniform sampler2D tex;
 uniform float dst;
 uniform float time;
+uniform bool corridor;
+uniform vec3 lightColor;
+uniform float lightIntensity;
 uniform float gamma;
 
 in vec2 uvs;
@@ -66,6 +69,11 @@ void main() {
 
     // apply gamma correction
     f_color.rgb = pow(f_color.rgb, vec3(1.0/gamma));
+
+    if (corridor) {
+      // apply colored overlay in corridor
+      f_color.rgb += lightColor * lightIntensity;
+    }
 
     if (dst < 500 && dst != 0) {
       f_color.r *= (-dst + 600)/100;

@@ -54,6 +54,12 @@ class Shader:
         self.program['tex'] = 0
         self.program['time'] = self.t
         self.program['gamma'] = self.settings.GAMMA / 10
+
+        if self.program['lightColor'].value == (0.0, 0.0, 0.0) and self.program['lightIntensity'].value == 0:
+            self.program['corridor'] = False
+        else:
+            self.program['corridor'] = True
+
         if self.settings.SHOWHEARTBEATEFFECT:
             self.program['dst'] = self.settings.dstToClosestEnemy
         else:

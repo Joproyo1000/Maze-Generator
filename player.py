@@ -132,9 +132,9 @@ class Player(pygame.sprite.Sprite):
 
         # we check collision on one axis at a time to avoid bugs
         self.hitbox.x += self.direction.x * speed * dt * 250
-        # self.collision('horizontal')
+        self.collision('horizontal')
         self.hitbox.y += self.direction.y * speed * dt * 250
-        # self.collision('vertical')
+        self.collision('vertical')
 
         # update final position
         self.rect.center = self.hitbox.center

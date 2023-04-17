@@ -59,7 +59,9 @@ class Settings:
         # colors
         self.MENUBACKGROUNDCOLOR = pygame.Color(46, 60, 87)
         self.TEXTCOLOR = 'darkgray'
+        self.DARKTEXTCOLOR = 'gray30'
         self.HOVERINGCOLOR = 'gray'
+        self.DARKHOVERINGCOLOR = 'gray20'
         self.SLIDEREXTCOLOR = 'gray28'
         self.SLIDERINTCOLOR = 'black'
 
@@ -85,7 +87,7 @@ class Settings:
 
         # initialize music and sound effects
         self.MUSICCHANNEL = pygame.mixer.Channel(0)
-        self.MUSIC = pygame.mixer.Sound('sound/Horror3.1.mp3')
+        self.MUSIC = pygame.mixer.Sound('sound/Horror.mp3')
         self.SOUNDEFFECTCHANNEL = pygame.mixer.Channel(1)
         self.FOOTSTEPSOUNDEFFECTS = list(pygame.mixer.Sound(f'sound/effects/walking/footstep{i}.mp3') for i in range(6))
 
@@ -136,9 +138,9 @@ class Settings:
                    'ENEMIES': 'ENNEMIS',
                    'WOLF DESCRIPTION': "LOUP AVEUGLE : COURT VITE MAIS NE VOUS VOIT PAS SI",
                    'WOLF DESCRIPTION 2': "VOUS NE BOUGEZ PAS",
-                   'SPIDER DESCRIPTION': "ARAIGNEE-SOURIS : VITESSTE NORMALE MAIS PEUT PLACER",
+                   'SPIDER DESCRIPTION': "ARAIGNEE-SOURIS : VITESSE NORMALE MAIS PEUT PLACER",
                    'SPIDER DESCRIPTION 2': "DES TOILES D'ARAIGNEE SUR VOTRE CHEMIN",
-                   'SLIME DESCRIPTION': "BLOB : EST LENT ET BETE, IL NE VOUS POURSUIVERA PAS",
+                   'SLIME DESCRIPTION': "SLIME : EST LENT ET BETE, IL NE VOUS POURSUIVERA PAS",
                    'SLIME DESCRIPTION 2': "MAIS IL Y EN A BEAUCOUP",
                    'RABBIT DESCRIPTION': "LAPIN : IL A L'AIR MIGNON N'EST-CE PAS ?",
                    'ITEM USE DESCRIPTION': "UTILISEZ LE CLIC-GAUCHE POUR UTILISER",
@@ -191,25 +193,25 @@ class Settings:
                    'AN EXTRA LIFE': 'AN EXTRA LIFE',
                    'HELP': 'HELP',
                    'ENEMIES': 'ENEMIES',
-                   'WOLF DESCRIPTION': "",
-                   'WOLF DESCRIPTION 2': "",
-                   'SPIDER DESCRIPTION': "",
-                   'SPIDER DESCRIPTION 2': "",
-                   'SLIME DESCRIPTION': "",
-                   'SLIME DESCRIPTION 2': "",
-                   'RABBIT DESCRIPTION': "",
-                   'ITEM USE DESCRIPTION': "",
-                   'ITEM USE DESCRIPTION 2': "",
-                   'ITEM CHANGE DESCRIPTION': "",
-                   'ITEM CHANGE DESCRIPTION 2': "",
-                   'ITEM DISPLAY DESCRIPTION': "",
+                   'WOLF DESCRIPTION': "BLIND WOLF : RUNS FAST BUT DOESN'T SEE YOU",
+                   'WOLF DESCRIPTION 2': "IF YOU DON'T MOVE",
+                   'SPIDER DESCRIPTION': "SPIDER-MOUSE : NORMAL SPEED BUT CAN PLACE",
+                   'SPIDER DESCRIPTION 2': "COBWEBS ON YOUR WAY",
+                   'SLIME DESCRIPTION': "SLIME : IS SLOW AND DUMB, WON'T FOLLOW YOU",
+                   'SLIME DESCRIPTION 2': "BUT THERE'S A LOT OF THEM",
+                   'RABBIT DESCRIPTION': "RABBIT : IT LOOKS CUTE DOESN'T IT ?",
+                   'ITEM USE DESCRIPTION': "USE LEFT-CLICK TO USE",
+                   'ITEM USE DESCRIPTION 2': "CURRENTLY SELECTED ITEM",
+                   'ITEM CHANGE DESCRIPTION': "USE THE MOUSE WHEEL",
+                   'ITEM CHANGE DESCRIPTION 2': "TO CHANGE SELECTED OBJECT",
+                   'ITEM DISPLAY DESCRIPTION': "YOU CAN SEE THE CURRENTLY SELECTED ITEM HERE",
                    'ITEMS': "ITEMS",
-                   'MAP DESCRIPTION': "",
-                   'MAP DESCRIPTION 2': "",
-                   'FREEZE DESCRIPTION': "",
-                   'FREEZE DESCRIPTION 2': "",
-                   'HEAL DESCRIPTION': "",
-                   'HEAL DESCRIPTION 2': ""},
+                   'MAP DESCRIPTION': "MAP : A PIECE OF MAP THAT CAN REVEAL",
+                   'MAP DESCRIPTION 2': "A PORTION OF THE MAP",
+                   'FREEZE DESCRIPTION': "FREEZE : THIS FREEZE CAN SLOW DOWN",
+                   'FREEZE DESCRIPTION 2': "THE ENEMY YOU TOUCH FOR 5s",
+                   'HEAL DESCRIPTION': "HEAL : THIS MEDKIT ALLOWS YOU TO GET",
+                   'HEAL DESCRIPTION 2': "ONE EXTRA LIFE"},
 
             'DE': {'The Maze Of Shadows': 'Das Schattenlabyrinth',
                    'START': 'BEGINN',
@@ -246,27 +248,27 @@ class Settings:
                    'A PIECE OF MAP': 'EIN KARTESTUCK',
                    'A FREEZE ITEM': 'EIN SPERRVERMERK',
                    'AN EXTRA LIFE': 'EIN EXTRA-LEBEN',
-                   'HELP': '',
-                   'ENEMIES': '',
-                   'WOLF DESCRIPTION': "",
-                   'WOLF DESCRIPTION 2': "",
-                   'SPIDER DESCRIPTION': "",
-                   'SPIDER DESCRIPTION 2': "",
-                   'SLIME DESCRIPTION': "",
-                   'SLIME DESCRIPTION 2': "",
-                   'RABBIT DESCRIPTION': "",
-                   'ITEM USE DESCRIPTION': "",
-                   'ITEM USE DESCRIPTION 2': "",
-                   'ITEM CHANGE DESCRIPTION': "",
-                   'ITEM CHANGE DESCRIPTION 2': "",
-                   'ITEM DISPLAY DESCRIPTION': "",
-                   'ITEMS': "ITEMS",
-                   'MAP DESCRIPTION': "",
-                   'MAP DESCRIPTION 2': "",
-                   'FREEZE DESCRIPTION': "",
-                   'FREEZE DESCRIPTION 2': "",
-                   'HEAL DESCRIPTION': "",
-                   'HEAL DESCRIPTION 2': ""}
+                   'HELP': 'HILFE',
+                   'ENEMIES': 'FEINDE',
+                   'WOLF DESCRIPTION': "BLINDE WOLF : LAUFT SCHNELL ABER SIEHT NICHT SIE, WENN",
+                   'WOLF DESCRIPTION 2': "SIE NICHT BEWEGEN",
+                   'SPIDER DESCRIPTION': "SPINNE-MAUS : NORMALE GESCHWINDICHKEIT ABER KANN",
+                   'SPIDER DESCRIPTION 2': "SPINNENNETZ AUF IHREN WEG STELLEN",
+                   'SLIME DESCRIPTION': "SLIME : IST LANGSAM UND BLOD, ER WIRD NICHT IHNEN VERFOLGEN",
+                   'SLIME DESCRIPTION 2': "ABER ES GIBT VIELE",
+                   'RABBIT DESCRIPTION': "KANINCHEN : ES SIEHT NIEDLICH, NE ?",
+                   'ITEM USE DESCRIPTION': "BENUTZEN SIE DEN RECHTEN MAUSKLICK",
+                   'ITEM USE DESCRIPTION 2': "UM DAS GEWAHLT OBJEKT ZU BENUTZEN",
+                   'ITEM CHANGE DESCRIPTION': "BENUTZEN SIE DIE MAUSRADCHEN",
+                   'ITEM CHANGE DESCRIPTION 2': "UM OBJEKTE ZU ANDERN",
+                   'ITEM DISPLAY DESCRIPTION': "SIE KONNEN DAS GEWAHLT OBJEKT DA",
+                   'ITEMS': "OBJEKTE",
+                   'MAP DESCRIPTION': "KARTE : EIN KARTESTUCK, ES ERMOGLICHT IHNEN",
+                   'MAP DESCRIPTION 2': "EIN KARTETEIL ZU ZEIGEN",
+                   'FREEZE DESCRIPTION': "GEL : MIT DIESEM GEL KONNEN SIE DIE FEINDE",
+                   'FREEZE DESCRIPTION 2': "DIE SIE BERUHREN, WAHREND 5 SEKUNDE VERLANGSAMEN",
+                   'HEAL DESCRIPTION': "HILFE : DIESES HILFSET ERMOGLICHT IHNEN",
+                   'HEAL DESCRIPTION 2': "EIN EXTRA-LEBEN ZU HABEN"}
         }
 
         # keep track of distance to the closest enemy

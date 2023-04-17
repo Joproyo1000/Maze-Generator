@@ -44,6 +44,7 @@ class YSortCameraGroup(pygame.sprite.Group):
         self.background = pygame.Surface((self.settings.MAZEWIDTHS[self.settings.CURRENTLEVEL],
                                           self.settings.MAZEHEIGHTS[self.settings.CURRENTLEVEL]))
         self.backgroundRect = self.background.get_rect()
+
         # we move the background lower so that it is aligned with the walls in perspective
         self.backgroundRect.y += self.settings.TILESIZE / 27 * 14
 
@@ -80,7 +81,6 @@ class YSortCameraGroup(pygame.sprite.Group):
         lightColor = self.settings.LIGHTCOLOR
         lightSize = self.settings.LIGHTRADIUS
         self.light = LIGHT(lightSize, pixel_shader(lightSize, lightColor, 1, False))
-
 
         # create shadow objects (walls, etc...)
         # the rect's y parameter must be adjusted to the TILESIZE
@@ -211,6 +211,7 @@ class YSortCameraGroup(pygame.sprite.Group):
                                                          player.rect.centery // self.settings.TILESIZE)):
             if sprite.isWall and sprite.rect.centery > player.rect.centery:
                 pygame.draw.rect(cutPlayerSprite, (0, 0, 0, 0), Rect(sprite.rect.centerx - player.rect.centerx - 9, (sprite.rect.centery - player.rect.centery) / self.perspectiveOffset - 8, sprite.rect.width, sprite.rect.height))
+
 
         # lighting
         if self.settings.SHADERON:

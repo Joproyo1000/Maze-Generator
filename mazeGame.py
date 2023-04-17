@@ -2,9 +2,7 @@ import time
 
 from sys import exit
 
-import pygame
-
-from mazeLevel import Maze
+from mazeLevel import Maze, Corridor
 from settings import Settings
 from shaders import Shader
 from debug import debug
@@ -32,8 +30,11 @@ class MazeGame:
         else:
             self.screen = pygame.display.set_mode(self.settings.RESOLUTION)
 
-        self.background = pygame.image.load('graphics/startscreen.png').convert()
-        self.background = pygame.transform.scale(self.background, (self.screen.get_size()))
+        self.menuBackground = pygame.image.load('graphics/menu_background.png').convert()
+        self.menuBackground = pygame.transform.scale(self.menuBackground, (self.screen.get_size()))
+        self.endingBackground = pygame.image.load('graphics/ending_background.png').convert()
+        self.endingBackground = pygame.transform.scale(self.endingBackground, (self.screen.get_size()))
+        self.background = self.menuBackground
 
         # initialize maze
         self.maze = Maze(self.settings)
@@ -81,7 +82,7 @@ class MazeGame:
                                 if self.chooseType():
                                     fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                     self.maze.reset()
-                                    self.game()
+                                    self.corridor('up', 10, (56, 27, 24), self.game)
                             if i == 1:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings_menu(self.main_menu)
@@ -362,6 +363,10 @@ class MazeGame:
         ]
 
         self.drawScreen()
+        for image, rect in zip(pages[currentPage % len(pages)], pagesRect[currentPage % len(pages)]):
+            self.screen.blit(image, rect)
+
+        fadeTransitionEnd(self.screen, self.shader if self.settings.SHADERON else None)
 
         while True:
             # used for taking inputs
@@ -395,11 +400,46 @@ class MazeGame:
             # set FPS
             self.clock.tick(self.maze.FPS)
 
+    def corridor(self, direction: str, length: int, lightColor: (int, int, int), end: classmethod):
+        """
+        :param direction:
+        :param length:
+        :param lightColor:
+        """
+        corridor = Corridor(direction, length, lightColor, self.settings)
+
+        currentTime = time.time()
+
+        while True:
+            # calculate deltaTime to make the speed go at the same rate regardless of FPS
+            deltaTime = time.time() - currentTime
+            currentTime = time.time()
+
+            # set background color
+            self.screen.fill('black')
+
+            # used for taking inputs
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if corridor.check_end():
+                    end()
+
+            # run the level
+            corridor.run(deltaTime)
+
+            if not self.settings.SHADERON:
+                pygame.display.update()
+
+            # set FPS
+            self.clock.tick(self.maze.FPS)
+
     def game(self, doTransition: bool=True):
         """
         Main game loop
         """
-
         if doTransition:
             self.maze.run(0)
             fadeTransitionEnd(self.screen, self.shader if self.settings.SHADERON else None)
@@ -425,17 +465,6 @@ class MazeGame:
                     self.maze.player.currentItemIndex = (self.maze.player.currentItemIndex + event.y) % len(self.maze.player.inventory)
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.maze.playerUse()
-                    if self.maze.status == 'finished':
-                        if self.maze.retryButton.checkForInput():
-                            self.maze.reset()
-                            self.maze.status = 'running'
-                        if self.maze.restartButtion.checkForInput():
-                            self.maze.reset()
-                            self.maze.status = 'running'
-                        if self.maze.exitButton.checkForInput():
-                            self.settings.dstToClosestEnemy = 1000000
-                            self.main_menu()
-                            self.maze.status = 'running'
 
                 # menus
                 if event.type == pygame.KEYDOWN:
@@ -454,10 +483,14 @@ class MazeGame:
                         if event.type == enemyEvent and playerPos:
                             self.maze.enemyBehavior(i, playerPos)
 
+            if self.maze.status == 'success':
+                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                self.corridor('up', 10, (99, 99, 76), self.end_menu)
+            elif self.maze.status == 'fail':
+                self.end_menu()
+
             # run the level
             self.maze.run(deltaTime)
-
-            debug(self.maze.enemies.sprites()[0].direction)
 
             if not self.settings.SHADERON:
                 pygame.display.update()
@@ -520,7 +553,6 @@ class MazeGame:
         """
         Pause menu, runs when escape is pressed
         """
-
         self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 2.7), self.settings.TEXTS[self.settings.LANGUAGE]['CONTINUE'],
                                       self.settings.FONT, self.settings.TEXTCOLOR, self.settings.TEXTCOLOR),
                         Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.87), self.settings.TEXTS[self.settings.LANGUAGE]['PARAMETERS'],
@@ -567,6 +599,79 @@ class MazeGame:
                                 self.main_menu()
 
             self.drawScreen()
+
+            if not self.settings.SHADERON:
+                pygame.display.update()
+            else:
+                self.shader.render(self.screen)
+
+            # set FPS
+            self.clock.tick(self.maze.FPS)
+
+    def end_menu(self):
+
+        # buttons
+        if self.maze.status == 'success':
+            self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.6), 'RECOMMENCER',
+                                                self.settings.SMALLCREEPYFONT, self.settings.DARKTEXTCOLOR, self.settings.DARKHOVERINGCOLOR),
+                            Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUITTER',
+                                            self.settings.SMALLCREEPYFONT, self.settings.DARKTEXTCOLOR, self.settings.DARKHOVERINGCOLOR)]
+            endTextUp = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU HAVE REFOUND'], True, 'darkgreen')
+            endTextUpRect = endTextUp.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 3))
+
+            endTextDown = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOUR BROTHER'] if self.settings.TYPE == 'girl' else self.settings.TEXTS[self.settings.LANGUAGE]['YOUR SISTER'], True, 'darkgreen')
+            endTextDownRect = endTextDown.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 2.2))
+
+            self.background = self.endingBackground
+
+        else:
+            self.buttons = [Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.6), 'REESAYER',
+                                   self.settings.SMALLCREEPYFONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR),
+                            Button(None, (self.settings.WIDTH // 2, self.settings.HEIGHT // 1.3), 'QUITTER',
+                                   self.settings.SMALLCREEPYFONT, self.settings.TEXTCOLOR, self.settings.HOVERINGCOLOR)]
+            endTextUp = self.settings.BIGCREEPYFONT.render(self.settings.TEXTS[self.settings.LANGUAGE]['YOU DIED'], True, 'darkred')
+            endTextUpRect = endTextUp.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 2.2))
+
+            endTextDown = self.settings.BIGCREEPYFONT.render('', True, 'darkgreen')
+            endTextDownRect = endTextDown.get_rect(center=(self.settings.WIDTH / 2, self.settings.HEIGHT / 2.2))
+
+        self.drawScreen()
+        self.screen.blit(endTextUp, endTextUpRect)
+        self.screen.blit(endTextDown, endTextDownRect)
+
+        fadeTransitionEnd(self.screen, self.shader if self.settings.SHADERON else None)
+
+        while True:
+            # set background color
+            self.screen.fill(pygame.Color(46, 60, 87))
+
+            # used for taking inputs
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for i, button in enumerate(self.buttons):
+                        if button.checkForInput():
+                            if i == 0:
+                                self.background = self.menuBackground
+                                self.maze.status = 'running'
+                                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                                self.maze.reset()
+                                self.maze.transition = 200
+                                self.game(doTransition=False)
+                            elif i == 1:
+                                self.background = self.menuBackground
+                                self.settings.dstToClosestEnemy = 1000000
+                                self.maze.status = 'running'
+                                fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
+                                self.main_menu()
+
+            self.drawScreen()
+
+            self.screen.blit(endTextUp, endTextUpRect)
+            self.screen.blit(endTextDown, endTextDownRect)
 
             if not self.settings.SHADERON:
                 pygame.display.update()
@@ -642,4 +747,4 @@ class MazeGame:
 
 if __name__ == '__main__':
     mazeGen = MazeGame()
-    mazeGen.help_menu(mazeGen.main_menu)
+    mazeGen.main_menu()
