@@ -82,7 +82,7 @@ class MazeGame:
                                 if self.chooseType():
                                     fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                     self.maze.reset()
-                                    self.corridor('up', 10, (56, 27, 24), self.game)
+                                    self.corridor('down', 10, (56, 27, 24), self.game)
                             if i == 1:
                                 fadeTransitionStart(self.screen, self.shader if self.settings.SHADERON else None)
                                 self.settings_menu(self.main_menu)
